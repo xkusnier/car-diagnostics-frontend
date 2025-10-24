@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import LoginScreen from "./LoginScreen";
-import RegisterScreen from "./RegisterScreen.js"; // Opravený import na .js
+import RegisterScreen from "./RegisterScreen.js";
 
 function App() {
   const [data, setData] = useState(null);
@@ -10,13 +10,17 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
   const [showRegister, setShowRegister] = useState(false);
 
-  // Detekcia URL a nastavenie showRegister
+  // Dynamická detekcia URL a nastavenie showRegister
   useEffect(() => {
-    if (window.location.pathname === "/register") {
-      setShowRegister(true);
-    } else {
-      setShowRegister(false);
-    }
+    const handlePopstate = () => {
+      setShowRegister(window.location.pathname === "/register");
+    };
+    // Pridanie listenera na zmenu histórie prehliadača
+    window.addEventListener("popstate", handlePopstate);
+    // Inicializácia pri načítaní
+    setShowRegister(window.location.pathname === "/register");
+    // Odstránenie listenera pri unmountingu
+    return () => window.removeEventListener("popstate", handlePopstate);
   }, []);
 
   // Načítanie dát pre dashboard po prihlásení
