@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import LoginScreen from "./LoginScreen";
-import RegisterScreen from "./RegisterScreen";
+import RegisterScreen from "./RegisterScreen.js"; // Opravený import na .js
 
 function App() {
   const [data, setData] = useState(null);
