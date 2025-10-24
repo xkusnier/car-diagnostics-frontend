@@ -57,7 +57,11 @@ function App() {
   };
 
   if (!isAuthenticated) {
-    return <LoginScreen onLogin={handleLogin} />;
+    return showRegister ? (
+      <RegisterScreen onRegister={handleRegister} />
+    ) : (
+      <LoginScreen onLogin={handleLogin} />
+    );
   }
 
   return (
