@@ -35,6 +35,20 @@ function App() {
       });
   };
 
+  const handleRegister = (email, password) => {
+    api
+      .post("/api/register", { email, password })
+      .then((res) => {
+        if (res.data.status === "success") {
+          setShowRegister(false); 
+          setError("Registration successful. Please log in.");
+        }
+      })
+      .catch((err) => {
+        setError(err.response?.data?.error || "Registration failed");
+      });
+  };
+  
   const handleLogout = () => {
     setIsAuthenticated(false);
     setToken(null);
