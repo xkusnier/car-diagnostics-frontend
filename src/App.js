@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import LoginScreen from "./LoginScreen";
+import RegisterScreen from "./RegisterScreen"; // Pridaný import
 
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
+  const [showRegister, setShowRegister] = useState(false); // Pridané useState pre showRegister
 
   // Načítanie dát pre dashboard po prihlásení
   useEffect(() => {
