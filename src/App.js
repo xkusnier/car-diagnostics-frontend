@@ -1,52 +1,61 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
-import LoginScreen from "./LoginScreen"; // Import LoginScreen
+import LoginScreen from "./LoginScreen";
 
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Stav pre autentifikáciu
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
 
   // Načítanie dát pre dashboard po prihlásení
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && token) {
+      api.defaults.headers.Authorization = `Bearer ${token}`;
       api
         .get("/api/all")
         .then((res) => setData(res.data))
         .catch((err) => setError(err.message));
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, token]);
 
-  // Funkcia na spracovanie prihlásenia
-  const handleLogin = (username, password) => {
-    // Simulácia prihlásenia (nahradí sa API volaním)
-    if (username && password) {
-      // Príklad: api.post("/api/login", { username, password })
-      // .then(() => setIsAuthenticated(true))
-      // .catch((err) => setError(err.message));
-      setIsAuthenticated(true); // Dočasná simulácia úspešného prihlásenia
-    } else {
-      setError("Invalid credentials");
-    }
+  const handleLogin = (email, password) => {
+    api
+      .post("/api/login", { email, password })
+      .then((res) => {
+        if (res.data.access_token) {
+          setToken(res.data.access_token);
+          localStorage.setItem("jwt_token", res.data.access_token); // Uloženie tokenu
+          setIsAuthenticated(true);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        setError(err.response?.data?.error || "Login failed");
+      });
   };
 
-  // Ak nie je používateľ prihlásený, zobrazí sa LoginScreen
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setToken(null);
+    localStorage.removeItem("jwt_token");
+    delete api.defaults.headers.Authorization;
+  };
+
   if (!isAuthenticated) {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
-  // Ak je používateľ prihlásený, zobrazí sa dashboard
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>Car Diagnostics Dashboard</h1>
+      <button onClick={handleLogout} style={{ marginBottom: "1rem", padding: "0.5rem 1rem", background: "red", color: "white", border: "none", borderRadius: "4px" }}>
+        Logout
+      </button>
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
       {!data && !error && <p>Loading data...</p>}
       {data && (
-        <table
-          border="1"
-          cellPadding="8"
-          style={{ borderCollapse: "collapse", marginTop: "1rem" }}
-        >
+        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", marginTop: "1rem" }}>
           <thead>
             <tr>
               <th>VIN</th>
