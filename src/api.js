@@ -1,10 +1,13 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://car-diagnostics.onrender.com";
-
 export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+ baseurl = "https://car-diagnostics.onrender.com";, // Nahraďte správnym URL backendu
 });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("jwt_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => Promise.reject(error));
