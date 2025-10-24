@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import LoginScreen from "./LoginScreen";
-import RegisterScreen from "./RegisterScreen"; // Pridaný import
+import RegisterScreen from "./RegisterScreen";
 
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
-  const [showRegister, setShowRegister] = useState(false); // Pridané useState pre showRegister
+  const [showRegister, setShowRegister] = useState(false);
+
+  // Detekcia URL a nastavenie showRegister
+  useEffect(() => {
+    if (window.location.pathname === "/register") {
+      setShowRegister(true);
+    } else {
+      setShowRegister(false);
+    }
+  }, []);
 
   // Načítanie dát pre dashboard po prihlásení
   useEffect(() => {
@@ -27,7 +36,7 @@ function App() {
       .then((res) => {
         if (res.data.access_token) {
           setToken(res.data.access_token);
-          localStorage.setItem("jwt_token", res.data.access_token); // Uloženie tokenu
+          localStorage.setItem("jwt_token", res.data.access_token);
           setIsAuthenticated(true);
           setError(null);
         }
