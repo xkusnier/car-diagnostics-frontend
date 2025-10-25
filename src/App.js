@@ -15,11 +15,8 @@ function App() {
     const handlePopstate = () => {
       setShowRegister(window.location.pathname === "/register");
     };
-    // Pridanie listenera na zmenu histórie prehliadača
     window.addEventListener("popstate", handlePopstate);
-    // Inicializácia pri načítaní
     setShowRegister(window.location.pathname === "/register");
-    // Odstránenie listenera pri unmountingu
     return () => window.removeEventListener("popstate", handlePopstate);
   }, []);
 
@@ -38,16 +35,16 @@ function App() {
     api
       .post("/api/login", { email, password })
       .then((res) => {
-        if (res.data.access_token) {
-          setToken(res.data.access_token);
-          localStorage.setItem("jwt_token", res.data.access_token);
-          setIsAuthenticated(true);
-          setError(null);
-        }
-      })
-      .catch((err) => {
-        setError(err.response?.data?.error || "Login failed");
-      });
+      if (res.data.access_token) {
+        setToken(res.data.access_token);
+        localStorage.setItem("jwt_token", res.data.access_token);
+        setIsAuthenticated(true);
+        setError(null);
+      }
+    })
+    .catch((err) => {
+      setError(err.response?.data?.error || "Login failed");
+    });
   };
 
   const handleRegister = (email, password) => {
