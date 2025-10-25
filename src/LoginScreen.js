@@ -64,10 +64,18 @@ function LoginScreen({ onLogin }) {
         </p>
         <p className="text-center text-sm text-gray-600 mt-2">
           Don't have an account?{" "}
-          <a href="#" onClick={(e) => { e.preventDefault(); window.location.href = "/register"; }} className="text-blue-500 hover:underline">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              window.dispatchEvent(new Event("open-register"));
+            }}
+            className="text-blue-500 hover:underline"
+          >
             Register
           </a>
         </p>
+
       </div>
     </div>
   );
