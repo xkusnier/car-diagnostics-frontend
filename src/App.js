@@ -12,13 +12,11 @@ function App() {
 
   // Dynamická detekcia URL a nastavenie showRegister
   useEffect(() => {
-    const handlePopstate = () => {
-      setShowRegister(window.location.pathname === "/register");
-    };
-    window.addEventListener("popstate", handlePopstate);
-    setShowRegister(window.location.pathname === "/register");
-    return () => window.removeEventListener("popstate", handlePopstate);
+  const openRegister = () => setShowRegister(true);
+  window.addEventListener("open-register", openRegister);
+  return () => window.removeEventListener("open-register", openRegister);
   }, []);
+
 
   // Načítanie dát pre dashboard po prihlásení
   useEffect(() => {
