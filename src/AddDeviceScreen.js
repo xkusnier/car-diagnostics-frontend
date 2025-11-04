@@ -6,63 +6,106 @@ function AddDeviceScreen({ onBack }) {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleAddDevice = () => {
-    if (!deviceId) {
-      setError("Please enter a valid Device ID.");
+  const handleAddDevice = async () => {
+    setMessage(null);
+    setError(null);
+
+    if (!deviceId || isNaN(deviceId) || parseInt(deviceId) <= 0) {
+      setError("⚠️ Please enter a valid positive integer as Device ID.");
       return;
     }
 
-    api
-      .post("/api/add-device", { device_id: parseInt(deviceId) })
-      .then((res) => {
-        setMessage(`✅ Device ${res.data.device_id} successfully added!`);
-        setError(null);
-        setDeviceId("");
-      })
-      .catch((err) => {
-        const msg = err.response?.data?.error || "Failed to add device.";
-        setError(`❌ ${msg}`);
-        setMessage(null);
+    try {
+      const res = await api.post("/api/add-device", {
+        device_id: parseInt(deviceId),
       });
+
+      setMessage(`✅ Device ${res.data.device_id} successfully added!`);
+      setDeviceId("");
+    } catch (err) {
+      let msg = "❌ Failed to add device.";
+
+      if (err.response) {
+        if (err.response.status === 409) {
+          msg = "❌ Device with this ID already exists.";
+        } else if (err.response.status === 400) {
+          msg = "⚠️ Invalid Device ID provided.";
+        } else if (err.response.data?.error) {
+          msg = `❌ ${err.response.data.error}`;
+        }
+      }
+
+      setError(msg);
+    }
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h2>Add New Device</h2>
+    <div
+      style={{
+        padding: "2rem",
+        fontFamily: "Arial, sans-serif",
+        maxWidth: "400px",
+        margin: "auto",
+        textAlign: "center",
+      }}
+    >
+      <h2 style={{ marginBottom: "1rem" }}>Add New Device</h2>
+
       <input
         type="number"
         placeholder="Enter Device ID"
         value={deviceId}
         onChange={(e) => setDeviceId(e.target.value)}
-        style={{ marginRight: "1rem", padding: "0.5rem" }}
+        style={{
+          marginRight: "1rem",
+          padding: "0.5rem",
+          width: "150px",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+        }}
       />
-      <button
-        onClick={handleAddDevice}
-        style={{
-          padding: "0.5rem 1rem",
-          background: "green",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-        }}
-      >
-        Add Device
-      </button>
-      <button
-        onClick={onBack}
-        style={{
-          marginLeft: "1rem",
-          padding: "0.5rem 1rem",
-          background: "gray",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-        }}
-      >
-        Back
-      </button>
-      {message && <p style={{ color: "green", marginTop: "1rem" }}>{message}</p>}
-      {error && <p style={{ color: "red", marginTop: "1rem" }}>{error}</p>}
+
+      <div style={{ marginTop: "1rem" }}>
+        <button
+          onClick={handleAddDevice}
+          style={{
+            padding: "0.5rem 1rem",
+            background: "green",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            marginRight: "1rem",
+            cursor: "pointer",
+          }}
+        >
+          Add Device
+        </button>
+
+        <button
+          onClick={onBack}
+          style={{
+            padding: "0.5rem 1rem",
+            background: "gray",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Back
+        </button>
+      </div>
+
+      {message && (
+        <p style={{ color: "green", marginTop: "1rem", fontWeight: "bold" }}>
+          {message}
+        </p>
+      )}
+      {error && (
+        <p style={{ color: "red", marginTop: "1rem", fontWeight: "bold" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
