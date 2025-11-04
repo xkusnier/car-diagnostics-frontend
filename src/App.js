@@ -4,6 +4,7 @@ import LoginScreen from "./LoginScreen";
 import RegisterScreen from "./RegisterScreen";
 import MyDevicesScreen from "./MyDevicesScreen";
 import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
+import DTCHistoryScreen from "./DTCHistoryScreen"; // 👈 nový import
 
 function App() {
   const [data, setData] = useState(null);
@@ -14,7 +15,8 @@ function App() {
   const [showMyDevices, setShowMyDevices] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [role, setRole] = useState(localStorage.getItem("user_role") || "user");
-  
+  const [showHistory, setShowHistory] = useState(false); // 👈 nový stav pre DTC History
+
   useEffect(() => {
     const openRegister = () => setShowRegister(true);
     window.addEventListener("open-register", openRegister);
@@ -76,49 +78,54 @@ function App() {
     delete api.defaults.headers.Authorization;
   };
 
- // ====== VIEW HANDLERS ======
-if (!isAuthenticated) {
-  return showRegister ? (
-    <RegisterScreen onRegister={handleRegister} />
-  ) : (
-    <LoginScreen onLogin={handleLogin} />
-  );
-}
+  // ====== VIEW HANDLERS ======
+  if (!isAuthenticated) {
+    return showRegister ? (
+      <RegisterScreen onRegister={handleRegister} />
+    ) : (
+      <LoginScreen onLogin={handleLogin} />
+    );
+  }
 
-// === DEVICE DIAGNOSTICS má byť až po MY DEVICES ===
-// Ak by bol vyššie, prebil by MyDevicesScreen
-if (showMyDevices) {
-  return (
-    <MyDevicesScreen
-      onBack={() => setShowMyDevices(false)}
-      onDiagnostics={(id) => {
-        setSelectedDeviceId(id);
-        setShowMyDevices(false);
-      }}
-      role={role}
-    />
-  );
-}
+  // ====== MY DEVICES SCREEN ======
+  if (showMyDevices) {
+    return (
+      <MyDevicesScreen
+        onBack={() => setShowMyDevices(false)}
+        onDiagnostics={(id) => {
+          setSelectedDeviceId(id);
+          setShowMyDevices(false);
+        }}
+        role={role}
+      />
+    );
+  }
 
-if (selectedDeviceId) {
-  return (
-    <DeviceDiagnosticsScreen
-      deviceId={selectedDeviceId}
-      onBack={() => {
-        setSelectedDeviceId(null);
-        setShowMyDevices(true); // 👈 vracia na MyDevices
-      }}
-    />
-  );
-}
+  // ====== DEVICE DIAGNOSTICS SCREEN ======
+  if (selectedDeviceId) {
+    return (
+      <DeviceDiagnosticsScreen
+        deviceId={selectedDeviceId}
+        onBack={() => {
+          setSelectedDeviceId(null);
+          setShowMyDevices(true);
+        }}
+      />
+    );
+  }
 
+  // ====== DTC HISTORY SCREEN ======
+  if (showHistory) {
+    return <DTCHistoryScreen onBack={() => setShowHistory(false)} />;
+  }
 
   // ====== MAIN DASHBOARD ======
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>Car Diagnostics Dashboard</h1>
       <h3 style={{ color: role === "admin" ? "darkred" : "black" }}>
-        Logged in as: <span style={{ textTransform: "capitalize" }}>{role}</span>
+        Logged in as:{" "}
+        <span style={{ textTransform: "capitalize" }}>{role}</span>
       </h3>
 
       <div style={{ marginBottom: "1rem" }}>
@@ -136,8 +143,6 @@ if (selectedDeviceId) {
           Logout
         </button>
 
-
-
         <button
           onClick={() => setShowMyDevices(true)}
           style={{
@@ -150,6 +155,20 @@ if (selectedDeviceId) {
         >
           {role === "admin" ? "All Devices" : "My Devices"}
         </button>
+
+        <button
+          onClick={() => setShowHistory(true)} // 👈 nové tlačidlo
+          style={{
+            marginLeft: "1rem",
+            padding: "0.5rem 1rem",
+            background: "green",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+          }}
+        >
+          DTC History (VIN)
+        </button>
       </div>
 
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
@@ -159,7 +178,11 @@ if (selectedDeviceId) {
         <table
           border="1"
           cellPadding="8"
-          style={{ borderCollapse: "collapse", marginTop: "1rem", width: "100%" }}
+          style={{
+            borderCollapse: "collapse",
+            marginTop: "1rem",
+            width: "100%",
+          }}
         >
           <thead>
             <tr>
@@ -171,7 +194,7 @@ if (selectedDeviceId) {
             {data.map((v, i) => (
               <tr key={i}>
                 <td>{v.vin}</td>
-                {(v.dtc_codes || []).join(', ')}
+                <td>{(v.dtc_codes || []).join(", ")}</td>
               </tr>
             ))}
           </tbody>
