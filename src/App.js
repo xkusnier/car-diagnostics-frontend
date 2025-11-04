@@ -33,13 +33,16 @@ function App() {
     }
   }, [token]);
 
+  // ====== LOGIN ======
   const handleLogin = (email, password) => {
     api
       .post("/api/login", { email, password })
       .then((res) => {
         if (res.data.access_token) {
           setToken(res.data.access_token);
+          setRole(res.data.role || "user");
           localStorage.setItem("jwt_token", res.data.access_token);
+          localStorage.setItem("user_role", res.data.role || "user");
           setIsAuthenticated(true);
           setError(null);
         }
@@ -49,6 +52,7 @@ function App() {
       });
   };
 
+  // ====== REGISTER ======
   const handleRegister = (email, password) => {
     api
       .post("/api/register", { email, password })
@@ -63,14 +67,17 @@ function App() {
       });
   };
 
+  // ====== LOGOUT ======
   const handleLogout = () => {
     setIsAuthenticated(false);
     setToken(null);
+    setRole("user");
     localStorage.removeItem("jwt_token");
+    localStorage.removeItem("user_role");
     delete api.defaults.headers.Authorization;
   };
 
-  // ======== VIEW HANDLERS ========
+  // ====== VIEW HANDLERS ======
   if (!isAuthenticated) {
     return showRegister ? (
       <RegisterScreen onRegister={handleRegister} />
@@ -79,12 +86,12 @@ function App() {
     );
   }
 
-  // Add Device screen
+  // ====== ADD DEVICE SCREEN ======
   if (showAddDevice) {
-    return <AddDeviceScreen onBack={() => setShowAddDevice(false)} />;
+    return <AddDeviceScreen onBack={() => setShowAddDevice(false)} role={role} />;
   }
 
-  // My Devices screen
+  // ====== MY DEVICES SCREEN ======
   if (showMyDevices) {
     return (
       <MyDevicesScreen
@@ -93,11 +100,12 @@ function App() {
           setSelectedDeviceId(id);
           setShowMyDevices(false);
         }}
+        role={role}
       />
     );
   }
 
-  // Diagnostics screen
+  // ====== DEVICE DIAGNOSTICS SCREEN ======
   if (selectedDeviceId) {
     return (
       <DeviceDiagnosticsScreen
@@ -107,10 +115,13 @@ function App() {
     );
   }
 
-  // ======== MAIN DASHBOARD ========
+  // ====== MAIN DASHBOARD ======
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>Car Diagnostics Dashboard</h1>
+      <h3 style={{ color: role === "admin" ? "darkred" : "black" }}>
+        Logged in as: <span style={{ textTransform: "capitalize" }}>{role}</span>
+      </h3>
 
       <div style={{ marginBottom: "1rem" }}>
         <button
@@ -138,7 +149,7 @@ function App() {
             marginRight: "1rem",
           }}
         >
-          Add Device
+          {role === "admin" ? "Add Device (Admin)" : "Add Device"}
         </button>
 
         <button
@@ -151,7 +162,7 @@ function App() {
             borderRadius: "4px",
           }}
         >
-          My Devices
+          {role === "admin" ? "All Devices" : "My Devices"}
         </button>
       </div>
 
@@ -162,7 +173,7 @@ function App() {
         <table
           border="1"
           cellPadding="8"
-          style={{ borderCollapse: "collapse", marginTop: "1rem" }}
+          style={{ borderCollapse: "collapse", marginTop: "1rem", width: "100%" }}
         >
           <thead>
             <tr>
