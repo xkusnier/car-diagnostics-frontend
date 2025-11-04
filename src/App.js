@@ -15,7 +15,8 @@ function App() {
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [showMyDevices, setShowMyDevices] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-
+  const [role, setRole] = useState(localStorage.getItem("user_role") || "user");
+  
   useEffect(() => {
     const openRegister = () => setShowRegister(true);
     window.addEventListener("open-register", openRegister);
