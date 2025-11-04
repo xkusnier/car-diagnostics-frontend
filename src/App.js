@@ -107,6 +107,7 @@ function App() {
       <DeviceDiagnosticsScreen
         deviceId={selectedDeviceId}
         onBack={() => setSelectedDeviceId(null)}
+        setShowMyDevices(true);
       />
     );
   }
