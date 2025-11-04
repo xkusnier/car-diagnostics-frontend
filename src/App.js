@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import LoginScreen from "./LoginScreen";
-import RegisterScreen from "./RegisterScreen.js";
+import RegisterScreen from "./RegisterScreen";
+import AddDeviceScreen from "./AddDeviceScreen";
 
 function App() {
   const [data, setData] = useState(null);
@@ -9,16 +10,14 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
   const [showRegister, setShowRegister] = useState(false);
-  const [newDeviceId, setNewDeviceId] = useState("");
+  const [showAddDevice, setShowAddDevice] = useState(false);
 
-  // Dynamická detekcia URL a nastavenie showRegister
   useEffect(() => {
     const openRegister = () => setShowRegister(true);
     window.addEventListener("open-register", openRegister);
     return () => window.removeEventListener("open-register", openRegister);
   }, []);
 
-  // Načítanie dát pre dashboard po prihlásení
   useEffect(() => {
     if (isAuthenticated && token) {
       api.defaults.headers.Authorization = `Bearer ${token}`;
@@ -29,7 +28,6 @@ function App() {
     }
   }, [isAuthenticated, token]);
 
-  // LOGIN
   const handleLogin = (email, password) => {
     api
       .post("/api/login", { email, password })
@@ -46,7 +44,6 @@ function App() {
       });
   };
 
-  // REGISTER
   const handleRegister = (email, password) => {
     api
       .post("/api/register", { email, password })
@@ -61,7 +58,6 @@ function App() {
       });
   };
 
-  // LOGOUT
   const handleLogout = () => {
     setIsAuthenticated(false);
     setToken(null);
@@ -69,25 +65,7 @@ function App() {
     delete api.defaults.headers.Authorization;
   };
 
-  // ADD DEVICE
-  const handleAddDevice = () => {
-    if (!newDeviceId) {
-      alert("Enter a valid device ID");
-      return;
-    }
-
-    api
-      .post("/api/add-device", { device_id: parseInt(newDeviceId) })
-      .then((res) => {
-        alert(`✅ Device ${res.data.device_id} successfully added!`);
-        setNewDeviceId("");
-      })
-      .catch((err) => {
-        const msg = err.response?.data?.error || "Failed to add device";
-        alert(`❌ ${msg}`);
-      });
-  };
-
+  // Ak nie je prihlásený
   if (!isAuthenticated) {
     return showRegister ? (
       <RegisterScreen onRegister={handleRegister} />
@@ -96,40 +74,32 @@ function App() {
     );
   }
 
+  // Ak je otvorená obrazovka AddDevice
+  if (showAddDevice) {
+    return <AddDeviceScreen onBack={() => setShowAddDevice(false)} />;
+  }
+
   // DASHBOARD
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>Car Diagnostics Dashboard</h1>
-
-      <button
-        onClick={handleLogout}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.5rem 1rem",
-          background: "red",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-        }}
-      >
-        Logout
-      </button>
-
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-      {!data && !error && <p>Loading data...</p>}
-
-      {/* Sekcia na pridanie nového zariadenia */}
-      <div style={{ marginBottom: "2rem", marginTop: "2rem" }}>
-        <h3>Register new Device</h3>
-        <input
-          type="number"
-          placeholder="Enter device ID"
-          value={newDeviceId}
-          onChange={(e) => setNewDeviceId(e.target.value)}
-          style={{ marginRight: "1rem", padding: "0.5rem" }}
-        />
+      <div style={{ marginBottom: "1rem" }}>
         <button
-          onClick={handleAddDevice}
+          onClick={handleLogout}
+          style={{
+            marginRight: "1rem",
+            padding: "0.5rem 1rem",
+            background: "red",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+          }}
+        >
+          Logout
+        </button>
+
+        <button
+          onClick={() => setShowAddDevice(true)}
           style={{
             padding: "0.5rem 1rem",
             background: "green",
@@ -142,7 +112,9 @@ function App() {
         </button>
       </div>
 
-      {/* Tabuľka s VIN a DTC kódmi */}
+      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {!data && !error && <p>Loading data...</p>}
+
       {data && (
         <table
           border="1"
