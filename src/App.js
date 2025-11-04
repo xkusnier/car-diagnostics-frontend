@@ -3,6 +3,8 @@ import { api } from "./api";
 import LoginScreen from "./LoginScreen";
 import RegisterScreen from "./RegisterScreen";
 import AddDeviceScreen from "./AddDeviceScreen";
+import MyDevicesScreen from "./MyDevicesScreen";
+import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
 
 function App() {
   const [data, setData] = useState(null);
@@ -11,6 +13,8 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
   const [showRegister, setShowRegister] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
+  const [showMyDevices, setShowMyDevices] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
 
   useEffect(() => {
     const openRegister = () => setShowRegister(true);
@@ -19,14 +23,15 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (token) {
       api.defaults.headers.Authorization = `Bearer ${token}`;
+      setIsAuthenticated(true);
       api
         .get("/api/all")
         .then((res) => setData(res.data))
         .catch((err) => setError(err.message));
     }
-  }, [isAuthenticated, token]);
+  }, [token]);
 
   const handleLogin = (email, password) => {
     api
@@ -65,7 +70,7 @@ function App() {
     delete api.defaults.headers.Authorization;
   };
 
-  // Ak nie je prihlásený
+  // ======== VIEW HANDLERS ========
   if (!isAuthenticated) {
     return showRegister ? (
       <RegisterScreen onRegister={handleRegister} />
@@ -74,15 +79,39 @@ function App() {
     );
   }
 
-  // Ak je otvorená obrazovka AddDevice
+  // Add Device screen
   if (showAddDevice) {
     return <AddDeviceScreen onBack={() => setShowAddDevice(false)} />;
   }
 
-  // DASHBOARD
+  // My Devices screen
+  if (showMyDevices) {
+    return (
+      <MyDevicesScreen
+        onBack={() => setShowMyDevices(false)}
+        onDiagnostics={(id) => {
+          setSelectedDeviceId(id);
+          setShowMyDevices(false);
+        }}
+      />
+    );
+  }
+
+  // Diagnostics screen
+  if (selectedDeviceId) {
+    return (
+      <DeviceDiagnosticsScreen
+        deviceId={selectedDeviceId}
+        onBack={() => setSelectedDeviceId(null)}
+      />
+    );
+  }
+
+  // ======== MAIN DASHBOARD ========
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>Car Diagnostics Dashboard</h1>
+
       <div style={{ marginBottom: "1rem" }}>
         <button
           onClick={handleLogout}
@@ -106,9 +135,23 @@ function App() {
             color: "white",
             border: "none",
             borderRadius: "4px",
+            marginRight: "1rem",
           }}
         >
           Add Device
+        </button>
+
+        <button
+          onClick={() => setShowMyDevices(true)}
+          style={{
+            padding: "0.5rem 1rem",
+            background: "blue",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+          }}
+        >
+          My Devices
         </button>
       </div>
 
