@@ -76,43 +76,42 @@ function App() {
     delete api.defaults.headers.Authorization;
   };
 
-  // ====== VIEW HANDLERS ======
-  if (!isAuthenticated) {
-    return showRegister ? (
-      <RegisterScreen onRegister={handleRegister} />
-    ) : (
-      <LoginScreen onLogin={handleLogin} />
-    );
-  }
+ // ====== VIEW HANDLERS ======
+if (!isAuthenticated) {
+  return showRegister ? (
+    <RegisterScreen onRegister={handleRegister} />
+  ) : (
+    <LoginScreen onLogin={handleLogin} />
+  );
+}
 
-  // ====== ADD DEVICE SCREEN ======
+// === DEVICE DIAGNOSTICS má byť až po MY DEVICES ===
+// Ak by bol vyššie, prebil by MyDevicesScreen
+if (showMyDevices) {
+  return (
+    <MyDevicesScreen
+      onBack={() => setShowMyDevices(false)}
+      onDiagnostics={(id) => {
+        setSelectedDeviceId(id);
+        setShowMyDevices(false);
+      }}
+      role={role}
+    />
+  );
+}
 
-  // ====== MY DEVICES SCREEN ======
-  if (showMyDevices) {
-    return (
-      <MyDevicesScreen
-        onBack={() => setShowMyDevices(false)}
-        onDiagnostics={(id) => {
-          setSelectedDeviceId(id);
-          setShowMyDevices(false);
-        }}
-        role={role}
-      />
-    );
-  }
-
-  // ====== DEVICE DIAGNOSTICS SCREEN ======
 if (selectedDeviceId) {
   return (
     <DeviceDiagnosticsScreen
       deviceId={selectedDeviceId}
       onBack={() => {
         setSelectedDeviceId(null);
-        setShowMyDevices(true); // 👈 volanie vo funkcii, nie ako prop
+        setShowMyDevices(true); // 👈 vracia na MyDevices
       }}
     />
   );
 }
+
 
   // ====== MAIN DASHBOARD ======
   return (
