@@ -102,15 +102,17 @@ function App() {
   }
 
   // ====== DEVICE DIAGNOSTICS SCREEN ======
-  if (selectedDeviceId) {
-    return (
-      <DeviceDiagnosticsScreen
-        deviceId={selectedDeviceId}
-        onBack={() => setSelectedDeviceId(null)}
-        setShowMyDevices(true);
-      />
-    );
-  }
+if (selectedDeviceId) {
+  return (
+    <DeviceDiagnosticsScreen
+      deviceId={selectedDeviceId}
+      onBack={() => {
+        setSelectedDeviceId(null);
+        setShowMyDevices(true); // 👈 volanie vo funkcii, nie ako prop
+      }}
+    />
+  );
+}
 
   // ====== MAIN DASHBOARD ======
   return (
