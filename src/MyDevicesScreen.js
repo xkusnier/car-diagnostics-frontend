@@ -14,26 +14,36 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
       .catch((err) => setError(err.response?.data?.error || "Failed to load devices"));
   }, []);
 
-  const handleAddDevice = () => {
-    if (!newDeviceId) return alert("Enter device ID");
+const handleAddDevice = () => {
+  if (!newDeviceId) return alert("Enter device ID");
 
-    const payload =
-      role === "admin"
-        ? { device_id: newDeviceId, user_id: assignUserId }
-        : { device_id: newDeviceId };
+  const payload =
+    role === "admin"
+      ? { device_id: newDeviceId, user_id: assignUserId }
+      : { device_id: newDeviceId };
 
-    api
-      .post("/api/add-device", payload)
-      .then((res) => {
-        alert("Device added!");
-        setNewDeviceId("");
-        setAssignUserId("");
-        setDevices((prev) => [...prev, { device_id: payload.device_id, status: "Offline" }]);
-      })
-      .catch((err) => {
-        alert(err.response?.data?.error || "Failed to add device");
-      });
-  };
+  api
+    .post("/api/add-device", payload)
+    .then((res) => {
+      alert("Device added!");
+      setNewDeviceId("");
+      setAssignUserId("");
+
+      const newDev = {
+        device_id: res.data.device_id,
+        user_id: res.data.assigned_to,
+        vin: "—",
+        status: "Offline",
+      };
+
+      // ✅ okamžite pridáme správne user_id z backendu
+      setDevices((prev) => [...prev, newDev]);
+    })
+    .catch((err) => {
+      alert(err.response?.data?.error || "Failed to add device");
+    });
+};
+
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
