@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import LoginScreen from "./LoginScreen";
 import RegisterScreen from "./RegisterScreen";
-import AddDeviceScreen from "./AddDeviceScreen";
 import MyDevicesScreen from "./MyDevicesScreen";
 import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
 
@@ -12,7 +11,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
   const [showRegister, setShowRegister] = useState(false);
-  const [showAddDevice, setShowAddDevice] = useState(false);
   const [showMyDevices, setShowMyDevices] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [role, setRole] = useState(localStorage.getItem("user_role") || "user");
@@ -88,9 +86,6 @@ function App() {
   }
 
   // ====== ADD DEVICE SCREEN ======
-  if (showAddDevice) {
-    return <AddDeviceScreen onBack={() => setShowAddDevice(false)} role={role} />;
-  }
 
   // ====== MY DEVICES SCREEN ======
   if (showMyDevices) {
@@ -139,19 +134,7 @@ function App() {
           Logout
         </button>
 
-        <button
-          onClick={() => setShowAddDevice(true)}
-          style={{
-            padding: "0.5rem 1rem",
-            background: "green",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            marginRight: "1rem",
-          }}
-        >
-          {role === "admin" ? "Add Device (Admin)" : "Add Device"}
-        </button>
+
 
         <button
           onClick={() => setShowMyDevices(true)}
