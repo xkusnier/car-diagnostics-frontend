@@ -169,7 +169,7 @@ function App() {
             {data.map((v, i) => (
               <tr key={i}>
                 <td>{v.vin}</td>
-                <td>{v.dtc_codes.join(", ")}</td>
+                {(device.dtc_codes || []).join(', ')}
               </tr>
             ))}
           </tbody>
