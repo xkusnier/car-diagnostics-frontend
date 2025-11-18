@@ -7,35 +7,76 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
 
+  // ➕ nové
+  const [clearStatus, setClearStatus] = useState("");
+  const [polling, setPolling] = useState(false);
+  let pollingInterval = null;
+
+  // Fetch diagnostics on mount
   useEffect(() => {
-    const fetchDiagnostics = async () => {
-      try {
-        const res = await api.get(`/api/device/${deviceId}/diagnostics`);
-        setData(res.data);
-      } catch (err) {
-        setError(err.response?.data?.error || "Error fetching diagnostics");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDiagnostics();
   }, [deviceId]);
 
+  const fetchDiagnostics = async () => {
+    try {
+      const res = await api.get(`/api/device/${deviceId}/diagnostics`);
+      setData(res.data);
+    } catch (err) {
+      setError(err.response?.data?.error || "Error fetching diagnostics");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --------- NOVÉ: POLLING PO CLEAR ---------
+  const startPollingDiagnostics = () => {
+    if (pollingInterval) clearInterval(pollingInterval);
+
+    setPolling(true);
+
+    pollingInterval = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/device/${deviceId}/diagnostics`);
+        const diag = res.data;
+
+        if (!diag.dtc_codes || diag.dtc_codes.length === 0) {
+          clearInterval(pollingInterval);
+          setPolling(false);
+          setClearing(false);
+          setClearStatus("DTC successfully cleared ✔");
+
+          setData(diag); // refresh
+        } else {
+          setClearStatus("Waiting for RPi to clear DTC...");
+        }
+      } catch (e) {
+        console.error("Polling error:", e);
+      }
+    }, 3000);
+  };
+
+  // --------- UPRAVENÉ CLEAR DTC ---------
   const handleClearDTCs = async () => {
     if (!window.confirm("Are you sure you want to clear all active DTCs?")) return;
+
     setClearing(true);
+    setClearStatus("Sending clear command...");
+
     try {
-      const res = await api.post(`/api/device/${deviceId}/clear-dtcs`);
-      alert(res.data.message || "Cleared active DTCs.");
-      const updated = await api.get(`/api/device/${deviceId}/diagnostics`);
-      setData(updated.data);
+      // BE pridá command, nečistí databázu okamžite
+      await api.post(`/api/device/${deviceId}/clear-dtcs`);
+
+      setClearStatus("Command sent. Waiting for RPi...");
+
+      // spusti polling diagnostiky
+      startPollingDiagnostics();
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to clear DTCs.");
-    } finally {
+      alert(err.response?.data?.error || "Failed to send clear command.");
       setClearing(false);
     }
   };
 
+  // -------------------- UI --------------------
   if (loading)
     return <p style={{ padding: "2rem" }}>Loading diagnostics...</p>;
 
@@ -103,6 +144,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           {clearing ? "Clearing..." : "Clear Active DTCs"}
         </button>
       </div>
+
+      {/* ➕ Zobrazenie clear statusu */}
+      {clearing || polling ? (
+        <p style={{ color: "orange", marginBottom: "1.5rem" }}>
+          {clearStatus}
+        </p>
+      ) : null}
 
       <h3>Active DTC Codes</h3>
 
