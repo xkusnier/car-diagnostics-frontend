@@ -6,9 +6,11 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
+  const [reading, setReading] = useState(false);
 
   // ➕ nové
   const [clearStatus, setClearStatus] = useState("");
+  const [readStatus, setReadStatus] = useState("");
   const [polling, setPolling] = useState(false);
   let pollingInterval = null;
 
@@ -53,6 +55,33 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         console.error("Polling error:", e);
       }
     }, 3000);
+  };
+
+  // --------- NOVÉ: READ DTC FUNCTION ---------
+  const handleReadDTCs = async () => {
+    setReading(true);
+    setReadStatus("Sending read DTC command...");
+
+    try {
+      const response = await api.post(`/api/device/${deviceId}/read-dtcs`);
+      
+      setReadStatus("Command sent. Device will read DTC codes...");
+      
+      // Po 5 sekundách refreshneme diagnostiku
+      setTimeout(() => {
+        fetchDiagnostics();
+        setReading(false);
+        setReadStatus("DTC read command completed");
+        
+        // Reset status po 3 sekundách
+        setTimeout(() => setReadStatus(""), 3000);
+      }, 5000);
+
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to send read DTC command.");
+      setReading(false);
+      setReadStatus("");
+    }
   };
 
   // --------- UPRAVENÉ CLEAR DTC ---------
@@ -108,6 +137,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         <p>
           <strong>Device ID:</strong> {data.device_id} <br />
           <strong>VIN:</strong> {data.vin || "N/A"} <br />
+          <strong>Brand:</strong> {data.brand || "N/A"} <br />
+          <strong>Model:</strong> {data.model || "N/A"} <br />
+          <strong>Year:</strong> {data.year || "N/A"} <br />
+          <strong>Engine:</strong> {data.engine || "N/A"} <br />
           <strong>Status:</strong>{" "}
           <span style={{ color: data.online ? "green" : "red" }}>
             {data.online ? "Online" : "Offline"}
@@ -130,24 +163,49 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           Back
         </button>
 
+        {/* ➕ NOVÉ TLACITKO READ DTC */}
         <button
-          onClick={handleClearDTCs}
-          disabled={clearing}
+          onClick={handleReadDTCs}
+          disabled={reading || !data.online}
           style={{
+            marginRight: "1rem",
             padding: "0.5rem 1rem",
-            background: "darkred",
+            background: reading ? "orange" : "#007bff",
             color: "white",
             border: "none",
             borderRadius: "4px",
+            opacity: !data.online ? 0.5 : 1,
           }}
         >
-          {clearing ? "Clearing..." : "Clear Active DTCs"}
+          {reading ? "Reading..." : "Read DTC"}
+        </button>
+
+        <button
+          onClick={handleClearDTCs}
+          disabled={clearing || !data.online}
+          style={{
+            padding: "0.5rem 1rem",
+            background: clearing ? "orange" : "darkred",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            opacity: !data.online ? 0.5 : 1,
+          }}
+        >
+          {clearing ? "Clearing..." : "Clear DTC"}
         </button>
       </div>
 
+      {/* ➕ Zobrazenie read statusu */}
+      {readStatus && (
+        <p style={{ color: "blue", marginBottom: "1rem", padding: "0.5rem", background: "#f0f8ff", borderRadius: "4px" }}>
+          📡 {readStatus}
+        </p>
+      )}
+
       {/* ➕ Zobrazenie clear statusu */}
       {clearing || polling ? (
-        <p style={{ color: "orange", marginBottom: "1.5rem" }}>
+        <p style={{ color: "orange", marginBottom: "1.5rem", padding: "0.5rem", background: "#fff3cd", borderRadius: "4px" }}>
           {clearStatus}
         </p>
       ) : null}
