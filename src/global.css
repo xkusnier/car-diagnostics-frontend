@@ -1,4 +1,5 @@
 /* src/styles/global.css */
+
 /* DTCHistoryScreen.css */
 
 .dtc-history-container {
@@ -209,8 +210,132 @@
 .dtc-code.critical { color: #d50000; }
 
 .description-cell {
-  max-width: 300
-    
+  max-width: 300px;
+}
+
+.description-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.additional-info {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.severity-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.severity-badge.low {
+  background: #e8f5e9;
+  color: var(--success-green);
+}
+
+.severity-badge.medium {
+  background: #fff3e0;
+  color: var(--warning-orange);
+}
+
+.severity-badge.high {
+  background: #ffebee;
+  color: var(--danger-red);
+}
+
+.severity-badge.critical {
+  background: #fce4ec;
+  color: #d50000;
+}
+
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.time-ago {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.resolved {
+  background: #e8f5e9;
+  color: var(--success-green);
+}
+
+.status-badge.active {
+  background: #ffebee;
+  color: var(--danger-red);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-lg);
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-light);
+}
+
+.page-info {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dtc-history-container {
+    padding: var(--space-md);
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .results-header {
+    flex-direction: column;
+  }
+  
+  .results-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 :root {
   /* Automotive Color Palette */
   --primary-blue: #1a73e8;
