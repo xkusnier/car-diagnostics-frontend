@@ -4,6 +4,9 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'https://car-diagnostics.onrender.com',
   timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Request interceptor to add token
@@ -29,9 +32,10 @@ api.interceptors.response.use(
       console.error('API Error:', error.response.status, error.response.data);
       
       // Auto logout on 401 Unauthorized
-      if (error.response.status === 401 && window.location.pathname !== '/') {
+      if (error.response.status === 401 && !window.location.pathname.includes('/login')) {
         localStorage.removeItem('token');
-        window.location.href = '/';
+        localStorage.removeItem('user');
+        window.location.reload();
       }
     } else if (error.request) {
       // Request made but no response
