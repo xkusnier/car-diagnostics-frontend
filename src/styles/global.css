@@ -1708,7 +1708,175 @@ body {
   color: var(--text-secondary);
   font-weight: 600;
 }
+/* ========== DEVICE DIAGNOSTICS STYLES ========== */
 
+/* Severity Badges */
+.severity-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.badge-critical {
+  background: #d32f2f;
+  color: white;
+}
+
+.badge-high {
+  background: #f57c00;
+  color: white;
+}
+
+.badge-medium {
+  background: #ffb300;
+  color: #333;
+}
+
+.badge-low {
+  background: #388e3c;
+  color: white;
+}
+
+/* DTC Code Badge */
+.dtc-code-badge {
+  background: #e8f0fe;
+  color: var(--primary-blue);
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
+  display: inline-block;
+  border-left: 4px solid var(--primary-blue);
+}
+
+/* Severity Display */
+.severity-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.severity-info small {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  display: block;
+}
+
+/* Severity Legend */
+.severity-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legend-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* DTC Table Specific */
+.dtc-table th:nth-child(3),
+.dtc-table td:nth-child(3) {
+  width: 150px;
+}
+
+.dtc-table th:nth-child(4),
+.dtc-table td:nth-child(4) {
+  width: 180px;
+}
+
+/* Status Messages */
+.status-message {
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+}
+
+.status-message.info {
+  background: #e3f2fd;
+  color: var(--info-cyan);
+  border-left: 4px solid var(--info-cyan);
+}
+
+.status-message.warning {
+  background: #fff3e0;
+  color: var(--warning-orange);
+  border-left: 4px solid var(--warning-orange);
+}
+
+/* Control Panel */
+.control-panel {
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Device Status */
+.device-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-indicator.online {
+  background: var(--success-green);
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.offline {
+  background: var(--danger-red);
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
 /* ========== RESPONSIVE UTILITIES ========== */
 @media (max-width: 768px) {
   .container {
