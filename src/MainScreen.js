@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./global.css"; // OPRAVENÉ: odstrániť "styles/"
+import ".styles/global.css"; // OPRAVENÉ: odstrániť "styles/"
 import { api } from "./api";
 
 function MainScreen({ onNavigate, user }) {
