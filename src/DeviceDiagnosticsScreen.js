@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
-import "./DeviceDiagnosticsScreen.css"; // Nový CSS súbor
+import "./styles/global.css";
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [data, setData] = useState(null);
@@ -97,29 +97,61 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  // -------------------- LOADING --------------------
+  // Funkcia pre farebné kódovanie severity
+  const getSeverityColor = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical': return '#d32f2f';  // červená
+      case 'high': return '#f57c00';      // oranžová
+      case 'medium': return '#ffb300';    // žltá
+      case 'low': return '#388e3c';       // zelená
+      default: return '#5f6368';          // šedá
+    }
+  };
+
+  const getSeverityBadgeClass = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical': return 'badge-critical';
+      case 'high': return 'badge-high';
+      case 'medium': return 'badge-medium';
+      case 'low': return 'badge-low';
+      default: return 'badge-info';
+    }
+  };
+
+  const getSeverityIcon = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical': return '🔥';
+      case 'high': return '⚠️';
+      case 'medium': return '🔶';
+      case 'low': return 'ℹ️';
+      default: return '❓';
+    }
+  };
+
+  // -------------------- UI --------------------
   if (loading) {
     return (
-      <div className="diagnostics-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+      <div className="devices-container">
+        <div className="loading-center">
+          <div className="spinner-large"></div>
           <p>Loading diagnostics data...</p>
         </div>
       </div>
     );
   }
 
-  // -------------------- ERROR --------------------
   if (error) {
     return (
-      <div className="diagnostics-container">
+      <div className="devices-container">
         <div className="error-card">
           <div className="error-icon">⚠️</div>
-          <h3>Error Loading Diagnostics</h3>
-          <p>{error}</p>
-          <button className="btn btn-secondary" onClick={onBack}>
-            ← Back to Devices
-          </button>
+          <div className="error-content">
+            <h3>Error Loading Diagnostics</h3>
+            <p>{error}</p>
+            <button className="btn btn-secondary" onClick={onBack}>
+              ← Back to Devices
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -127,46 +159,56 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
   // -------------------- MAIN UI --------------------
   return (
-    <div className="diagnostics-container">
+    <div className="devices-container">
       {/* Header */}
-      <div className="diagnostics-header">
-        <button className="btn-back" onClick={onBack}>
-          ← Back
+      <div className="devices-header">
+        <button className="btn btn-secondary" onClick={onBack}>
+          ← Back to Devices
         </button>
-        <h1>Device Diagnostics</h1>
+        <div className="header-content">
+          <h1>Device Diagnostics</h1>
+          <p className="subtitle">
+            Real-time diagnostics for device #{deviceId}
+          </p>
+        </div>
         <div className="device-status">
           <span className={`status-indicator ${data.online ? 'online' : 'offline'}`}></span>
-          {data.online ? 'Online' : 'Offline'}
+          {data.online ? 'Device Online' : 'Device Offline'}
         </div>
       </div>
 
       {/* Device Info Cards */}
-      <div className="device-info-grid">
-        <div className="info-card">
-          <h4>Device ID</h4>
-          <p>{data.device_id}</p>
+      <div className="stats-bar">
+        <div className="stat-item">
+          <span className="stat-number">#{data.device_id}</span>
+          <span className="stat-label">Device ID</span>
         </div>
-        <div className="info-card">
-          <h4>VIN</h4>
-          <p>{data.vin || "N/A"}</p>
+        <div className="stat-item">
+          <span className="stat-number">{data.vin ? data.vin : "N/A"}</span>
+          <span className="stat-label">VIN</span>
         </div>
-        <div className="info-card">
-          <h4>Vehicle</h4>
-          <p>{data.brand || "N/A"} {data.model || ""} ({data.year || "N/A"})</p>
+        <div className="stat-item">
+          <span className="stat-number">
+            {data.brand ? `${data.brand} ${data.model}` : "N/A"}
+          </span>
+          <span className="stat-label">Vehicle</span>
         </div>
-        <div className="info-card">
-          <h4>Engine</h4>
-          <p>{data.engine || "N/A"}</p>
+        <div className="stat-item">
+          <span className="stat-number">
+            {data.dtc_codes ? data.dtc_codes.length : 0}
+          </span>
+          <span className="stat-label">Active DTCs</span>
         </div>
       </div>
 
       {/* Control Panel */}
-      <div className="control-panel">
+      <div className="control-panel" style={{ marginBottom: '2rem' }}>
         <div className="button-group">
           <button
             className={`btn btn-primary ${reading ? 'loading' : ''}`}
             onClick={handleReadDTCs}
             disabled={reading || !data.online}
+            style={{ minWidth: '150px' }}
           >
             {reading ? (
               <>
@@ -185,6 +227,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
             className={`btn btn-danger ${clearing ? 'loading' : ''}`}
             onClick={handleClearDTCs}
             disabled={clearing || !data.online}
+            style={{ minWidth: '150px' }}
           >
             {clearing ? (
               <>
@@ -220,9 +263,14 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       <div className="dtc-section">
         <div className="section-header">
           <h2>Active DTC Codes</h2>
-          <span className="dtc-count">
-            {data.dtc_codes?.length || 0} codes found
-          </span>
+          <div className="dtc-count">
+            {data.dtc_codes ? data.dtc_codes.length : 0} active codes
+            {data.dtc_codes && data.dtc_codes.length > 0 && (
+              <span style={{ marginLeft: '1rem', fontSize: '0.875rem', color: '#5f6368' }}>
+                {data.dtc_codes.filter(d => d.severity === 'critical').length} critical
+              </span>
+            )}
+          </div>
         </div>
 
         {(!data.dtc_codes || data.dtc_codes.length === 0) ? (
@@ -238,32 +286,111 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                 <tr>
                   <th>DTC Code</th>
                   <th>Description</th>
+                  <th>Severity</th>
                   <th>Date Detected</th>
-                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {data.dtc_codes.map((item, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'even' : 'odd'}>
-                    <td>
-                      <span className="dtc-code-badge">{item.dtc_code}</span>
-                    </td>
-                    <td className="description-cell">{item.description}</td>
-                    <td>
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleString("en-GB")
-                        : "—"}
-                    </td>
-                    <td>
-                      <span className="status-badge active">Active</span>
-                    </td>
-                  </tr>
-                ))}
+                {data.dtc_codes.map((item, i) => {
+                  const severityColor = getSeverityColor(item.severity);
+                  const severityBadgeClass = getSeverityBadgeClass(item.severity);
+                  const severityIcon = getSeverityIcon(item.severity);
+                  
+                  return (
+                    <tr key={i} className={i % 2 === 0 ? 'even' : 'odd'}>
+                      <td>
+                        <span 
+                          className="dtc-code-badge" 
+                          style={{ 
+                            borderLeft: `4px solid ${severityColor}`,
+                            background: `${severityColor}15`
+                          }}
+                        >
+                          {item.dtc_code}
+                        </span>
+                      </td>
+                      <td className="description-cell">
+                        <div className="description-content">
+                          <strong>{item.description || "No description available"}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="severity-display">
+                          <span 
+                            className={`severity-badge ${severityBadgeClass}`}
+                            style={{ 
+                              background: severityColor,
+                              color: 'white'
+                            }}
+                          >
+                            {severityIcon} {item.severity?.toUpperCase() || 'MEDIUM'}
+                          </span>
+                          <div className="severity-info">
+                            <small>
+                              {item.severity === 'critical' && 'Requires immediate attention'}
+                              {item.severity === 'high' && 'Needs attention soon'}
+                              {item.severity === 'medium' && 'Monitor condition'}
+                              {item.severity === 'low' && 'Informational only'}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="date-cell">
+                          <div className="date">
+                            {item.created_at
+                              ? new Date(item.created_at).toLocaleDateString('en-GB', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              : "—"}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* Severity Legend */}
+      {data.dtc_codes && data.dtc_codes.length > 0 && (
+        <div className="quick-tips">
+          <h4>⚠️ Severity Legend</h4>
+          <div className="severity-legend">
+            <div className="legend-item">
+              <span className="legend-color" style={{ background: '#d32f2f' }}></span>
+              <span className="legend-label">
+                <strong>CRITICAL</strong> - Requires immediate attention
+              </span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-color" style={{ background: '#f57c00' }}></span>
+              <span className="legend-label">
+                <strong>HIGH</strong> - Needs attention soon
+              </span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-color" style={{ background: '#ffb300' }}></span>
+              <span className="legend-label">
+                <strong>MEDIUM</strong> - Monitor condition
+              </span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-color" style={{ background: '#388e3c' }}></span>
+              <span className="legend-label">
+                <strong>LOW</strong> - Informational only
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
