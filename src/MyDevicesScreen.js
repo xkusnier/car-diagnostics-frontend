@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
-import "./MyDevicesScreen.css";
 
 function MyDevicesScreen({ onBack, onDiagnostics, role }) {
   const [devices, setDevices] = useState([]);
