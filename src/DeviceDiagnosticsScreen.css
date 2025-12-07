@@ -1,0 +1,383 @@
+/* DeviceDiagnosticsScreen.css */
+
+:root {
+  --primary-color: #1a73e8;
+  --primary-dark: #0d47a1;
+  --secondary-color: #5f6368;
+  --danger-color: #d32f2f;
+  --danger-dark: #b71c1c;
+  --success-color: #2e7d32;
+  --warning-color: #f57c00;
+  --info-color: #0288d1;
+  
+  --bg-color: #f8f9fa;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --radius: 12px;
+}
+
+/* Container */
+.diagnostics-container {
+  padding: 2rem;
+  background: var(--bg-color);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* Header */
+.diagnostics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.btn-back {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+  background: var(--border-color);
+}
+
+.device-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-indicator.online {
+  background: var(--success-color);
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.offline {
+  background: var(--danger-color);
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Device Info Grid */
+.device-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.info-card {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--primary-color);
+}
+
+.info-card h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Control Panel */
+.control-panel {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.875rem 1.75rem;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger-color), var(--danger-dark));
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.btn-secondary {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Status Messages */
+.status-message {
+  padding: 1rem;
+  border-radius: var(--radius);
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+}
+
+.status-message.info {
+  background: #e3f2fd;
+  color: var(--info-color);
+  border-left: 4px solid var(--info-color);
+}
+
+.status-message.warning {
+  background: #fff3e0;
+  color: var(--warning-color);
+  border-left: 4px solid var(--warning-color);
+}
+
+/* DTC Section */
+.dtc-section {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.section-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dtc-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+  padding: 1.5rem;
+}
+
+.dtc-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dtc-table th {
+  background: #f5f5f5;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.dtc-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dtc-table tr:hover {
+  background: #f9f9f9;
+}
+
+.dtc-table tr.even {
+  background: #fafafa;
+}
+
+/* Badges */
+.dtc-code-badge {
+  background: #e8f0fe;
+  color: var(--primary-color);
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: #ffebee;
+  color: var(--danger-color);
+}
+
+/* Loading States */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error Card */
+.error-card {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .diagnostics-container {
+    padding: 1rem;
+  }
+  
+  .diagnostics-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .device-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .dtc-table {
+    font-size: 0.875rem;
+  }
+  
+  .dtc-table th,
+  .dtc-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
