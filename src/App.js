@@ -1,204 +1,172 @@
-import React, { useEffect, useState } from "react";
-import { api } from "./api";
+// App.js - Updated
+import React, { useState, useEffect } from "react";
+import "./styles/global.css";
+import "./App.css";
+
+// Import screens
 import LoginScreen from "./LoginScreen";
 import RegisterScreen from "./RegisterScreen";
+import MainScreen from "./MainScreen";
 import MyDevicesScreen from "./MyDevicesScreen";
 import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
-import DTCHistoryScreen from "./DTCHistoryScreen"; // 👈 nový import
+import DTCHistoryScreen from "./DTCHistoryScreen";
+import { api } from "./api";
 
 function App() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [token, setToken] = useState(localStorage.getItem("jwt_token") || null);
-  const [showRegister, setShowRegister] = useState(false);
-  const [showMyDevices, setShowMyDevices] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState("login");
+  const [user, setUser] = useState(null);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-  const [role, setRole] = useState(localStorage.getItem("user_role") || "user");
-  const [showHistory, setShowHistory] = useState(false); // 👈 nový stav pre DTC History
 
   useEffect(() => {
-    const openRegister = () => setShowRegister(true);
-    window.addEventListener("open-register", openRegister);
-    return () => window.removeEventListener("open-register", openRegister);
+    // Check if user is already logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      setCurrentScreen("main");
+    }
+
+    // Listen for registration event
+    const handleRegister = () => setCurrentScreen("register");
+    window.addEventListener("open-register", handleRegister);
+
+    return () => {
+      window.removeEventListener("open-register", handleRegister);
+    };
   }, []);
 
-  useEffect(() => {
-    if (token) {
-      api.defaults.headers.Authorization = `Bearer ${token}`;
-      setIsAuthenticated(true);
-      api
-        .get("/api/all")
-        .then((res) => setData(res.data))
-        .catch((err) => setError(err.message));
+  const handleLogin = async (email, password) => {
+    try {
+      const response = await api.post("/api/login", { email, password });
+      const { token, user } = response.data;
+      
+      localStorage.setItem("token", token);
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
+      setUser(user);
+      setCurrentScreen("main");
+    } catch (error) {
+      throw error;
     }
-  }, [token]);
-
-  // ====== LOGIN ======
-  const handleLogin = (email, password) => {
-    api
-      .post("/api/login", { email, password })
-      .then((res) => {
-        if (res.data.access_token) {
-          setToken(res.data.access_token);
-          setRole(res.data.role || "user");
-          localStorage.setItem("jwt_token", res.data.access_token);
-          localStorage.setItem("user_role", res.data.role || "user");
-          setIsAuthenticated(true);
-          setError(null);
-        }
-      })
-      .catch((err) => {
-        setError(err.response?.data?.error || "Login failed");
-      });
   };
 
-  // ====== REGISTER ======
-  const handleRegister = (email, password) => {
-    api
-      .post("/api/register", { email, password })
-      .then((res) => {
-        if (res.data.status === "success") {
-          setShowRegister(false);
-          setError("Registration successful. Please log in.");
-        }
-      })
-      .catch((err) => {
-        setError(err.response?.data?.error || "Registration failed");
-      });
+  const handleRegister = async (email, password) => {
+    try {
+      const response = await api.post("/api/register", { email, password });
+      const { token, user } = response.data;
+      
+      localStorage.setItem("token", token);
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
+      setUser(user);
+      setCurrentScreen("main");
+    } catch (error) {
+      throw error;
+    }
   };
 
-  // ====== LOGOUT ======
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setToken(null);
-    setRole("user");
-    localStorage.removeItem("jwt_token");
-    localStorage.removeItem("user_role");
-    delete api.defaults.headers.Authorization;
+    localStorage.removeItem("token");
+    delete api.defaults.headers.common["Authorization"];
+    setUser(null);
+    setCurrentScreen("login");
   };
 
-  // ====== VIEW HANDLERS ======
-  if (!isAuthenticated) {
-    return showRegister ? (
-      <RegisterScreen onRegister={handleRegister} />
-    ) : (
-      <LoginScreen onLogin={handleLogin} />
-    );
-  }
+  const navigateTo = (screen) => {
+    setCurrentScreen(screen);
+  };
 
-  // ====== MY DEVICES SCREEN ======
-  if (showMyDevices) {
-    return (
-      <MyDevicesScreen
-        onBack={() => setShowMyDevices(false)}
-        onDiagnostics={(id) => {
-          setSelectedDeviceId(id);
-          setShowMyDevices(false);
-        }}
-        role={role}
-      />
-    );
-  }
-
-  // ====== DEVICE DIAGNOSTICS SCREEN ======
-  if (selectedDeviceId) {
-    return (
-      <DeviceDiagnosticsScreen
-        deviceId={selectedDeviceId}
-        onBack={() => {
-          setSelectedDeviceId(null);
-          setShowMyDevices(true);
-        }}
-      />
-    );
-  }
-
-  // ====== DTC HISTORY SCREEN ======
-  if (showHistory) {
-    return <DTCHistoryScreen onBack={() => setShowHistory(false)} />;
-  }
-
-  // ====== MAIN DASHBOARD ======
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h1>Car Diagnostics Dashboard</h1>
-      <h3 style={{ color: role === "admin" ? "darkred" : "black" }}>
-        Logged in as:{" "}
-        <span style={{ textTransform: "capitalize" }}>{role}</span>
-      </h3>
+    <div className="app">
+      {/* Navigation Bar (shown only when logged in) */}
+      {user && currentScreen !== "login" && currentScreen !== "register" && (
+        <nav className="app-nav">
+          <div className="nav-brand">
+            <span className="nav-logo">🚗</span>
+            <span className="nav-title">Car Diagnostics</span>
+          </div>
+          
+          <div className="nav-links">
+            <button
+              className={`nav-link ${currentScreen === "main" ? "active" : ""}`}
+              onClick={() => navigateTo("main")}
+            >
+              Dashboard
+            </button>
+            <button
+              className={`nav-link ${currentScreen === "my-devices" ? "active" : ""}`}
+              onClick={() => navigateTo("my-devices")}
+            >
+              My Devices
+            </button>
+            <button
+              className={`nav-link ${currentScreen === "dtc-history" ? "active" : ""}`}
+              onClick={() => navigateTo("dtc-history")}
+            >
+              DTC History
+            </button>
+          </div>
+          
+          <div className="nav-user">
+            <span className="user-email">{user.email}</span>
+            <button className="btn-logout" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        </nav>
+      )}
 
-      <div style={{ marginBottom: "1rem" }}>
-        <button
-          onClick={handleLogout}
-          style={{
-            marginRight: "1rem",
-            padding: "0.5rem 1rem",
-            background: "red",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Logout
-        </button>
+      {/* Main Content */}
+      <main className="app-content">
+        {currentScreen === "login" && (
+          <LoginScreen onLogin={handleLogin} />
+        )}
+        
+        {currentScreen === "register" && (
+          <RegisterScreen onRegister={handleRegister} />
+        )}
+        
+        {currentScreen === "main" && (
+          <MainScreen 
+            onNavigate={navigateTo}
+            user={user}
+          />
+        )}
+        
+        {currentScreen === "my-devices" && (
+          <MyDevicesScreen 
+            onBack={() => navigateTo("main")}
+            onDiagnostics={(deviceId) => {
+              setSelectedDeviceId(deviceId);
+              navigateTo("device-diagnostics");
+            }}
+            role={user?.role}
+          />
+        )}
+        
+        {currentScreen === "device-diagnostics" && (
+          <DeviceDiagnosticsScreen 
+            deviceId={selectedDeviceId}
+            onBack={() => navigateTo("my-devices")}
+          />
+        )}
+        
+        {currentScreen === "dtc-history" && (
+          <DTCHistoryScreen 
+            onBack={() => navigateTo("main")}
+          />
+        )}
+      </main>
 
-        <button
-          onClick={() => setShowMyDevices(true)}
-          style={{
-            padding: "0.5rem 1rem",
-            background: "blue",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          {role === "admin" ? "All Devices" : "My Devices"}
-        </button>
-
-        <button
-          onClick={() => setShowHistory(true)} // 👈 nové tlačidlo
-          style={{
-            marginLeft: "1rem",
-            padding: "0.5rem 1rem",
-            background: "green",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          DTC History (VIN)
-        </button>
-      </div>
-
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-      {!data && !error && <p>Loading data...</p>}
-
-      {data && (
-        <table
-          border="1"
-          cellPadding="8"
-          style={{
-            borderCollapse: "collapse",
-            marginTop: "1rem",
-            width: "100%",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>VIN</th>
-              <th>DTC Codes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((v, i) => (
-              <tr key={i}>
-                <td>{v.vin}</td>
-                <td>{(v.dtc_codes || []).join(", ")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Footer */}
+      {user && currentScreen !== "login" && currentScreen !== "register" && (
+        <footer className="app-footer">
+          <p>© {new Date().getFullYear()} Car Diagnostics System. All rights reserved.</p>
+          <div className="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Contact Support</a>
+          </div>
+        </footer>
       )}
     </div>
   );
