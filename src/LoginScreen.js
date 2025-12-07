@@ -1,43 +1,77 @@
+// LoginScreen.js - Updated for consistency
 import React, { useState } from "react";
+import "./styles/global.css";
+import "./AuthScreens.css";
 
 function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!email || !password) {
       setError("Please enter both email and password");
       return;
     }
+    
     setError(null);
-    onLogin(email, password);
+    setLoading(true);
+    
+    try {
+      await onLogin(email, password);
+    } catch (err) {
+      setError("Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-gray-800">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">
-          Car Diagnostics Login
-        </h1>
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+    <div className="auth-container">
+      <div className="auth-background">
+        <div className="auth-shape shape-1"></div>
+        <div className="auth-shape shape-2"></div>
+        <div className="auth-shape shape-3"></div>
+      </div>
+      
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-logo">
+            <span className="logo-icon">🚗</span>
+            <h1 className="logo-text">Car Diagnostics</h1>
+          </div>
+          <h2 className="auth-title">Welcome Back</h2>
+          <p className="auth-subtitle">Sign in to your account to continue</p>
+        </div>
+
+        {error && (
+          <div className="auth-error">
+            <span className="error-icon">⚠️</span>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
+              Email Address
             </label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input"
               placeholder="Enter your email"
+              disabled={loading}
             />
           </div>
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
               Password
             </label>
             <input
@@ -45,37 +79,62 @@ function LoginScreen({ onLogin }) {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input"
               placeholder="Enter your password"
+              disabled={loading}
             />
           </div>
+
+          <div className="form-options">
+            <label className="checkbox-label">
+              <input type="checkbox" />
+              <span>Remember me</span>
+            </label>
+            <a href="#" className="forgot-link">Forgot password?</a>
+          </div>
+
           <button
             type="submit"
-            className="w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800 transition-colors duration-200"
+            className={`auth-button ${loading ? 'loading' : ''}`}
+            disabled={loading}
           >
-            Log In
+            {loading ? (
+              <>
+                <span className="spinner-small"></span>
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Forgot your password?{" "}
-          <a href="#" className="text-blue-500 hover:underline">
-            Reset it
-          </a>
-        </p>
-        <p className="text-center text-sm text-gray-600 mt-2">
-          Don't have an account?{" "}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              window.dispatchEvent(new Event("open-register"));
-            }}
-            className="text-blue-500 hover:underline"
-          >
-            Register
-          </a>
-        </p>
 
+        <div className="auth-divider">
+          <span>or continue with</span>
+        </div>
+
+        <div className="social-auth">
+          <button className="social-button google">
+            <span className="social-icon">🔍</span>
+            Google
+          </button>
+          <button className="social-button microsoft">
+            <span className="social-icon">❖</span>
+            Microsoft
+          </button>
+        </div>
+
+        <div className="auth-footer">
+          <p>
+            Don't have an account?{" "}
+            <button
+              onClick={() => window.dispatchEvent(new Event("open-register"))}
+              className="auth-link"
+            >
+              Sign up now
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
