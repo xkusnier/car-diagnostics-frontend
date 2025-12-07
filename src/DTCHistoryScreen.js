@@ -1,103 +1,276 @@
 import React, { useState } from "react";
 import { api } from "./api";
+import "./styles/global.css";
+import "./DTCHistoryScreen.css";
 
 function DTCHistoryScreen({ onBack }) {
   const [vin, setVin] = useState("");
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    dateFrom: "",
+    dateTo: "",
+    severity: "all"
+  });
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
     setData(null);
+    
     try {
-      const res = await api.post("/api/dtc-history-full", { vin });
+      const payload = { vin };
+      if (filters.dateFrom) payload.date_from = filters.dateFrom;
+      if (filters.dateTo) payload.date_to = filters.dateTo;
+      if (filters.severity !== "all") payload.severity = filters.severity;
+      
+      const res = await api.post("/api/dtc-history-full", payload);
       setData(res.data.history);
     } catch (err) {
-      setError(err.response?.data?.error || "Error fetching history");
+      setError(err.response?.data?.error || "Error fetching DTC history");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h2>DTC History Lookup</h2>
+  const getSeverityColor = (dtcCode) => {
+    // Simple severity detection based on DTC code patterns
+    if (dtcCode?.startsWith('P0') || dtcCode?.startsWith('P1')) return 'medium';
+    if (dtcCode?.startsWith('P2')) return 'high';
+    if (dtcCode?.startsWith('C') || dtcCode?.startsWith('U')) return 'critical';
+    return 'low';
+  };
 
-      <div style={{ marginBottom: "1rem" }}>
-        <input
-          type="text"
-          value={vin}
-          onChange={(e) => setVin(e.target.value)}
-          placeholder="Enter VIN"
-          style={{
-            padding: "0.5rem",
-            width: "250px",
-            marginRight: "1rem",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
-        />
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !vin}
-          style={{
-            padding: "0.5rem 1rem",
-            background: "blue",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          {loading ? "Loading..." : "Show History"}
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className="dtc-history-container">
+      {/* Header */}
+      <div className="dtc-history-header">
+        <button className="btn btn-secondary" onClick={onBack}>
+          ← Back to Dashboard
         </button>
+        <h1>DTC History Lookup</h1>
+        <p className="subtitle">Search and analyze diagnostic trouble code history by VIN</p>
       </div>
 
-      {error && <p style={{ color: "red" }}>❌ {error}</p>}
+      {/* Search Card */}
+      <div className="search-card card">
+        <div className="search-header">
+          <h2>Search Parameters</h2>
+          <span className="search-icon">🔍</span>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="search-form">
+          <div className="form-group">
+            <label htmlFor="vin">Vehicle Identification Number (VIN)</label>
+            <input
+              type="text"
+              id="vin"
+              value={vin}
+              onChange={(e) => setVin(e.target.value.toUpperCase())}
+              placeholder="Enter 17-character VIN"
+              className="input"
+              maxLength="17"
+              required
+            />
+            <small className="input-hint">Enter the complete 17-character VIN</small>
+          </div>
 
-      {data && (
-        <table
-          border="1"
-          cellPadding="8"
-          style={{
-            borderCollapse: "collapse",
-            width: "100%",
-            marginTop: "1rem",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>DTC Code</th>
-              <th>Description</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item, i) => (
-              <tr key={i}>
-                <td>{item.dtc_code}</td>
-                <td>{item.description}</td>
-                <td>{new Date(item.created_at).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          <div className="filters-grid">
+            <div className="form-group">
+              <label htmlFor="dateFrom">Date From</label>
+              <input
+                type="date"
+                id="dateFrom"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
+                className="input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="dateTo">Date To</label>
+              <input
+                type="date"
+                id="dateTo"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
+                className="input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="severity">Severity Filter</label>
+              <select
+                id="severity"
+                value={filters.severity}
+                onChange={(e) => setFilters({...filters, severity: e.target.value})}
+                className="input"
+              >
+                <option value="all">All Severities</option>
+                <option value="low">Low (Information)</option>
+                <option value="medium">Medium (Warning)</option>
+                <option value="high">High (Error)</option>
+                <option value="critical">Critical (Failure)</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !vin.trim()}
+            className={`btn btn-primary ${loading ? 'loading' : ''}`}
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                Searching...
+              </>
+            ) : (
+              'Search DTC History'
+            )}
+          </button>
+        </form>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="error-card card">
+          <div className="error-icon">❌</div>
+          <div className="error-content">
+            <h3>Search Failed</h3>
+            <p>{error}</p>
+          </div>
+        </div>
       )}
 
-      <button
-        onClick={onBack}
-        style={{
-          marginTop: "1rem",
-          padding: "0.5rem 1rem",
-          background: "gray",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-        }}
-      >
-        Back
-      </button>
+      {/* Results Section */}
+      {data && (
+        <div className="results-section card">
+          <div className="results-header">
+            <div>
+              <h2>Search Results</h2>
+              <p className="results-summary">
+                Found <strong>{data.length}</strong> DTC records for VIN: <code>{vin}</code>
+              </p>
+            </div>
+            <div className="results-actions">
+              <button className="btn btn-secondary" onClick={() => window.print()}>
+                📄 Print Report
+              </button>
+              <button className="btn btn-secondary">
+                📥 Export CSV
+              </button>
+            </div>
+          </div>
+
+          {data.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📭</div>
+              <h3>No DTC Records Found</h3>
+              <p>No diagnostic trouble codes found for the specified VIN and filters.</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary Cards */}
+              <div className="summary-cards">
+                <div className="summary-card">
+                  <span className="summary-value">{data.length}</span>
+                  <span className="summary-label">Total Records</span>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-value">
+                    {[...new Set(data.map(d => d.dtc_code))].length}
+                  </span>
+                  <span className="summary-label">Unique DTCs</span>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-value">
+                    {data.filter(d => getSeverityColor(d.dtc_code) === 'critical').length}
+                  </span>
+                  <span className="summary-label">Critical Issues</span>
+                </div>
+              </div>
+
+              {/* DTC Table */}
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>DTC Code</th>
+                      <th>Description</th>
+                      <th>Severity</th>
+                      <th>Date Detected</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((item, i) => {
+                      const severity = getSeverityColor(item.dtc_code);
+                      return (
+                        <tr key={i}>
+                          <td>
+                            <span className={`dtc-code ${severity}`}>
+                              {item.dtc_code}
+                            </span>
+                          </td>
+                          <td className="description-cell">
+                            <div className="description-content">
+                              <strong>{item.description || "No description available"}</strong>
+                              {item.additional_info && (
+                                <small className="additional-info">{item.additional_info}</small>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`severity-badge ${severity}`}>
+                              {severity.toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="date-cell">
+                              <div className="date">{formatDate(item.created_at)}</div>
+                              <div className="time-ago">
+                                {Math.floor((new Date() - new Date(item.created_at)) / (1000 * 60 * 60 * 24))} days ago
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="status-badge resolved">
+                              {item.resolved ? 'Resolved' : 'Active'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination (if needed) */}
+              {data.length > 10 && (
+                <div className="pagination">
+                  <button className="btn btn-secondary">← Previous</button>
+                  <span className="page-info">Page 1 of {Math.ceil(data.length / 10)}</span>
+                  <button className="btn btn-secondary">Next →</button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
