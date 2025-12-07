@@ -11,34 +11,14 @@ import DTCHistoryScreen from "./DTCHistoryScreen";
 import { api } from "./api";
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState("login"); // Začíname s login screenom
+  const [currentScreen, setCurrentScreen] = useState("login");
   const [user, setUser] = useState(null);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in (from localStorage)
-    const token = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
+    checkAuthStatus();
     
-    if (token && savedUser) {
-      try {
-        // Set authorization header
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        
-        // Parse and set user
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        
-        // Navigate to main screen
-        setCurrentScreen("main");
-      } catch (error) {
-        console.error("Error parsing saved user:", error);
-        // Clear invalid data
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      }
-    }
-
     // Listen for registration event from LoginScreen
     const handleRegister = () => setCurrentScreen("register");
     window.addEventListener("open-register", handleRegister);
@@ -48,14 +28,46 @@ function App() {
     };
   }, []);
 
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      // Set authorization header
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
+      // Verify token with backend
+      try {
+        const response = await api.get("/api/verify-token");
+        const user = response.data.user;
+        
+        // Save user to state
+        setUser(user);
+        setCurrentScreen("main");
+      } catch (error) {
+        console.log("Token verification failed, clearing auth data");
+        // Token is invalid or expired
+        localStorage.removeItem("token");
+        delete api.defaults.headers.common["Authorization"];
+      }
+    } catch (error) {
+      console.error("Auth check error:", error);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
+
   const handleLogin = async (email, password) => {
     try {
       const response = await api.post("/api/login", { email, password });
       const { token, user } = response.data;
       
-      // Save to localStorage
+      // Save token only (user data comes from backend)
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
       
       // Set authorization header for future requests
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -67,23 +79,29 @@ function App() {
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
+      const errorMessage = error.response?.data?.error || 
+                          (error.response?.status === 401 ? 
+                           "Invalid email or password" : 
+                           "Login failed. Please try again.");
       return { 
         success: false, 
-        message: error.response?.data?.error || "Login failed. Please try again." 
+        message: errorMessage
       };
     }
   };
 
   const handleRegister = async (email, password) => {
     try {
-      const response = await api.post("/api/register", { email, password });
+      const response = await api.post("/api/register", { 
+        email, 
+        password 
+      });
       const { token, user } = response.data;
       
-      // Save to localStorage
+      // Save token only
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
       
-      // Set authorization header for future requests
+      // Set authorization header
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       
       // Update state
@@ -93,9 +111,13 @@ function App() {
       return { success: true };
     } catch (error) {
       console.error("Registration error:", error);
+      const errorMessage = error.response?.data?.error || 
+                          (error.response?.status === 409 ? 
+                           "User with this email already exists" : 
+                           "Registration failed. Please try again.");
       return { 
         success: false, 
-        message: error.response?.data?.error || "Registration failed. Please try again." 
+        message: errorMessage
       };
     }
   };
@@ -103,7 +125,6 @@ function App() {
   const handleLogout = () => {
     // Clear localStorage
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
     
     // Clear authorization header
     delete api.defaults.headers.common["Authorization"];
@@ -117,6 +138,26 @@ function App() {
   const navigateTo = (screen) => {
     setCurrentScreen(screen);
   };
+
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card" style={{ textAlign: 'center' }}>
+          <div className="auth-header">
+            <div className="auth-logo">
+              <span className="logo-icon">🚗</span>
+              <h1 className="logo-text">Car Diagnostics</h1>
+            </div>
+            <div style={{ margin: '2rem 0' }}>
+              <div className="spinner-large" style={{ margin: '0 auto' }}></div>
+              <p style={{ marginTop: '1rem' }}>Checking authentication...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
