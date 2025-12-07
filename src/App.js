@@ -31,6 +31,8 @@ function App() {
   const checkAuthStatus = async () => {
     try {
       const token = localStorage.getItem("token");
+      const savedEmail = localStorage.getItem("email");
+      const savedRole = localStorage.getItem("role");
       
       if (!token) {
         setIsCheckingAuth(false);
@@ -40,27 +42,24 @@ function App() {
       // Set authorization header
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       
-      // Try to get user data using existing endpoint
-      // Since we don't have /api/verify-token, try to get devices
-      // If it succeeds, user is authenticated
+      // Try to verify token by calling a protected endpoint
       try {
+        // Use /api/my-devices to verify token (this endpoint is @jwt_required)
         const response = await api.get("/api/my-devices");
         
         // If we get here, token is valid
-        // But we don't have user data... 
-        // We'll store basic user info from localStorage or create a fallback
-        const savedUser = localStorage.getItem("user");
-        if (savedUser && savedUser !== "undefined") {
-          try {
-            const parsedUser = JSON.parse(savedUser);
-            setUser(parsedUser);
-          } catch {
-            // If parsing fails, create fallback user
-            setUser({ email: "User", role: "user" });
-          }
+        // Create user object from localStorage
+        if (savedEmail && savedRole) {
+          setUser({ 
+            email: savedEmail, 
+            role: savedRole 
+          });
         } else {
-          // Create fallback user object
-          setUser({ email: "User", role: "user" });
+          // Create fallback user
+          setUser({ 
+            email: "User", 
+            role: "user" 
+          });
         }
         
         setCurrentScreen("main");
@@ -68,7 +67,8 @@ function App() {
         console.log("Token invalid or expired, clearing auth data");
         // Token is invalid or expired
         localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.removeItem("email");
+        localStorage.removeItem("role");
         delete api.defaults.headers.common["Authorization"];
       }
     } catch (error) {
@@ -81,17 +81,24 @@ function App() {
   const handleLogin = async (email, password) => {
     try {
       const response = await api.post("/api/login", { email, password });
-      const { token, user } = response.data;
+      const { access_token, role } = response.data;
       
-      // Save token and user data
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      // Save to localStorage - NOTE: backend returns "access_token" not "token"
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("email", email);
+      localStorage.setItem("role", role);
       
       // Set authorization header for future requests
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+      
+      // Create user object
+      const userObj = { 
+        email: email, 
+        role: role 
+      };
       
       // Update state
-      setUser(user);
+      setUser(userObj);
       setCurrentScreen("main");
       
       return { success: true };
@@ -114,20 +121,10 @@ function App() {
         email, 
         password 
       });
-      const { token, user } = response.data;
       
-      // Save token and user data
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      // After registration, auto-login
+      return await handleLogin(email, password);
       
-      // Set authorization header
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      
-      // Update state
-      setUser(user);
-      setCurrentScreen("main");
-      
-      return { success: true };
     } catch (error) {
       console.error("Registration error:", error);
       const errorMessage = error.response?.data?.error || 
@@ -144,7 +141,8 @@ function App() {
   const handleLogout = () => {
     // Clear localStorage
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("email");
+    localStorage.removeItem("role");
     
     // Clear authorization header
     delete api.defaults.headers.common["Authorization"];
