@@ -79,9 +79,9 @@ function MainScreen({ onNavigate, user }) {
 
   if (loading) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loadingCenter}>
-          <div style={styles.spinnerLarge}></div>
+      <div className="main-screen">
+        <div className="loading-center">
+          <div className="spinner-large"></div>
           <p>Loading Dashboard...</p>
         </div>
       </div>
@@ -89,21 +89,21 @@ function MainScreen({ onNavigate, user }) {
   }
 
   return (
-    <div style={styles.container}>
+    <div className="main-screen">
       {/* Header */}
-      <header style={styles.dashboardHeader}>
-        <div style={styles.headerLeft}>
-          <h1 style={styles.dashboardTitle}>Car Diagnostics Dashboard</h1>
-          <p style={styles.dashboardSubtitle}>Welcome back, {user?.email || "User"}!</p>
+      <header className="dashboard-header">
+        <div className="header-left">
+          <h1 className="dashboard-title">Car Diagnostics Dashboard</h1>
+          <p className="dashboard-subtitle">Welcome back, {user?.email || "User"}!</p>
         </div>
-        <div style={styles.headerRight}>
-          <div style={styles.userInfo}>
-            <span style={styles.userAvatar}>
+        <div className="header-right">
+          <div className="user-info">
+            <span className="user-avatar">
               {user?.email?.charAt(0).toUpperCase() || "U"}
             </span>
-            <div style={styles.userDetails}>
-              <span style={styles.userName}>{user?.email || "User"}</span>
-              <span style={styles.userRole}>{user?.role || "User"}</span>
+            <div className="user-details">
+              <span className="user-name">{user?.email || "User"}</span>
+              <span className="user-role">{user?.role || "User"}</span>
             </div>
           </div>
         </div>
@@ -111,92 +111,92 @@ function MainScreen({ onNavigate, user }) {
 
       {/* Error Message */}
       {error && (
-        <div style={styles.errorCard}>
-          <span style={styles.errorIcon}>⚠️</span>
+        <div className="error-card" style={{ marginBottom: '2rem' }}>
+          <span className="error-icon">⚠️</span>
           <p>{error}</p>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
             📊
           </div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>{stats.totalDevices}</h3>
-            <p style={styles.statLabel}>Total Devices</p>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.totalDevices}</h3>
+            <p className="stat-label">Total Devices</p>
           </div>
         </div>
 
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'}}>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' }}>
             ✅
           </div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>{stats.onlineDevices}</h3>
-            <p style={styles.statLabel}>Online Now</p>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.onlineDevices}</h3>
+            <p className="stat-label">Online Now</p>
           </div>
         </div>
 
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, background: 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)'}}>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)' }}>
             ⚠️
           </div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>{stats.activeDTCs}</h3>
-            <p style={styles.statLabel}>Active DTCs</p>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.activeDTCs}</h3>
+            <p className="stat-label">Active DTCs</p>
           </div>
         </div>
 
-        <div style={styles.statCard}>
-          <div style={{...styles.statIcon, background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'}}>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
             🔔
           </div>
-          <div style={styles.statContent}>
-            <h3 style={styles.statValue}>{stats.recentIssues}</h3>
-            <p style={styles.statLabel}>Recent Issues</p>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.recentIssues}</h3>
+            <p className="stat-label">Recent Issues</p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div style={styles.quickActionsSection}>
-        <h2 style={styles.sectionTitle}>Quick Actions</h2>
-        <div style={styles.quickActionsGrid}>
+      <div className="quick-actions-section">
+        <h2 className="section-title">Quick Actions</h2>
+        <div className="quick-actions-grid">
           {quickActions.map((action, index) => (
             <button
               key={index}
-              style={styles.quickActionCard}
+              className="quick-action-card"
               onClick={action.action}
             >
-              <span style={styles.actionIcon}>{action.icon}</span>
-              <span style={styles.actionLabel}>{action.label}</span>
+              <span className="action-icon">{action.icon}</span>
+              <span className="action-label">{action.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div style={styles.recentActivitySection}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Recent Activity</h2>
-          <button style={styles.btnSecondary}>View All</button>
+      <div className="recent-activity-section">
+        <div className="section-header">
+          <h2 className="section-title">Recent Activity</h2>
+          <button className="btn btn-secondary btn-sm">View All</button>
         </div>
-        <div style={styles.activityList}>
+        <div className="activity-list">
           {recentActivity.map((activity) => (
-            <div key={activity.id} style={styles.activityItem}>
-              <div style={styles.activityIcon}>
+            <div key={activity.id} className="activity-item">
+              <div className="activity-icon">
                 {activity.status === 'success' && '✅'}
                 {activity.status === 'warning' && '⚠️'}
                 {activity.status === 'info' && 'ℹ️'}
               </div>
-              <div style={styles.activityContent}>
-                <div style={styles.activityMain}>
+              <div className="activity-content">
+                <div className="activity-main">
                   <strong>{activity.device}</strong>
                   <span>{activity.action}</span>
                 </div>
-                <div style={styles.activityTime}>{activity.time}</div>
+                <div className="activity-time">{activity.time}</div>
               </div>
             </div>
           ))}
@@ -204,13 +204,11 @@ function MainScreen({ onNavigate, user }) {
       </div>
 
       {/* Footer */}
-      <footer style={styles.dashboardFooter}>
+      <footer className="dashboard-footer">
         <p>Car Diagnostics System • v1.0.0 • {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
 }
-
-
 
 export default MainScreen;
