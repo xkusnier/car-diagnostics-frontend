@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "./api";
+import "./DeviceDiagnosticsScreen.css"; // Nový CSS súbor
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [data, setData] = useState(null);
@@ -7,16 +8,16 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [reading, setReading] = useState(false);
-
-  // ➕ nové
   const [clearStatus, setClearStatus] = useState("");
   const [readStatus, setReadStatus] = useState("");
   const [polling, setPolling] = useState(false);
   let pollingInterval = null;
 
-  // Fetch diagnostics on mount
   useEffect(() => {
     fetchDiagnostics();
+    return () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+    };
   }, [deviceId]);
 
   const fetchDiagnostics = async () => {
@@ -30,7 +31,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  // --------- NOVÉ: POLLING PO CLEAR ---------
   const startPollingDiagnostics = () => {
     if (pollingInterval) clearInterval(pollingInterval);
 
@@ -47,7 +47,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           setClearing(false);
           setClearStatus("DTC successfully cleared ✔");
 
-          setData(diag); // refresh
+          setData(diag);
         } else {
           setClearStatus("Waiting for RPi to clear DTC...");
         }
@@ -57,7 +57,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }, 3000);
   };
 
-  // --------- NOVÉ: READ DTC FUNCTION ---------
   const handleReadDTCs = async () => {
     setReading(true);
     setReadStatus("Sending read DTC command...");
@@ -67,13 +66,11 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       
       setReadStatus("Command sent. Device will read DTC codes...");
       
-      // Po 5 sekundách refreshneme diagnostiku
       setTimeout(() => {
         fetchDiagnostics();
         setReading(false);
         setReadStatus("DTC read command completed");
         
-        // Reset status po 3 sekundách
         setTimeout(() => setReadStatus(""), 3000);
       }, 5000);
 
@@ -84,7 +81,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  // --------- UPRAVENÉ CLEAR DTC ---------
   const handleClearDTCs = async () => {
     if (!window.confirm("Are you sure you want to clear all active DTCs?")) return;
 
@@ -92,12 +88,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     setClearStatus("Sending clear command...");
 
     try {
-      // BE pridá command, nečistí databázu okamžite
       await api.post(`/api/device/${deviceId}/clear-dtcs`);
-
       setClearStatus("Command sent. Waiting for RPi...");
-
-      // spusti polling diagnostiky
       startPollingDiagnostics();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send clear command.");
@@ -105,149 +97,173 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  // -------------------- UI --------------------
-  if (loading)
-    return <p style={{ padding: "2rem" }}>Loading diagnostics...</p>;
-
-  if (error)
+  // -------------------- LOADING --------------------
+  if (loading) {
     return (
-      <div style={{ padding: "2rem" }}>
-        <p style={{ color: "red" }}>❌ {error}</p>
-        <button
-          onClick={onBack}
-          style={{
-            marginTop: "1rem",
-            padding: "0.5rem 1rem",
-            background: "gray",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Back
-        </button>
+      <div className="diagnostics-container">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading diagnostics data...</p>
+        </div>
       </div>
     );
+  }
 
+  // -------------------- ERROR --------------------
+  if (error) {
+    return (
+      <div className="diagnostics-container">
+        <div className="error-card">
+          <div className="error-icon">⚠️</div>
+          <h3>Error Loading Diagnostics</h3>
+          <p>{error}</p>
+          <button className="btn btn-secondary" onClick={onBack}>
+            ← Back to Devices
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------- MAIN UI --------------------
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h2>Device Diagnostics</h2>
+    <div className="diagnostics-container">
+      {/* Header */}
+      <div className="diagnostics-header">
+        <button className="btn-back" onClick={onBack}>
+          ← Back
+        </button>
+        <h1>Device Diagnostics</h1>
+        <div className="device-status">
+          <span className={`status-indicator ${data.online ? 'online' : 'offline'}`}></span>
+          {data.online ? 'Online' : 'Offline'}
+        </div>
+      </div>
 
-      <div style={{ marginBottom: "1rem" }}>
-        <p>
-          <strong>Device ID:</strong> {data.device_id} <br />
-          <strong>VIN:</strong> {data.vin || "N/A"} <br />
-          <strong>Brand:</strong> {data.brand || "N/A"} <br />
-          <strong>Model:</strong> {data.model || "N/A"} <br />
-          <strong>Year:</strong> {data.year || "N/A"} <br />
-          <strong>Engine:</strong> {data.engine || "N/A"} <br />
-          <strong>Status:</strong>{" "}
-          <span style={{ color: data.online ? "green" : "red" }}>
-            {data.online ? "Online" : "Offline"}
+      {/* Device Info Cards */}
+      <div className="device-info-grid">
+        <div className="info-card">
+          <h4>Device ID</h4>
+          <p>{data.device_id}</p>
+        </div>
+        <div className="info-card">
+          <h4>VIN</h4>
+          <p>{data.vin || "N/A"}</p>
+        </div>
+        <div className="info-card">
+          <h4>Vehicle</h4>
+          <p>{data.brand || "N/A"} {data.model || ""} ({data.year || "N/A"})</p>
+        </div>
+        <div className="info-card">
+          <h4>Engine</h4>
+          <p>{data.engine || "N/A"}</p>
+        </div>
+      </div>
+
+      {/* Control Panel */}
+      <div className="control-panel">
+        <div className="button-group">
+          <button
+            className={`btn btn-primary ${reading ? 'loading' : ''}`}
+            onClick={handleReadDTCs}
+            disabled={reading || !data.online}
+          >
+            {reading ? (
+              <>
+                <span className="spinner-small"></span>
+                Reading...
+              </>
+            ) : (
+              <>
+                <span className="icon">📡</span>
+                Read DTC
+              </>
+            )}
+          </button>
+
+          <button
+            className={`btn btn-danger ${clearing ? 'loading' : ''}`}
+            onClick={handleClearDTCs}
+            disabled={clearing || !data.online}
+          >
+            {clearing ? (
+              <>
+                <span className="spinner-small"></span>
+                Clearing...
+              </>
+            ) : (
+              <>
+                <span className="icon">🗑️</span>
+                Clear DTC
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Status Messages */}
+        {readStatus && (
+          <div className="status-message info">
+            <span className="icon">ℹ️</span>
+            {readStatus}
+          </div>
+        )}
+
+        {(clearing || polling) && (
+          <div className="status-message warning">
+            <span className="icon">⏳</span>
+            {clearStatus}
+          </div>
+        )}
+      </div>
+
+      {/* DTC Codes Section */}
+      <div className="dtc-section">
+        <div className="section-header">
+          <h2>Active DTC Codes</h2>
+          <span className="dtc-count">
+            {data.dtc_codes?.length || 0} codes found
           </span>
-        </p>
+        </div>
+
+        {(!data.dtc_codes || data.dtc_codes.length === 0) ? (
+          <div className="empty-state">
+            <div className="empty-icon">✅</div>
+            <h3>No Active DTC Codes</h3>
+            <p>No diagnostic trouble codes found for this device.</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="dtc-table">
+              <thead>
+                <tr>
+                  <th>DTC Code</th>
+                  <th>Description</th>
+                  <th>Date Detected</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.dtc_codes.map((item, i) => (
+                  <tr key={i} className={i % 2 === 0 ? 'even' : 'odd'}>
+                    <td>
+                      <span className="dtc-code-badge">{item.dtc_code}</span>
+                    </td>
+                    <td className="description-cell">{item.description}</td>
+                    <td>
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleString("en-GB")
+                        : "—"}
+                    </td>
+                    <td>
+                      <span className="status-badge active">Active</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-
-      <div style={{ marginBottom: "1.5rem" }}>
-        <button
-          onClick={onBack}
-          style={{
-            marginRight: "1rem",
-            padding: "0.5rem 1rem",
-            background: "gray",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Back
-        </button>
-
-        {/* ➕ NOVÉ TLACITKO READ DTC */}
-        <button
-          onClick={handleReadDTCs}
-          disabled={reading || !data.online}
-          style={{
-            marginRight: "1rem",
-            padding: "0.5rem 1rem",
-            background: reading ? "orange" : "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            opacity: !data.online ? 0.5 : 1,
-          }}
-        >
-          {reading ? "Reading..." : "Read DTC"}
-        </button>
-
-        <button
-          onClick={handleClearDTCs}
-          disabled={clearing || !data.online}
-          style={{
-            padding: "0.5rem 1rem",
-            background: clearing ? "orange" : "darkred",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            opacity: !data.online ? 0.5 : 1,
-          }}
-        >
-          {clearing ? "Clearing..." : "Clear DTC"}
-        </button>
-      </div>
-
-      {/* ➕ Zobrazenie read statusu */}
-      {readStatus && (
-        <p style={{ color: "blue", marginBottom: "1rem", padding: "0.5rem", background: "#f0f8ff", borderRadius: "4px" }}>
-          📡 {readStatus}
-        </p>
-      )}
-
-      {/* ➕ Zobrazenie clear statusu */}
-      {clearing || polling ? (
-        <p style={{ color: "orange", marginBottom: "1.5rem", padding: "0.5rem", background: "#fff3cd", borderRadius: "4px" }}>
-          {clearStatus}
-        </p>
-      ) : null}
-
-      <h3>Active DTC Codes</h3>
-
-      {(!data.dtc_codes || data.dtc_codes.length === 0) && (
-        <p>No active DTC codes found.</p>
-      )}
-
-      {data.dtc_codes && data.dtc_codes.length > 0 && (
-        <table
-          border="1"
-          cellPadding="8"
-          style={{
-            borderCollapse: "collapse",
-            width: "100%",
-            marginTop: "1rem",
-          }}
-        >
-          <thead style={{ background: "#f5f5f5" }}>
-            <tr>
-              <th>DTC Code</th>
-              <th>Description</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.dtc_codes.map((item, i) => (
-              <tr key={i}>
-                <td>{item.dtc_code}</td>
-                <td>{item.description}</td>
-                <td>
-                  {item.created_at
-                    ? new Date(item.created_at).toLocaleString("en-GB")
-                    : "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
     </div>
   );
 }
