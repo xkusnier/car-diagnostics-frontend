@@ -40,18 +40,35 @@ function App() {
       // Set authorization header
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       
-      // Verify token with backend
+      // Try to get user data using existing endpoint
+      // Since we don't have /api/verify-token, try to get devices
+      // If it succeeds, user is authenticated
       try {
-        const response = await api.get("/api/verify-token");
-        const user = response.data.user;
+        const response = await api.get("/api/my-devices");
         
-        // Save user to state
-        setUser(user);
+        // If we get here, token is valid
+        // But we don't have user data... 
+        // We'll store basic user info from localStorage or create a fallback
+        const savedUser = localStorage.getItem("user");
+        if (savedUser && savedUser !== "undefined") {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+          } catch {
+            // If parsing fails, create fallback user
+            setUser({ email: "User", role: "user" });
+          }
+        } else {
+          // Create fallback user object
+          setUser({ email: "User", role: "user" });
+        }
+        
         setCurrentScreen("main");
       } catch (error) {
-        console.log("Token verification failed, clearing auth data");
+        console.log("Token invalid or expired, clearing auth data");
         // Token is invalid or expired
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         delete api.defaults.headers.common["Authorization"];
       }
     } catch (error) {
@@ -66,8 +83,9 @@ function App() {
       const response = await api.post("/api/login", { email, password });
       const { token, user } = response.data;
       
-      // Save token only (user data comes from backend)
+      // Save token and user data
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       
       // Set authorization header for future requests
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -98,8 +116,9 @@ function App() {
       });
       const { token, user } = response.data;
       
-      // Save token only
+      // Save token and user data
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       
       // Set authorization header
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -125,6 +144,7 @@ function App() {
   const handleLogout = () => {
     // Clear localStorage
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     
     // Clear authorization header
     delete api.defaults.headers.common["Authorization"];
