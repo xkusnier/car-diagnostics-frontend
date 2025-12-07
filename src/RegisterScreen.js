@@ -1,12 +1,11 @@
-// RegisterScreen.js - Updated for consistency
 import React, { useState } from "react";
 import "./styles/global.css";
 
-function RegisterScreen({ onRegister }) {
+function RegisterScreen({ onRegister, onNavigateToLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
@@ -34,13 +33,17 @@ function RegisterScreen({ onRegister }) {
       return;
     }
     
-    setError(null);
+    setError("");
     setLoading(true);
     
     try {
-      await onRegister(email, password);
+      const result = await onRegister(email, password);
+      
+      if (!result.success) {
+        setError(result.message || "Registration failed");
+      }
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed");
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -124,6 +127,7 @@ function RegisterScreen({ onRegister }) {
                 type="checkbox" 
                 checked={termsAccepted}
                 onChange={(e) => setTermsAccepted(e.target.checked)}
+                disabled={loading}
               />
               <span>
                 I agree to the{" "}
@@ -169,7 +173,7 @@ function RegisterScreen({ onRegister }) {
           <p>
             Already have an account?{" "}
             <button
-              onClick={() => window.location.href = "/"}
+              onClick={onNavigateToLogin}
               className="auth-link"
             >
               Sign in here
