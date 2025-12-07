@@ -1,7 +1,6 @@
 // LoginScreen.js - Updated for consistency
 import React, { useState } from "react";
 import "./styles/global.css";
-import "./AuthScreens.css";
 
 function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState("");
