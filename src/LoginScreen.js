@@ -1,11 +1,10 @@
-// LoginScreen.js - Updated for consistency
 import React, { useState } from "react";
 import "./styles/global.css";
 
-function LoginScreen({ onLogin }) {
+function LoginScreen({ onLogin, onNavigateToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -16,13 +15,17 @@ function LoginScreen({ onLogin }) {
       return;
     }
     
-    setError(null);
+    setError("");
     setLoading(true);
     
     try {
-      await onLogin(email, password);
+      const result = await onLogin(email, password);
+      
+      if (!result.success) {
+        setError(result.message || "Invalid email or password");
+      }
     } catch (err) {
-      setError("Invalid email or password");
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -127,7 +130,7 @@ function LoginScreen({ onLogin }) {
           <p>
             Don't have an account?{" "}
             <button
-              onClick={() => window.dispatchEvent(new Event("open-register"))}
+              onClick={onNavigateToRegister}
               className="auth-link"
             >
               Sign up now
