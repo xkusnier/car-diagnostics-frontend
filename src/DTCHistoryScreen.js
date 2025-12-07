@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
-import "./DTCHistoryScreen.css";
 
 function DTCHistoryScreen({ onBack }) {
   const [vin, setVin] = useState("");
