@@ -31,10 +31,23 @@ api.interceptors.response.use(
       // Server responded with error status
       console.error('API Error:', error.response.status, error.response.data);
       
+      // Check for JWT errors
+      const errorMsg = error.response.data?.msg || error.response.data?.error || '';
+      
+      // Common JWT errors
+      if (error.response.status === 422 && errorMsg.includes('Not enough segments')) {
+        console.log('JWT token malformed - clearing auth');
+        localStorage.removeItem('token');
+        localStorage.removeItem('email');
+        localStorage.removeItem('role');
+        window.location.reload();
+      }
+      
       // Auto logout on 401 Unauthorized
       if (error.response.status === 401 && !window.location.pathname.includes('/login')) {
         localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('email');
+        localStorage.removeItem('role');
         window.location.reload();
       }
     } else if (error.request) {
