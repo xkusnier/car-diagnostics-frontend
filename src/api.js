@@ -1,16 +1,48 @@
-import axios from "axios";
+// src/api.js
+import axios from 'axios';
 
-export const api = axios.create({
-  baseURL: "https://car-diagnostics.onrender.com", // Nahraďte správnym URL backendu
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'https://car-diagnostics.onrender.com',
+  timeout: 10000,
 });
 
+// Request interceptor to add token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("jwt_token");
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // Server responded with error status
+      console.error('API Error:', error.response.status, error.response.data);
+      
+      // Auto logout on 401 Unauthorized
+      if (error.response.status === 401 && window.location.pathname !== '/') {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+      }
+    } else if (error.request) {
+      // Request made but no response
+      console.error('Network Error:', error.request);
+    } else {
+      // Something else happened
+      console.error('Error:', error.message);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export { api };
