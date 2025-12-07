@@ -1,7 +1,5 @@
-// App.js - Updated
 import React, { useState, useEffect } from "react";
 import "./styles/global.css";
-import "./App.css";
 
 // Import screens
 import LoginScreen from "./LoginScreen";
@@ -13,19 +11,35 @@ import DTCHistoryScreen from "./DTCHistoryScreen";
 import { api } from "./api";
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState("login");
+  const [currentScreen, setCurrentScreen] = useState("login"); // Začíname s login screenom
   const [user, setUser] = useState(null);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in (from localStorage)
     const token = localStorage.getItem("token");
-    if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      setCurrentScreen("main");
+    const savedUser = localStorage.getItem("user");
+    
+    if (token && savedUser) {
+      try {
+        // Set authorization header
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        
+        // Parse and set user
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        
+        // Navigate to main screen
+        setCurrentScreen("main");
+      } catch (error) {
+        console.error("Error parsing saved user:", error);
+        // Clear invalid data
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     }
 
-    // Listen for registration event
+    // Listen for registration event from LoginScreen
     const handleRegister = () => setCurrentScreen("register");
     window.addEventListener("open-register", handleRegister);
 
@@ -39,13 +53,24 @@ function App() {
       const response = await api.post("/api/login", { email, password });
       const { token, user } = response.data;
       
+      // Save to localStorage
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      
+      // Set authorization header for future requests
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       
+      // Update state
       setUser(user);
       setCurrentScreen("main");
+      
+      return { success: true };
     } catch (error) {
-      throw error;
+      console.error("Login error:", error);
+      return { 
+        success: false, 
+        message: error.response?.data?.error || "Login failed. Please try again." 
+      };
     }
   };
 
@@ -54,30 +79,48 @@ function App() {
       const response = await api.post("/api/register", { email, password });
       const { token, user } = response.data;
       
+      // Save to localStorage
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      
+      // Set authorization header for future requests
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       
+      // Update state
       setUser(user);
       setCurrentScreen("main");
+      
+      return { success: true };
     } catch (error) {
-      throw error;
+      console.error("Registration error:", error);
+      return { 
+        success: false, 
+        message: error.response?.data?.error || "Registration failed. Please try again." 
+      };
     }
   };
 
   const handleLogout = () => {
+    // Clear localStorage
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    // Clear authorization header
     delete api.defaults.headers.common["Authorization"];
+    
+    // Reset state
     setUser(null);
     setCurrentScreen("login");
   };
 
+  // Navigation function
   const navigateTo = (screen) => {
     setCurrentScreen(screen);
   };
 
   return (
     <div className="app">
-      {/* Navigation Bar (shown only when logged in) */}
+      {/* Navigation Bar - shown only when logged in and not on auth screens */}
       {user && currentScreen !== "login" && currentScreen !== "register" && (
         <nav className="app-nav">
           <div className="nav-brand">
@@ -107,7 +150,7 @@ function App() {
           </div>
           
           <div className="nav-user">
-            <span className="user-email">{user.email}</span>
+            <span className="user-email">{user?.email || "User"}</span>
             <button className="btn-logout" onClick={handleLogout}>
               Logout
             </button>
@@ -118,21 +161,27 @@ function App() {
       {/* Main Content */}
       <main className="app-content">
         {currentScreen === "login" && (
-          <LoginScreen onLogin={handleLogin} />
+          <LoginScreen 
+            onLogin={handleLogin}
+            onNavigateToRegister={() => setCurrentScreen("register")}
+          />
         )}
         
         {currentScreen === "register" && (
-          <RegisterScreen onRegister={handleRegister} />
+          <RegisterScreen 
+            onRegister={handleRegister}
+            onNavigateToLogin={() => setCurrentScreen("login")}
+          />
         )}
         
-        {currentScreen === "main" && (
+        {currentScreen === "main" && user && (
           <MainScreen 
             onNavigate={navigateTo}
             user={user}
           />
         )}
         
-        {currentScreen === "my-devices" && (
+        {currentScreen === "my-devices" && user && (
           <MyDevicesScreen 
             onBack={() => navigateTo("main")}
             onDiagnostics={(deviceId) => {
@@ -143,21 +192,21 @@ function App() {
           />
         )}
         
-        {currentScreen === "device-diagnostics" && (
+        {currentScreen === "device-diagnostics" && user && (
           <DeviceDiagnosticsScreen 
             deviceId={selectedDeviceId}
             onBack={() => navigateTo("my-devices")}
           />
         )}
         
-        {currentScreen === "dtc-history" && (
+        {currentScreen === "dtc-history" && user && (
           <DTCHistoryScreen 
             onBack={() => navigateTo("main")}
           />
         )}
       </main>
 
-      {/* Footer */}
+      {/* Footer - shown only when logged in */}
       {user && currentScreen !== "login" && currentScreen !== "register" && (
         <footer className="app-footer">
           <p>© {new Date().getFullYear()} Car Diagnostics System. All rights reserved.</p>
