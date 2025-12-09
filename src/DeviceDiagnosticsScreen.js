@@ -11,6 +11,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [clearStatus, setClearStatus] = useState("");
   const [readStatus, setReadStatus] = useState("");
   const [polling, setPolling] = useState(false);
+  const [patterns, setPatterns] = useState([]);
+  const [loadingPatterns, setLoadingPatterns] = useState(false);
   let pollingInterval = null;
 
   useEffect(() => {
@@ -20,6 +22,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     };
   }, [deviceId]);
 
+  useEffect(() => {
+    // Ak máme VIN, načítame patterny
+    if (data?.vin) {
+      checkDtcPatterns(data.vin);
+    }
+  }, [data?.vin]);
+
   const fetchDiagnostics = async () => {
     try {
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
@@ -28,6 +37,21 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       setError(err.response?.data?.error || "Error fetching diagnostics");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkDtcPatterns = async (vin) => {
+    if (!vin) return;
+    
+    setLoadingPatterns(true);
+    try {
+      const res = await api.get(`/api/dtc/pattern-check/${vin}`);
+      setPatterns(res.data.matched_patterns || []);
+    } catch (err) {
+      console.error("Error loading DTC patterns:", err);
+      setPatterns([]);
+    } finally {
+      setLoadingPatterns(false);
     }
   };
 
@@ -48,6 +72,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           setClearStatus("DTC successfully cleared ✔");
 
           setData(diag);
+          // Aktualizuj patterny po vymazaní DTC
+          if (diag.vin) {
+            checkDtcPatterns(diag.vin);
+          }
         } else {
           setClearStatus("Waiting for RPi to clear DTC...");
         }
@@ -126,6 +154,12 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       case 'low': return 'ℹ️';
       default: return '❓';
     }
+  };
+
+  const getConfidenceColor = (confidence) => {
+    if (confidence >= 90) return '#388e3c'; // zelená
+    if (confidence >= 80) return '#ffb300'; // žltá
+    return '#f57c00'; // oranžová
   };
 
   // -------------------- UI --------------------
@@ -258,6 +292,81 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           </div>
         )}
       </div>
+
+      {/* DTC Pattern Detection Section */}
+      {data.vin && data.dtc_codes && data.dtc_codes.length > 0 && (
+        <div className="pattern-section" style={{ marginBottom: '2rem' }}>
+          <div className="section-header">
+            <h2>🔍 DTC Pattern Detection</h2>
+            <div className="pattern-count">
+              {loadingPatterns ? (
+                <div className="spinner-tiny"></div>
+              ) : (
+                `${patterns.length} pattern(s) detected`
+              )}
+            </div>
+          </div>
+
+          {loadingPatterns ? (
+            <div className="empty-state">
+              <div className="spinner-medium"></div>
+              <p>Analyzing DTC patterns...</p>
+            </div>
+          ) : patterns.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🔍</div>
+              <h3>No Patterns Detected</h3>
+              <p>No known diagnostic patterns match the current DTC combination.</p>
+            </div>
+          ) : (
+            <div className="pattern-cards">
+              {patterns.map((pattern, index) => (
+                <div key={index} className="pattern-card">
+                  <div className="pattern-header">
+                    <div className="pattern-title">
+                      <span className="pattern-icon">🎯</span>
+                      <h3>{pattern.pattern_name}</h3>
+                    </div>
+                    <div 
+                      className="confidence-badge"
+                      style={{ 
+                        backgroundColor: getConfidenceColor(pattern.confidence),
+                        color: 'white'
+                      }}
+                    >
+                      {pattern.confidence}% confidence
+                    </div>
+                  </div>
+                  
+                  <div className="pattern-body">
+                    <div className="pattern-cause">
+                      <strong>Primary Cause:</strong> {pattern.primary_cause}
+                    </div>
+                    
+                    <div className="pattern-codes">
+                      <strong>Required DTC Codes:</strong>
+                      <div className="dtc-code-list">
+                        {pattern.required_codes.map((code, idx) => (
+                          <span key={idx} className="dtc-tag">
+                            {code}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="pattern-match">
+                      <strong>Match Status:</strong>
+                      <span className="match-badge success">
+                        ✅ All required codes present
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* DTC Codes Section */}
       <div className="dtc-section">
