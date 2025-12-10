@@ -9,6 +9,7 @@ import MyDevicesScreen from "./MyDevicesScreen";
 import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
 import DTCHistoryScreen from "./DTCHistoryScreen";
 import { api } from "./api";
+import AddDeviceScreen from "./AddDeviceScreen";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("login");
@@ -263,6 +264,12 @@ function App() {
             onBack={() => navigateTo("main")}
           />
         )}
+        {currentScreen === "add-device" && user && (
+          <AddDeviceScreen 
+            onBack={() => navigateTo("main")}
+          />
+        )}
+
       </main>
 
       {/* Footer - shown only when logged in */}
