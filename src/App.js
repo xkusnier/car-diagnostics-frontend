@@ -65,13 +65,20 @@ function App() {
         
         setCurrentScreen("main");
       } catch (error) {
-        console.log("Token invalid or expired, clearing auth data");
-        // Token is invalid or expired
-        localStorage.removeItem("token");
-        localStorage.removeItem("email");
-        localStorage.removeItem("role");
-        delete api.defaults.headers.common["Authorization"];
+        if (error.response?.status === 401) {
+          console.log("Token invalid or expired, clearing auth data");
+      
+          localStorage.removeItem("token");
+          localStorage.removeItem("email");
+          localStorage.removeItem("role");
+          delete api.defaults.headers.common["Authorization"];
+        } else {
+          console.error("API health check failed:", error);
+          // token necháme,
+          // lebo nevieme či je problém na serveri
+        }
       }
+
     } catch (error) {
       console.error("Auth check error:", error);
     } finally {
