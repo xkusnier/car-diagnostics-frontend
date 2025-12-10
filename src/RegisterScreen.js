@@ -154,21 +154,6 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>or sign up with</span>
-        </div>
-
-        <div className="social-auth">
-          <button className="social-button google">
-            <span className="social-icon">🔍</span>
-            Google
-          </button>
-          <button className="social-button microsoft">
-            <span className="social-icon">❖</span>
-            Microsoft
-          </button>
-        </div>
-
         <div className="auth-footer">
           <p>
             Already have an account?{" "}
