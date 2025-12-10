@@ -10,6 +10,14 @@ function AddDeviceScreen({ onBack }) {
     setMessage(null);
     setError(null);
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Not logged in.");
+      return;
+    }
+
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    
     if (!deviceId || isNaN(deviceId) || parseInt(deviceId) <= 0) {
       setError("⚠️ Please enter a valid positive integer as Device ID.");
       return;
