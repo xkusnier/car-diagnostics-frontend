@@ -2236,3 +2236,16 @@ body {
     font-size: 0.875rem;
   }
 }
+
+.stat-item-vin {
+  flex: 2;              /* VIN bude 2x širší než ostatné */
+  min-width: 280px;     /* aby nebol udušený */
+}
+
+.stat-number-vin {
+  font-size: 1.8rem;    /* menšie než 2.5rem */
+  letter-spacing: 1px;
+  word-break: break-all; /* keď treba, zalomí */
+  line-height: 1.2;
+}
+
