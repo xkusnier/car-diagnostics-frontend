@@ -312,13 +312,6 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
                           🔧 Diagnostics
                         </button>
                         
-                        <button
-                          className="btn-action details"
-                          onClick={() => alert(`Details for device ${device.device_id}`)}
-                          title="View Details"
-                        >
-                          ℹ️ Details
-                        </button>
                       </div>
                     </td>
                   </tr>
