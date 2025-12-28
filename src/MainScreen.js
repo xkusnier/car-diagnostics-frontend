@@ -155,22 +155,6 @@ function MainScreen({ onNavigate, user }) {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="quick-actions-section">
-        <h2 className="section-title">Quick Actions</h2>
-        <div className="quick-actions-grid">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              className="quick-action-card"
-              onClick={action.action}
-            >
-              <span className="action-icon">{action.icon}</span>
-              <span className="action-label">{action.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Footer */}
       <footer className="dashboard-footer">
