@@ -2236,3 +2236,198 @@ body {
     font-size: 0.875rem;
   }
 }
+
+/* ========== DEVICE DIAGNOSTICS - IMPROVED TABLE ========== */
+
+.dtc-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.dtc-table th {
+  background: var(--bg-primary);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-light);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dtc-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+
+/* Rozšíri stĺpce v DTC tabuľke */
+.dtc-table th:nth-child(1), /* DTC Code */
+.dtc-table td:nth-child(1) {
+  width: 150px; /* Zvýšené z pôvodného */
+  min-width: 150px;
+  max-width: 180px;
+}
+
+.dtc-table th:nth-child(2), /* Description */
+.dtc-table td:nth-child(2) {
+  width: 400px; /* VEĽMI široký pre popis */
+  min-width: 300px;
+  max-width: 500px;
+  word-wrap: break-word;
+}
+
+.dtc-table th:nth-child(3), /* Severity */
+.dtc-table td:nth-child(3) {
+  width: 180px; /* Zvýšené pre badge + info */
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.dtc-table th:nth-child(4), /* Date Detected */
+.dtc-table td:nth-child(4) {
+  width: 200px; /* Zvýšené pre dátum */
+  min-width: 180px;
+  max-width: 220px;
+}
+
+/* Popisová bunka - zobraz dlhý text */
+.description-cell {
+  max-width: 400px;
+}
+
+.description-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.description-content strong {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+  display: block;
+}
+
+.additional-info {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+/* DTC Code badge - väčší */
+.dtc-code-badge {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 1rem;
+  display: inline-block;
+  border-left: 4px solid var(--primary-blue);
+  min-width: 120px;
+  text-align: center;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.dtc-code-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Severity display - väčší */
+.severity-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.severity-badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.severity-info small {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  display: block;
+  max-width: 160px;
+}
+
+/* Dátumová bunka */
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.date {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.time-ago {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive pre DTC tabuľku */
+@media (max-width: 1024px) {
+  .dtc-table th:nth-child(2),
+  .dtc-table td:nth-child(2) {
+    width: 300px;
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .dtc-table {
+    min-width: 800px; /* Minimal width pre scroll */
+  }
+  
+  .dtc-table th:nth-child(2),
+  .dtc-table td:nth-child(2) {
+    width: 350px;
+    min-width: 300px;
+  }
+}
+
+/* Štýly pre VIN v Device Info Cards */
+.stat-item:nth-child(2) .stat-number {
+  font-family: 'Courier New', monospace;
+  font-size: 1.8rem; /* Väčší font pre VIN */
+  letter-spacing: 0.5px;
+  word-break: break-all;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+  display: block;
+  padding: 0.5rem 0;
+}
