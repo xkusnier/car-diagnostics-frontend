@@ -279,17 +279,7 @@ function App() {
 
       </main>
 
-      {/* Footer - shown only when logged in */}
-      {user && currentScreen !== "login" && currentScreen !== "register" && (
-        <footer className="app-footer">
-          <p>© {new Date().getFullYear()} Car Diagnostics System. All rights reserved.</p>
-          <div className="footer-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-            <a href="#">Contact Support</a>
-          </div>
-        </footer>
-      )}
+
     </div>
   );
 }
