@@ -87,13 +87,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
             />
           </div>
 
-          <div className="form-options">
-            <label className="checkbox-label">
-              <input type="checkbox" />
-              <span>Remember me</span>
-            </label>
-            <a href="#" className="forgot-link">Forgot password?</a>
-          </div>
+
 
           <button
             type="submit"
