@@ -40,12 +40,7 @@ function MainScreen({ onNavigate, user }) {
         recentIssues: 0
       });
 
-      // Simulácia recent activity
-      setRecentActivity([
-        { id: 1, device: "Device #1234", action: "DTC Cleared", time: "5 min ago", status: "success" },
-        { id: 2, device: "Device #5678", action: "New DTC Detected", time: "1 hour ago", status: "warning" },
-        { id: 3, device: "Device #9012", action: "Device Connected", time: "2 hours ago", status: "info" },
-      ]);
+
       
       setError(null);
     } catch (error) {
@@ -177,35 +172,9 @@ function MainScreen({ onNavigate, user }) {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="recent-activity-section">
-        <div className="section-header">
-          <h2 className="section-title">Recent Activity</h2>
-          <button className="btn btn-secondary btn-sm">View All</button>
-        </div>
-        <div className="activity-list">
-          {recentActivity.map((activity) => (
-            <div key={activity.id} className="activity-item">
-              <div className="activity-icon">
-                {activity.status === 'success' && '✅'}
-                {activity.status === 'warning' && '⚠️'}
-                {activity.status === 'info' && 'ℹ️'}
-              </div>
-              <div className="activity-content">
-                <div className="activity-main">
-                  <strong>{activity.device}</strong>
-                  <span>{activity.action}</span>
-                </div>
-                <div className="activity-time">{activity.time}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Footer */}
       <footer className="dashboard-footer">
-        <p>Car Diagnostics System • v1.0.0 • {new Date().getFullYear()}</p>
+        <p>Car Diagnostics {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
