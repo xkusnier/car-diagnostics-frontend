@@ -329,16 +329,6 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
         )}
       </div>
 
-      {/* Quick Tips */}
-      <div className="quick-tips card">
-        <h4>💡 Quick Tips</h4>
-        <ul>
-          <li>Click on "Diagnostics" to view and manage DTC codes for a device</li>
-          <li>Use the search box to quickly find specific devices</li>
-          <li>Only online devices can execute diagnostics commands</li>
-          {role === "admin" && <li>As an admin, you can assign devices to any user</li>}
-        </ul>
-      </div>
     </div>
   );
 }
