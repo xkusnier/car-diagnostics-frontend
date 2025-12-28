@@ -87,46 +87,6 @@ function DTCHistoryScreen({ onBack }) {
             <small className="input-hint">Enter the complete 17-character VIN</small>
           </div>
 
-          <div className="filters-grid">
-            <div className="form-group">
-              <label htmlFor="dateFrom">Date From</label>
-              <input
-                type="date"
-                id="dateFrom"
-                value={filters.dateFrom}
-                onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
-                className="input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="dateTo">Date To</label>
-              <input
-                type="date"
-                id="dateTo"
-                value={filters.dateTo}
-                onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
-                className="input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="severity">Severity Filter</label>
-              <select
-                id="severity"
-                value={filters.severity}
-                onChange={(e) => setFilters({...filters, severity: e.target.value})}
-                className="input"
-              >
-                <option value="all">All Severities</option>
-                <option value="low">Low (Information)</option>
-                <option value="medium">Medium (Warning)</option>
-                <option value="high">High (Error)</option>
-                <option value="critical">Critical (Failure)</option>
-              </select>
-            </div>
-          </div>
-
           <button
             type="submit"
             disabled={loading || !vin.trim()}
