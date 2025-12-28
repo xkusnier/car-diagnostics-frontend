@@ -129,12 +129,6 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
                 onChange={(e) => setTermsAccepted(e.target.checked)}
                 disabled={loading}
               />
-              <span>
-                I agree to the{" "}
-                <a href="#" className="terms-link">Terms of Service</a>{" "}
-                and{" "}
-                <a href="#" className="terms-link">Privacy Policy</a>
-              </span>
             </label>
           </div>
 
