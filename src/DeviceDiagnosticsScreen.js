@@ -217,10 +217,11 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           <span className="stat-number">#{data.device_id}</span>
           <span className="stat-label">Device ID</span>
         </div>
-        <div className="stat-item">
-          <span className="stat-number">{data.vin ? data.vin : "N/A"}</span>
+        <div className="stat-item stat-item-vin">
+          <span className="stat-number stat-number-vin">{data.vin ? data.vin : "N/A"}</span>
           <span className="stat-label">VIN</span>
         </div>
+
         <div className="stat-item">
           <span className="stat-number">
             {data.brand ? `${data.brand} ${data.model}` : "N/A"}
