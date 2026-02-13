@@ -2,15 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 
-// ✅ NEW: websocket client
+// ✅ websocket client
 import { io } from "socket.io-client";
-
-/**
- * Assumptions:
- * - api (axios) already sets Authorization header (JWT) for REST calls.
- * - Your Flask-SocketIO server is on same origin OR you set REACT_APP_WS_URL.
- *   Example: REACT_APP_WS_URL=https://your-backend.onrender.com
- */
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [data, setData] = useState(null);
@@ -24,13 +17,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
 
-  // ✅ NEW: socket status
+  // ✅ socket status
   const [wsStatus, setWsStatus] = useState({
     connected: false,
     error: null,
   });
 
-  // ✅ Live data now comes via WS (but we still keep REST fallback optional)
+  // ✅ live values: will show latest snapshot even if no current telemetry
   const [live, setLive] = useState({
     odometer: null,
     battery: null,
@@ -41,9 +34,70 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     error: null,
   });
 
-  // ✅ FIX: intervals & socket must be refs (otherwise reset on render)
+  // refs
   const pollingIntervalRef = useRef(null);
   const socketRef = useRef(null);
+
+  // -------------------- SNAPSHOT REST (DB last known) --------------------
+  const fetchLiveSnapshots = async () => {
+    try {
+      const [odo, batt, eng, fuelRes, spd] = await Promise.allSettled([
+        api.get(`/api/device/${deviceId}/odometer`),
+        api.get(`/api/device/${deviceId}/battery`),
+        api.get(`/api/device/${deviceId}/engine`),
+        api.get(`/api/device/${deviceId}/fuel`),
+        api.get(`/api/device/${deviceId}/speed`),
+      ]);
+
+      setLive((prev) => {
+        const next = { ...prev, error: null };
+
+        if (odo.status === "fulfilled") next.odometer = odo.value.data;
+        if (batt.status === "fulfilled") next.battery = batt.value.data;
+        if (eng.status === "fulfilled") next.engine = eng.value.data;
+        if (fuelRes.status === "fulfilled") next.fuel = fuelRes.value.data;
+        if (spd.status === "fulfilled") next.speed = spd.value.data;
+
+        const ts = [
+          next.odometer?.timestamp,
+          next.battery?.timestamp,
+          next.engine?.timestamp,
+          next.fuel?.timestamp,
+          next.speed?.timestamp,
+        ]
+          .filter(Boolean)
+          .sort()
+          .slice(-1)[0];
+
+        next.updatedAt = ts || next.updatedAt || null;
+
+        const allFailed =
+          odo.status === "rejected" &&
+          batt.status === "rejected" &&
+          eng.status === "rejected" &&
+          fuelRes.status === "rejected" &&
+          spd.status === "rejected";
+
+        if (allFailed) {
+          const msg =
+            odo.reason?.response?.data?.error ||
+            batt.reason?.response?.data?.error ||
+            eng.reason?.response?.data?.error ||
+            fuelRes.reason?.response?.data?.error ||
+            spd.reason?.response?.data?.error ||
+            "No snapshot data available";
+          next.error = msg;
+        }
+
+        return next;
+      });
+    } catch (e) {
+      setLive((prev) => ({
+        ...prev,
+        error: e.response?.data?.error || "Error fetching snapshot data",
+      }));
+    }
+  };
 
   // -------------------- INIT --------------------
   useEffect(() => {
@@ -65,38 +119,29 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.vin]);
 
-  // -------------------- ✅ WEBSOCKET LIVE --------------------
+  // -------------------- ✅ WEBSOCKET LIVE (updates) --------------------
   useEffect(() => {
-    // Disconnect old socket when device changes or status changes
+    // Always take the latest snapshot on screen open / relog / refresh
+    // (so you don't see "—" until new telemetry arrives)
+    if (deviceId) fetchLiveSnapshots();
+
+    // Disconnect old socket when device changes
     if (socketRef.current) {
       socketRef.current.removeAllListeners();
       socketRef.current.disconnect();
       socketRef.current = null;
     }
 
-    // If device offline, clear WS status + keep old live values (or reset, your call)
-    if (!data?.online) {
-      setWsStatus({ connected: false, error: null });
-      setLive((prev) => ({
-        ...prev,
-        error: null,
-      }));
-      return;
-    }
-
-    // Build WS URL:
-    // - prefer env
-    // - else same origin (works in dev with proxy; in prod usually same domain)
+    // Use BACKEND URL for Socket.IO (NOT frontend host)
     const wsUrl =
       process.env.REACT_APP_WS_URL ||
-      `${window.location.protocol}//${window.location.host}`;
+      process.env.REACT_APP_API_URL ||
+      "https://car-diagnostics.onrender.com";
 
-    // Optional: pass JWT if you later protect socket (your BE currently doesn't verify it)
     const token = localStorage.getItem("token") || localStorage.getItem("access_token");
 
     const socket = io(wsUrl, {
       transports: ["websocket"],
-      // If you decide to check token on backend, keep this:
       auth: token ? { token } : undefined,
       reconnection: true,
       reconnectionAttempts: 10,
@@ -107,8 +152,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
     const onConnect = () => {
       setWsStatus({ connected: true, error: null });
-      // subscribe to this device room
       socket.emit("subscribe_device", { device_id: deviceId });
+
+      // snapshot again on connect (helps after relog if state was empty)
+      fetchLiveSnapshots();
     };
 
     const onDisconnect = () => {
@@ -117,7 +164,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
     const onConnectError = (err) => {
       setWsStatus({ connected: false, error: err?.message || "WebSocket connection error" });
-      setLive((prev) => ({ ...prev, error: "Live data stream unavailable (WS error)" }));
+      // DON'T wipe values; keep snapshot visible
     };
 
     const onTelemetry = (payload) => {
@@ -183,7 +230,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     socket.on("connect_error", onConnectError);
     socket.on("telemetry_update", onTelemetry);
 
-    // Optional server messages
     socket.on("server_ready", () => {});
     socket.on("subscribed", () => {});
     socket.on("error", (e) => {
@@ -195,13 +241,17 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [deviceId, data?.online]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceId]);
 
   // -------------------- REST --------------------
   const fetchDiagnostics = async () => {
     try {
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
       setData(res.data);
+
+      // ✅ always load last snapshot from DB
+      fetchLiveSnapshots();
     } catch (err) {
       setError(err.response?.data?.error || "Error fetching diagnostics");
     } finally {
@@ -470,7 +520,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         )}
       </div>
 
-      {/* ✅ Live Data Section (WS) */}
+      {/* ✅ Live Data Section */}
       <div className="dtc-section" style={{ marginBottom: "2rem" }}>
         <div className="section-header">
           <h2>📈 Live Data</h2>
@@ -478,14 +528,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           <div className="dtc-count" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
             <span>
               Stream:{" "}
-              {data.online ? (
-                wsStatus.connected ? (
-                  <strong style={{ color: "#388e3c" }}>Connected</strong>
-                ) : (
-                  <strong style={{ color: "#f57c00" }}>Disconnected</strong>
-                )
+              {wsStatus.connected ? (
+                <strong style={{ color: "#388e3c" }}>Connected</strong>
               ) : (
-                <strong style={{ color: "#5f6368" }}>Offline</strong>
+                <strong style={{ color: "#f57c00" }}>Disconnected</strong>
               )}
             </span>
 
@@ -507,7 +553,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           </div>
         </div>
 
-        live.error ? (
+        {live.error ? (
           <div className="empty-state">
             <div className="empty-icon">⚠️</div>
             <h3>No Live Data</h3>
