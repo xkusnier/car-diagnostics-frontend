@@ -1,6 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
+
+// ✅ NEW: websocket client
+import { io } from "socket.io-client";
+
+/**
+ * Assumptions:
+ * - api (axios) already sets Authorization header (JWT) for REST calls.
+ * - Your Flask-SocketIO server is on same origin OR you set REACT_APP_WS_URL.
+ *   Example: REACT_APP_WS_URL=https://your-backend.onrender.com
+ */
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [data, setData] = useState(null);
@@ -14,7 +24,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
 
-  // NEW: live data states
+  // ✅ NEW: socket status
+  const [wsStatus, setWsStatus] = useState({
+    connected: false,
+    error: null,
+  });
+
+  // ✅ Live data now comes via WS (but we still keep REST fallback optional)
   const [live, setLive] = useState({
     odometer: null,
     battery: null,
@@ -25,41 +41,163 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     error: null,
   });
 
-  // NOTE: these are not React state/refs; keeping your style, but be aware this resets per render.
-  let pollingInterval = null;
-  let liveInterval = null;
+  // ✅ FIX: intervals & socket must be refs (otherwise reset on render)
+  const pollingIntervalRef = useRef(null);
+  const socketRef = useRef(null);
 
+  // -------------------- INIT --------------------
   useEffect(() => {
     fetchDiagnostics();
+
     return () => {
-      if (pollingInterval) clearInterval(pollingInterval);
-      if (liveInterval) clearInterval(liveInterval);
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (socketRef.current) {
+        socketRef.current.removeAllListeners();
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId]);
 
   useEffect(() => {
-    // Ak máme VIN, načítame patterny
-    if (data?.vin) {
-      checkDtcPatterns(data.vin);
-    }
+    if (data?.vin) checkDtcPatterns(data.vin);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.vin]);
 
-  // NEW: start/stop live polling based on online status
+  // -------------------- ✅ WEBSOCKET LIVE --------------------
   useEffect(() => {
-    if (liveInterval) clearInterval(liveInterval);
-
-    if (data?.online) {
-      fetchLive();
-      liveInterval = setInterval(() => {
-        fetchLive();
-      }, 3000);
+    // Disconnect old socket when device changes or status changes
+    if (socketRef.current) {
+      socketRef.current.removeAllListeners();
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
 
+    // If device offline, clear WS status + keep old live values (or reset, your call)
+    if (!data?.online) {
+      setWsStatus({ connected: false, error: null });
+      setLive((prev) => ({
+        ...prev,
+        error: null,
+      }));
+      return;
+    }
+
+    // Build WS URL:
+    // - prefer env
+    // - else same origin (works in dev with proxy; in prod usually same domain)
+    const wsUrl =
+      process.env.REACT_APP_WS_URL ||
+      `${window.location.protocol}//${window.location.host}`;
+
+    // Optional: pass JWT if you later protect socket (your BE currently doesn't verify it)
+    const token = localStorage.getItem("token") || localStorage.getItem("access_token");
+
+    const socket = io(wsUrl, {
+      transports: ["websocket"],
+      // If you decide to check token on backend, keep this:
+      auth: token ? { token } : undefined,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+    });
+
+    socketRef.current = socket;
+
+    const onConnect = () => {
+      setWsStatus({ connected: true, error: null });
+      // subscribe to this device room
+      socket.emit("subscribe_device", { device_id: deviceId });
+    };
+
+    const onDisconnect = () => {
+      setWsStatus((prev) => ({ ...prev, connected: false }));
+    };
+
+    const onConnectError = (err) => {
+      setWsStatus({ connected: false, error: err?.message || "WebSocket connection error" });
+      setLive((prev) => ({ ...prev, error: "Live data stream unavailable (WS error)" }));
+    };
+
+    const onTelemetry = (payload) => {
+      // payload format from BE:
+      // {device_id, odometer, battery, engine, fuel, speed, timestamp}
+      if (!payload || Number(payload.device_id) !== Number(deviceId)) return;
+
+      setLive((prev) => ({
+        ...prev,
+        odometer:
+          payload.odometer != null
+            ? {
+                status: "success",
+                device_id: payload.device_id,
+                odometer: payload.odometer,
+                timestamp: payload.timestamp,
+              }
+            : prev.odometer,
+        battery:
+          payload.battery != null
+            ? {
+                status: "success",
+                device_id: payload.device_id,
+                battery_voltage: payload.battery.battery_voltage,
+                health: payload.battery.health,
+                timestamp: payload.timestamp,
+              }
+            : prev.battery,
+        engine:
+          payload.engine != null
+            ? {
+                status: "success",
+                device_id: payload.device_id,
+                engine: payload.engine,
+                timestamp: payload.timestamp,
+              }
+            : prev.engine,
+        fuel:
+          payload.fuel != null
+            ? {
+                status: "success",
+                device_id: payload.device_id,
+                fuel: payload.fuel,
+                timestamp: payload.timestamp,
+              }
+            : prev.fuel,
+        speed:
+          payload.speed != null
+            ? {
+                status: "success",
+                device_id: payload.device_id,
+                speed: payload.speed,
+                timestamp: payload.timestamp,
+              }
+            : prev.speed,
+        updatedAt: payload.timestamp || new Date().toISOString(),
+        error: null,
+      }));
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
+    socket.on("telemetry_update", onTelemetry);
+
+    // Optional server messages
+    socket.on("server_ready", () => {});
+    socket.on("subscribed", () => {});
+    socket.on("error", (e) => {
+      setWsStatus({ connected: false, error: e?.error || "WebSocket error" });
+    });
+
     return () => {
-      if (liveInterval) clearInterval(liveInterval);
+      socket.removeAllListeners();
+      socket.disconnect();
+      socketRef.current = null;
     };
   }, [deviceId, data?.online]);
 
+  // -------------------- REST --------------------
   const fetchDiagnostics = async () => {
     try {
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
@@ -71,70 +209,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  // NEW: load live data from new BE endpoints
-  const fetchLive = async () => {
-    try {
-      const [odo, batt, eng, fuel, spd] = await Promise.allSettled([
-        api.get(`/api/device/${deviceId}/odometer`),
-        api.get(`/api/device/${deviceId}/battery`),
-        api.get(`/api/device/${deviceId}/engine`),
-        api.get(`/api/device/${deviceId}/fuel`),
-        api.get(`/api/device/${deviceId}/speed`),
-      ]);
-
-      setLive((prev) => {
-        const next = { ...prev, error: null };
-
-        if (odo.status === "fulfilled") next.odometer = odo.value.data;
-        if (batt.status === "fulfilled") next.battery = batt.value.data;
-        if (eng.status === "fulfilled") next.engine = eng.value.data;
-        if (fuel.status === "fulfilled") next.fuel = fuel.value.data;
-        if (spd.status === "fulfilled") next.speed = spd.value.data;
-
-        const ts = [
-          next.odometer?.timestamp,
-          next.battery?.timestamp,
-          next.engine?.timestamp,
-          next.fuel?.timestamp,
-          next.speed?.timestamp,
-        ]
-          .filter(Boolean)
-          .sort()
-          .slice(-1)[0];
-
-        next.updatedAt = ts || null;
-
-        const allFailed =
-          odo.status === "rejected" &&
-          batt.status === "rejected" &&
-          eng.status === "rejected" &&
-          fuel.status === "rejected" &&
-          spd.status === "rejected";
-
-        if (allFailed) {
-          const msg =
-            odo.reason?.response?.data?.error ||
-            batt.reason?.response?.data?.error ||
-            eng.reason?.response?.data?.error ||
-            fuel.reason?.response?.data?.error ||
-            spd.reason?.response?.data?.error ||
-            "No live data available";
-          next.error = msg;
-        }
-
-        return next;
-      });
-    } catch (e) {
-      setLive((prev) => ({
-        ...prev,
-        error: e.response?.data?.error || "Error fetching live data",
-      }));
-    }
-  };
-
   const checkDtcPatterns = async (vin) => {
     if (!vin) return;
-
     setLoadingPatterns(true);
     try {
       const res = await api.get(`/api/dtc/pattern-check/${vin}`);
@@ -148,26 +224,25 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   const startPollingDiagnostics = () => {
-    if (pollingInterval) clearInterval(pollingInterval);
+    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
 
     setPolling(true);
 
-    pollingInterval = setInterval(async () => {
+    pollingIntervalRef.current = setInterval(async () => {
       try {
         const res = await api.get(`/api/device/${deviceId}/diagnostics`);
         const diag = res.data;
 
         if (!diag.dtc_codes || diag.dtc_codes.length === 0) {
-          clearInterval(pollingInterval);
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+
           setPolling(false);
           setClearing(false);
           setClearStatus("DTC successfully cleared ✔");
 
           setData(diag);
-          // Aktualizuj patterny po vymazaní DTC
-          if (diag.vin) {
-            checkDtcPatterns(diag.vin);
-          }
+          if (diag.vin) checkDtcPatterns(diag.vin);
         } else {
           setClearStatus("Waiting for RPi to clear DTC...");
         }
@@ -183,14 +258,12 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
     try {
       await api.post(`/api/device/${deviceId}/read-dtcs`);
-
       setReadStatus("Command sent. Device will read DTC codes...");
 
       setTimeout(() => {
         fetchDiagnostics();
         setReading(false);
         setReadStatus("DTC read command completed");
-
         setTimeout(() => setReadStatus(""), 3000);
       }, 5000);
     } catch (err) {
@@ -216,19 +289,19 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  // Funkcia pre farebné kódovanie severity
+  // -------------------- UI helpers --------------------
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
       case "critical":
-        return "#d32f2f"; // červená
+        return "#d32f2f";
       case "high":
-        return "#f57c00"; // oranžová
+        return "#f57c00";
       case "medium":
-        return "#ffb300"; // žltá
+        return "#ffb300";
       case "low":
-        return "#388e3c"; // zelená
+        return "#388e3c";
       default:
-        return "#5f6368"; // šedá
+        return "#5f6368";
     }
   };
 
@@ -263,9 +336,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   const getConfidenceColor = (confidence) => {
-    if (confidence >= 90) return "#388e3c"; // zelená
-    if (confidence >= 80) return "#ffb300"; // žltá
-    return "#f57c00"; // oranžová
+    if (confidence >= 90) return "#388e3c";
+    if (confidence >= 80) return "#ffb300";
+    return "#f57c00";
   };
 
   // -------------------- UI --------------------
@@ -297,7 +370,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     );
   }
 
-  // -------------------- MAIN UI --------------------
   return (
     <div className="devices-container">
       {/* Header */}
@@ -305,10 +377,12 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         <button className="btn btn-secondary" onClick={onBack}>
           ← Back to Devices
         </button>
+
         <div className="header-content">
           <h1>Device Diagnostics</h1>
           <p className="subtitle">Real-time diagnostics for device #{deviceId}</p>
         </div>
+
         <div className="device-status">
           <span className={`status-indicator ${data.online ? "online" : "offline"}`}></span>
           {data.online ? "Device Online" : "Device Offline"}
@@ -321,6 +395,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           <span className="stat-number">#{data.device_id}</span>
           <span className="stat-label">Device ID</span>
         </div>
+
         <div className="stat-item stat-item-vin">
           <span className="stat-number stat-number-vin">{data.vin ? data.vin : "N/A"}</span>
           <span className="stat-label">VIN</span>
@@ -330,6 +405,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           <span className="stat-number">{data.brand ? `${data.brand} ${data.model}` : "N/A"}</span>
           <span className="stat-label">Vehicle</span>
         </div>
+
         <div className="stat-item">
           <span className="stat-number">{data.dtc_codes ? data.dtc_codes.length : 0}</span>
           <span className="stat-label">Active DTCs</span>
@@ -394,11 +470,25 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         )}
       </div>
 
-      {/* NEW: Live Data Section */}
+      {/* ✅ Live Data Section (WS) */}
       <div className="dtc-section" style={{ marginBottom: "2rem" }}>
         <div className="section-header">
           <h2>📈 Live Data</h2>
-          <div className="dtc-count">
+
+          <div className="dtc-count" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <span>
+              Stream:{" "}
+              {data.online ? (
+                wsStatus.connected ? (
+                  <strong style={{ color: "#388e3c" }}>Connected</strong>
+                ) : (
+                  <strong style={{ color: "#f57c00" }}>Disconnected</strong>
+                )
+              ) : (
+                <strong style={{ color: "#5f6368" }}>Offline</strong>
+              )}
+            </span>
+
             {live.updatedAt ? (
               <span>
                 Updated:{" "}
@@ -412,7 +502,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                 })}
               </span>
             ) : (
-              <span>—</span>
+              <span>Updated: —</span>
             )}
           </div>
         </div>
@@ -428,6 +518,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
             <div className="empty-icon">⚠️</div>
             <h3>No Live Data</h3>
             <p>{live.error}</p>
+            {wsStatus.error && <p style={{ color: "#5f6368" }}>WS: {wsStatus.error}</p>}
           </div>
         ) : (
           <div className="stats-bar" style={{ marginTop: "1rem" }}>
@@ -447,9 +538,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
               <span className="stat-number">
                 {live.battery?.battery_voltage != null ? `${Number(live.battery.battery_voltage).toFixed(2)} V` : "—"}
               </span>
-              <span className="stat-label">
-                Battery {live.battery?.health ? `(${live.battery.health})` : ""}
-              </span>
+              <span className="stat-label">Battery {live.battery?.health ? `(${live.battery.health})` : ""}</span>
             </div>
 
             <div className="stat-item">
@@ -489,9 +578,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
             </div>
 
             <div className="stat-item">
-              <span className="stat-number">
-                {live.fuel?.fuel?.consumption_lh != null ? `${live.fuel.fuel.consumption_lh} L/h` : "—"}
-              </span>
+              <span className="stat-number">{live.fuel?.fuel?.consumption_lh != null ? `${live.fuel.fuel.consumption_lh} L/h` : "—"}</span>
               <span className="stat-label">Fuel (L/h)</span>
             </div>
 
@@ -643,10 +730,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                         <div className="severity-display">
                           <span
                             className={`severity-badge ${severityBadgeClass}`}
-                            style={{
-                              background: severityColor,
-                              color: "white",
-                            }}
+                            style={{ background: severityColor, color: "white" }}
                           >
                             {severityIcon} {item.severity?.toUpperCase() || "MEDIUM"}
                           </span>
