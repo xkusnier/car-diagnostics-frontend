@@ -507,13 +507,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           </div>
         </div>
 
-        {!data.online ? (
-          <div className="empty-state">
-            <div className="empty-icon">📴</div>
-            <h3>Device Offline</h3>
-            <p>Live data is available only when the device is online.</p>
-          </div>
-        ) : live.error ? (
+        live.error ? (
           <div className="empty-state">
             <div className="empty-icon">⚠️</div>
             <h3>No Live Data</h3>
