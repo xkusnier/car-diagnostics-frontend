@@ -2602,7 +2602,77 @@ body {
   background: #388e3c;
   color: white;
 }
+/* ========== MODAL DIALOG ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(3px);
+}
 
+.modal-content {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  max-width: 500px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+}
+
+.modal-content h3 {
+  color: var(--danger-red);
+  margin-bottom: var(--space-md);
+  font-size: 1.5rem;
+}
+
+.modal-content p {
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+  line-height: 1.6;
+}
+
+.modal-content .warning-text {
+  color: var(--danger-red);
+  background: rgba(211, 47, 47, 0.1);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--danger-red);
+  font-weight: 500;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+}
+
+/* Pridať štýl pre delete button v action-buttons */
+.btn-action.delete {
+  background: rgba(211, 47, 47, 0.1);
+  color: var(--danger-red);
+  border: 1px solid var(--danger-red);
+}
+
+.btn-action.delete:hover:not(:disabled) {
+  background: var(--danger-red);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-action.delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 /* DTC Code Badge */
 .dtc-code-badge {
   background: #1e3a8a;
