@@ -118,14 +118,6 @@ function DTCHistoryScreen({ onBack }) {
                 Found <strong>{data.length}</strong> DTC records for VIN: <code>{vin}</code>
               </p>
             </div>
-            <div className="results-actions">
-              <button className="btn btn-secondary" onClick={() => window.print()}>
-                📄 Print Report
-              </button>
-              <button className="btn btn-secondary">
-                📥 Export CSV
-              </button>
-            </div>
           </div>
 
           {data.length === 0 ? (
