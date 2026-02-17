@@ -10,12 +10,15 @@ import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
 import DTCHistoryScreen from "./DTCHistoryScreen";
 import { api } from "./api";
 import AddDeviceScreen from "./AddDeviceScreen";
-import VehicleTelemetryComparison from "./VehicleTelemetryComparison"; // ✅ Už máš importované
+import VehicleTelemetryComparison from "./VehicleTelemetryComparison";
+import LiveDataScreen from "./LiveDataScreen"; // ✅ IMPORT pre LiveDataScreen
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("login");
   const [user, setUser] = useState(null);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [selectedDeviceForLive, setSelectedDeviceForLive] = useState(null); // ✅ PRE LIVE DATA
+  const [selectedDeviceInfo, setSelectedDeviceInfo] = useState(null); // ✅ PRE LIVE DATA
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -163,11 +166,18 @@ function App() {
 
   // Navigation function
   const navigateTo = (screen, params = {}) => {
-    // Ak máme paramete (napr. deviceId), uložíme ich
+    // Ak máme parameter deviceId, uložíme ho
     if (params.deviceId) {
       setSelectedDeviceId(params.deviceId);
     }
     setCurrentScreen(screen);
+  };
+
+  // ✅ NOVÁ FUNKCIA pre navigáciu na Live Data
+  const navigateToLiveData = (deviceId, deviceInfo) => {
+    setSelectedDeviceForLive(deviceId);
+    setSelectedDeviceInfo(deviceInfo);
+    setCurrentScreen('live-data');
   };
 
   // Show loading while checking auth
@@ -219,7 +229,6 @@ function App() {
             >
               DTC History
             </button>
-            {/* ✅ NOVÉ: Telemetry Comparison v navigácii */}
             <button
               className={`nav-link ${currentScreen === "telemetry-comparison" ? "active" : ""}`}
               onClick={() => navigateTo("telemetry-comparison")}
@@ -267,6 +276,7 @@ function App() {
               setSelectedDeviceId(deviceId);
               navigateTo("device-diagnostics");
             }}
+            onLiveData={(deviceId, deviceInfo) => navigateToLiveData(deviceId, deviceInfo)} // ✅ SPRÁVNE ODOVZDANÉ
             role={user?.role}
           />
         )}
@@ -274,6 +284,14 @@ function App() {
         {currentScreen === "device-diagnostics" && user && (
           <DeviceDiagnosticsScreen 
             deviceId={selectedDeviceId}
+            onBack={() => navigateTo("my-devices")}
+          />
+        )}
+        
+        {currentScreen === "live-data" && user && ( // ✅ NOVÁ OBRAZOVKA
+          <LiveDataScreen 
+            deviceId={selectedDeviceForLive}
+            deviceInfo={selectedDeviceInfo}
             onBack={() => navigateTo("my-devices")}
           />
         )}
@@ -290,7 +308,6 @@ function App() {
           />
         )}
 
-        {/* ✅ NOVÁ OBRAZOVKA: Telemetry Comparison */}
         {currentScreen === "telemetry-comparison" && user && (
           <VehicleTelemetryComparison 
             onNavigate={navigateTo}
