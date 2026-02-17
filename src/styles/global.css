@@ -225,7 +225,106 @@ body {
   animation: spin 1s linear infinite;
   display: inline-block;
 }
+/* ========== LIVE DATA SCREEN ========== */
+.live-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-lg);
+}
 
+.live-data-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.live-data-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.live-data-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--space-sm);
+}
+
+.live-data-icon {
+  font-size: 1.5rem;
+}
+
+.live-data-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.live-data-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 80px;
+  padding: var(--space-md) 0;
+}
+
+.live-data-value .value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.live-data-value .value.no-data {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.live-data-value .unit {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-left: var(--space-xs);
+}
+
+.live-data-timestamp {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-light);
+  padding-top: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.engine-status {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  width: auto;
+  margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .live-data-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .live-data-value .value {
+    font-size: 2rem;
+  }
+}
 /* ========== MAIN SCREEN STYLES ========== */
 .main-screen {
   min-height: 100vh;
