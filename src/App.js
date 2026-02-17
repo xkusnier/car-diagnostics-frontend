@@ -19,6 +19,8 @@ function App() {
   const [selectedDeviceForLive, setSelectedDeviceForLive] = useState(null); // ✅ PRE LIVE DATA
   const [selectedDeviceInfo, setSelectedDeviceInfo] = useState(null); // ✅ PRE LIVE DATA
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  // ✅ Refresh key pre remountovanie komponentov
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     checkAuthStatus();
@@ -31,6 +33,12 @@ function App() {
       window.removeEventListener("open-register", handleRegister);
     };
   }, []);
+
+  // ✅ Funkcia pre refresh aktuálneho screenu
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    console.log(`Screen ${currentScreen} refreshed`);
+  };
 
   const checkAuthStatus = async () => {
     try {
@@ -237,6 +245,14 @@ function App() {
           </div>
           
           <div className="nav-user">
+            {/* ✅ REFRESH BUTTON - pridaný vedľa emailu */}
+            <button 
+              className="btn-refresh" 
+              onClick={handleRefresh}
+              title="Refresh current screen"
+            >
+              🔄
+            </button>
             <span className="user-email">{user?.email || "User"}</span>
             <button className="btn-logout" onClick={handleLogout}>
               Logout
@@ -263,6 +279,7 @@ function App() {
         
         {currentScreen === "main" && user && (
           <MainScreen 
+            key={`main-${refreshKey}`} // ✅ Pridaný refresh key
             onNavigate={navigateTo}
             user={user}
           />
@@ -270,6 +287,7 @@ function App() {
         
         {currentScreen === "my-devices" && user && (
           <MyDevicesScreen 
+            key={`my-devices-${refreshKey}`} // ✅ Pridaný refresh key
             onBack={() => navigateTo("main")}
             onDiagnostics={(deviceId) => {
               setSelectedDeviceId(deviceId);
@@ -282,6 +300,7 @@ function App() {
         
         {currentScreen === "device-diagnostics" && user && (
           <DeviceDiagnosticsScreen 
+            key={`device-diagnostics-${refreshKey}`} // ✅ Pridaný refresh key
             deviceId={selectedDeviceId}
             onBack={() => navigateTo("my-devices")}
           />
@@ -289,6 +308,7 @@ function App() {
         
         {currentScreen === "live-data" && user && ( // ✅ NOVÁ OBRAZOVKA
           <LiveDataScreen 
+            key={`live-data-${refreshKey}`} // ✅ Pridaný refresh key
             deviceId={selectedDeviceForLive}
             deviceInfo={selectedDeviceInfo}
             onBack={() => navigateTo("my-devices")}
@@ -297,6 +317,7 @@ function App() {
         
         {currentScreen === "dtc-history" && user && (
           <DTCHistoryScreen 
+            key={`dtc-history-${refreshKey}`} // ✅ Pridaný refresh key
             onBack={() => navigateTo("main")}
           />
         )}
@@ -304,6 +325,7 @@ function App() {
 
         {currentScreen === "telemetry-comparison" && user && (
           <VehicleTelemetryComparison 
+            key={`telemetry-${refreshKey}`} // ✅ Pridaný refresh key
             onNavigate={navigateTo}
             user={user}
           />
