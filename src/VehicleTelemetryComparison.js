@@ -230,11 +230,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
         {sortedVehicles.length === 0 ? (
           <div className="empty-state">
             <p>No vehicles found</p>
-            <button 
-              className="add-device-btn"
-              onClick={() => onNavigate('add-device')}
-            >
-              Add Your First Device
+              No devices
             </button>
           </div>
         ) : (
