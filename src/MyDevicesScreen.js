@@ -347,6 +347,15 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
                         >
                           🔧 Diagnostics
                         </button>
+
+                        <button
+                          className="btn-action live-data"
+                          onClick={() => onLiveData(device.device_id, device)}
+                          title="View Live Data"
+                          disabled={deletingId === device.device_id}
+                        >
+                          📊 Live Data
+                        </button>
                         
                         <button
                           className="btn-action delete"
