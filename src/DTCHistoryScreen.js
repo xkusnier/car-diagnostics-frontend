@@ -57,9 +57,6 @@ function DTCHistoryScreen({ onBack }) {
     <div className="dtc-history-container">
       {/* Header */}
       <div className="dtc-history-header">
-        <button className="btn btn-secondary" onClick={onBack}>
-          ← Back to Dashboard
-        </button>
         <h1>DTC History Lookup</h1>
         <p className="subtitle">Search and analyze diagnostic trouble code history by VIN</p>
       </div>
