@@ -2657,23 +2657,8 @@ body {
 
 /* Delete button - always red */
 .btn-action.delete {
-  background: var(--danger-red);
-  color: white;
-  border: 1px solid var(--danger-red);
-  transition: all 0.2s ease;
-}
-
-.btn-action.delete:hover:not(:disabled) {
-  background: #b71c1c; /* tmavšia červená pri hoveri */
-  border-color: #b71c1c;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-action.delete:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: var(--danger-red); /* stále červená, len transparentnejšia */
+  background: linear-gradient(135deg, var(--danger-red), #b71c1c);
+  color: var(--text-light);
 }
 /* DTC Code Badge */
 .dtc-code-badge {
