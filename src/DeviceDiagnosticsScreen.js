@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 
-// ✅ websocket client
+// ✅ websocket client - už nie je potrebný, ale necháme pre prípad
 import { io } from "socket.io-client";
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
@@ -17,87 +17,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
 
-  // ✅ socket status
-  const [wsStatus, setWsStatus] = useState({
-    connected: false,
-    error: null,
-  });
-
-  // ✅ live values: will show latest snapshot even if no current telemetry
-  const [live, setLive] = useState({
-    odometer: null,
-    battery: null,
-    engine: null,
-    fuel: null,
-    speed: null,
-    updatedAt: null,
-    error: null,
-  });
-
   // refs
   const pollingIntervalRef = useRef(null);
-  const socketRef = useRef(null);
-
-  // -------------------- SNAPSHOT REST (DB last known) --------------------
-  const fetchLiveSnapshots = async () => {
-    try {
-      const [odo, batt, eng, fuelRes, spd] = await Promise.allSettled([
-        api.get(`/api/device/${deviceId}/odometer`),
-        api.get(`/api/device/${deviceId}/battery`),
-        api.get(`/api/device/${deviceId}/engine`),
-        api.get(`/api/device/${deviceId}/fuel`),
-        api.get(`/api/device/${deviceId}/speed`),
-      ]);
-
-      setLive((prev) => {
-        const next = { ...prev, error: null };
-
-        if (odo.status === "fulfilled") next.odometer = odo.value.data;
-        if (batt.status === "fulfilled") next.battery = batt.value.data;
-        if (eng.status === "fulfilled") next.engine = eng.value.data;
-        if (fuelRes.status === "fulfilled") next.fuel = fuelRes.value.data;
-        if (spd.status === "fulfilled") next.speed = spd.value.data;
-
-        const ts = [
-          next.odometer?.timestamp,
-          next.battery?.timestamp,
-          next.engine?.timestamp,
-          next.fuel?.timestamp,
-          next.speed?.timestamp,
-        ]
-          .filter(Boolean)
-          .sort()
-          .slice(-1)[0];
-
-        next.updatedAt = ts || next.updatedAt || null;
-
-        const allFailed =
-          odo.status === "rejected" &&
-          batt.status === "rejected" &&
-          eng.status === "rejected" &&
-          fuelRes.status === "rejected" &&
-          spd.status === "rejected";
-
-        if (allFailed) {
-          const msg =
-            odo.reason?.response?.data?.error ||
-            batt.reason?.response?.data?.error ||
-            eng.reason?.response?.data?.error ||
-            fuelRes.reason?.response?.data?.error ||
-            spd.reason?.response?.data?.error ||
-            "No snapshot data available";
-          next.error = msg;
-        }
-
-        return next;
-      });
-    } catch (e) {
-      setLive((prev) => ({
-        ...prev,
-        error: e.response?.data?.error || "Error fetching snapshot data",
-      }));
-    }
-  };
 
   // -------------------- INIT --------------------
   useEffect(() => {
@@ -105,11 +26,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-      if (socketRef.current) {
-        socketRef.current.removeAllListeners();
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId]);
@@ -119,139 +35,11 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.vin]);
 
-  // -------------------- ✅ WEBSOCKET LIVE (updates) --------------------
-  useEffect(() => {
-    // Always take the latest snapshot on screen open / relog / refresh
-    // (so you don't see "—" until new telemetry arrives)
-    if (deviceId) fetchLiveSnapshots();
-
-    // Disconnect old socket when device changes
-    if (socketRef.current) {
-      socketRef.current.removeAllListeners();
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-
-    // Use BACKEND URL for Socket.IO (NOT frontend host)
-    const wsUrl =
-      process.env.REACT_APP_WS_URL ||
-      process.env.REACT_APP_API_URL ||
-      "https://car-diagnostics.onrender.com";
-
-    const token = localStorage.getItem("token") || localStorage.getItem("access_token");
-
-    const socket = io(wsUrl, {
-      transports: ["websocket"],
-      auth: token ? { token } : undefined,
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 500,
-    });
-
-    socketRef.current = socket;
-
-    const onConnect = () => {
-      setWsStatus({ connected: true, error: null });
-      socket.emit("subscribe_device", { device_id: deviceId });
-
-      // snapshot again on connect (helps after relog if state was empty)
-      fetchLiveSnapshots();
-    };
-
-    const onDisconnect = () => {
-      setWsStatus((prev) => ({ ...prev, connected: false }));
-    };
-
-    const onConnectError = (err) => {
-      setWsStatus({ connected: false, error: err?.message || "WebSocket connection error" });
-      // DON'T wipe values; keep snapshot visible
-    };
-
-    const onTelemetry = (payload) => {
-      // payload format from BE:
-      // {device_id, odometer, battery, engine, fuel, speed, timestamp}
-      if (!payload || Number(payload.device_id) !== Number(deviceId)) return;
-
-      setLive((prev) => ({
-        ...prev,
-        odometer:
-          payload.odometer != null
-            ? {
-                status: "success",
-                device_id: payload.device_id,
-                odometer: payload.odometer,
-                timestamp: payload.timestamp,
-              }
-            : prev.odometer,
-        battery:
-          payload.battery != null
-            ? {
-                status: "success",
-                device_id: payload.device_id,
-                battery_voltage: payload.battery.battery_voltage,
-                health: payload.battery.health,
-                timestamp: payload.timestamp,
-              }
-            : prev.battery,
-        engine:
-          payload.engine != null
-            ? {
-                status: "success",
-                device_id: payload.device_id,
-                engine: payload.engine,
-                timestamp: payload.timestamp,
-              }
-            : prev.engine,
-        fuel:
-          payload.fuel != null
-            ? {
-                status: "success",
-                device_id: payload.device_id,
-                fuel: payload.fuel,
-                timestamp: payload.timestamp,
-              }
-            : prev.fuel,
-        speed:
-          payload.speed != null
-            ? {
-                status: "success",
-                device_id: payload.device_id,
-                speed: payload.speed,
-                timestamp: payload.timestamp,
-              }
-            : prev.speed,
-        updatedAt: payload.timestamp || new Date().toISOString(),
-        error: null,
-      }));
-    };
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("connect_error", onConnectError);
-    socket.on("telemetry_update", onTelemetry);
-
-    socket.on("server_ready", () => {});
-    socket.on("subscribed", () => {});
-    socket.on("error", (e) => {
-      setWsStatus({ connected: false, error: e?.error || "WebSocket error" });
-    });
-
-    return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
-      socketRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceId]);
-
   // -------------------- REST --------------------
   const fetchDiagnostics = async () => {
     try {
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
       setData(res.data);
-
-      // ✅ always load last snapshot from DB
-      fetchLiveSnapshots();
     } catch (err) {
       setError(err.response?.data?.error || "Error fetching diagnostics");
     } finally {
@@ -430,7 +218,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
         <div className="header-content">
           <h1>Device Diagnostics</h1>
-          <p className="subtitle">Real-time diagnostics for device #{deviceId}</p>
+          <p className="subtitle">Diagnostics for device #{deviceId}</p>
         </div>
 
         <div className="device-status">
@@ -519,7 +307,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           </div>
         )}
       </div>
-
 
       {/* DTC Codes Section */}
       <div className="dtc-section">
@@ -686,132 +473,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           )}
         </div>
       )}
-
-
-      
-      {/* ✅ Live Data Section */}
-      <div className="dtc-section" style={{ marginBottom: "2rem" }}>
-        <div className="section-header">
-          <h2>📈 Live Data</h2>
-
-          <div className="dtc-count" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <span>
-              Stream:{" "}
-              {wsStatus.connected ? (
-                <strong style={{ color: "#388e3c" }}>Connected</strong>
-              ) : (
-                <strong style={{ color: "#f57c00" }}>Disconnected</strong>
-              )}
-            </span>
-
-            {live.updatedAt ? (
-              <span>
-                Updated:{" "}
-                {new Date(live.updatedAt).toLocaleString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                })}
-              </span>
-            ) : (
-              <span>Updated: —</span>
-            )}
-          </div>
-        </div>
-
-        {live.error ? (
-          <div className="empty-state">
-            <div className="empty-icon">⚠️</div>
-            <h3>No Live Data</h3>
-            <p>{live.error}</p>
-            {wsStatus.error && <p style={{ color: "#5f6368" }}>WS: {wsStatus.error}</p>}
-          </div>
-        ) : (
-          <div className="stats-bar" style={{ marginTop: "1rem" }}>
-            <div className="stat-item">
-              <span className="stat-number">
-                {live.odometer?.odometer != null ? `${live.odometer.odometer} km` : "—"}
-              </span>
-              <span className="stat-label">Odometer</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">{live.speed?.speed != null ? `${live.speed.speed} km/h` : "—"}</span>
-              <span className="stat-label">Speed</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">
-                {live.battery?.battery_voltage != null ? `${Number(live.battery.battery_voltage).toFixed(2)} V` : "—"}
-              </span>
-              <span className="stat-label">Battery {live.battery?.health ? `(${live.battery.health})` : ""}</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">{live.engine?.engine?.rpm != null ? `${live.engine.engine.rpm} rpm` : "—"}</span>
-              <span className="stat-label">
-                Engine{" "}
-                {live.engine?.engine?.running === true
-                  ? "(running)"
-                  : live.engine?.engine?.running === false
-                  ? "(off)"
-                  : ""}
-              </span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">
-                {live.engine?.engine?.coolant_temp != null ? `${live.engine.engine.coolant_temp} °C` : "—"}
-              </span>
-              <span className="stat-label">Coolant</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">{live.engine?.engine?.oil_temp != null ? `${live.engine.engine.oil_temp} °C` : "—"}</span>
-              <span className="stat-label">Oil Temp</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">
-                {live.engine?.engine?.intake_air_temp != null ? `${live.engine.engine.intake_air_temp} °C` : "—"}
-              </span>
-              <span className="stat-label">Intake Air</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">{live.engine?.engine?.load != null ? `${live.engine.engine.load}%` : "—"}</span>
-              <span className="stat-label">Engine Load</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">{live.fuel?.fuel?.consumption_lh != null ? `${live.fuel.fuel.consumption_lh} L/h` : "—"}</span>
-              <span className="stat-label">Fuel (L/h)</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">
-                {live.fuel?.fuel?.consumption_l100km != null ? `${live.fuel.fuel.consumption_l100km} L/100km` : "—"}
-              </span>
-              <span className="stat-label">Fuel (L/100km)</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">{live.fuel?.fuel?.maf != null ? `${live.fuel.fuel.maf} g/s` : "—"}</span>
-              <span className="stat-label">MAF</span>
-            </div>
-
-            <div className="stat-item">
-              <span className="stat-number">{live.fuel?.fuel?.type ? `${live.fuel.fuel.type}` : "—"}</span>
-              <span className="stat-label">Fuel Type</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-
     </div>
   );
 }
