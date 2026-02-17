@@ -107,16 +107,8 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
     <div className="devices-container">
       {/* Header */}
       <div className="devices-header">
-        <button className="btn btn-secondary" onClick={onBack}>
-          ← Back to Dashboard
-        </button>
         <div className="header-content">
           <h1>{role === "admin" ? "Device Management" : "My Devices"}</h1>
-          <p className="subtitle">
-            {role === "admin" 
-              ? "Manage all devices in the system" 
-              : "View and manage your connected devices"}
-          </p>
         </div>
         <button className="btn btn-primary" onClick={handleRefresh}>
           🔄 Refresh
