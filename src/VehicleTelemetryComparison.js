@@ -150,30 +150,8 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   return (
     <div className="telemetry-comparison">
-      {/* Header */}
-      <header className="comparison-header">
-        <div className="header-left">
-          <button 
-            className="back-button"
-            onClick={() => onNavigate('main')}
-          >
-            ← Back to Dashboard
-          </button>
-          <h1 className="page-title">Vehicle Telemetry Comparison</h1>
-        </div>
-        <div className="header-actions">
-          <button 
-            className="refresh-button"
-            onClick={fetchTelemetryComparison}
-            disabled={loading}
-          >
-            🔄 Refresh
-          </button>
-        </div>
-      </header>
-
-      {/* Summary Cards */}
-      <div className="summary-cards">
+      {/* Summary Cards - bez headeru */}
+      <div className="summary-cards" style={{ marginTop: 0 }}>
         <div className="summary-card">
           <div className="summary-icon">🚗</div>
           <div className="summary-content">
@@ -284,6 +262,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
                 <th>Engine</th>
                 <th>Temperatures</th>
                 <th>Odometer</th>
+                <th>Actions</th> {/* NOVÝ STĹPEC */}
               </tr>
             </thead>
             <tbody>
@@ -291,7 +270,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
                 <tr 
                   key={vehicle.device_id} 
                   className={!vehicle.online ? 'offline-row' : ''}
-                  onClick={() => onNavigate('device-detail', { deviceId: vehicle.device_id })}
+                  // ODSTRÁNENÉ onClick na celý riadok
                 >
                   <td>
                     <span className={`status-indicator ${vehicle.online ? 'online' : 'offline'}`}>
@@ -357,6 +336,19 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       <span>{(vehicle.telemetry.odometer / 1000).toFixed(1)}k km</span>
                     ) : '—'}
                   </td>
+                  <td>
+                    <button
+                      className="btn-action diagnostics"
+                      onClick={() => onNavigate('device-diagnostics', { deviceId: vehicle.device_id })}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        fontSize: '0.85rem',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      🔍 Diagnostics
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -387,11 +379,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         <div className="legend-item">
           <span className="legend-color" style={{ background: '#f44336' }}></span> Battery Critical
         </div>
-      </div>
-
-      {/* Last updated */}
-      <div className="last-updated">
-        <small>Click on any row to view detailed diagnostics</small>
       </div>
     </div>
   );
