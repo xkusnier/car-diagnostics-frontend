@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 
@@ -7,11 +7,52 @@ function DTCHistoryScreen({ onBack }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [activeDtcs, setActiveDtcs] = useState([]);
+  const [loadingActive, setLoadingActive] = useState(false);
   const [filters, setFilters] = useState({
     dateFrom: "",
     dateTo: "",
     severity: "all"
   });
+
+  // Funkcia na získanie aktívnych DTC pre dané VIN
+  const fetchActiveDtcs = async (vinCode) => {
+    setLoadingActive(true);
+    try {
+      // Skúsime nájsť zariadenie s týmto VIN
+      const devicesRes = await api.get("/api/my-devices");
+      const devices = devicesRes.data.devices || [];
+      
+      // Nájsť zariadenie s týmto VIN
+      const deviceWithVin = devices.find(d => d.vin === vinCode);
+      
+      if (deviceWithVin) {
+        // Získať diagnostiku pre toto zariadenie (obsahuje aktívne DTC)
+        const diagRes = await api.get(`/api/device/${deviceWithVin.device_id}/diagnostics`);
+        const activeCodes = diagRes.data.dtc_codes || [];
+        setActiveDtcs(activeCodes.map(d => d.dtc_code));
+      } else {
+        // Ak nenájdeme zariadenie, skúsime priamo endpoint pre aktívne DTC
+        try {
+          const activeRes = await api.get(`/api/vehicle/${vinCode}/active-dtcs`);
+          setActiveDtcs(activeRes.data.active_dtcs || []);
+        } catch {
+          // Ak ani to nefunguje, predpokladáme že nie sú žiadne aktívne DTC
+          setActiveDtcs([]);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching active DTCs:", err);
+      setActiveDtcs([]);
+    } finally {
+      setLoadingActive(false);
+    }
+  };
+
+  // Funkcia na kontrolu či je DTC aktívne
+  const isDtcActive = (dtcCode) => {
+    return activeDtcs.includes(dtcCode);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,13 +61,17 @@ function DTCHistoryScreen({ onBack }) {
     setData(null);
     
     try {
-      const payload = { vin };
+      const payload = { vin: vin.toUpperCase() };
       if (filters.dateFrom) payload.date_from = filters.dateFrom;
       if (filters.dateTo) payload.date_to = filters.dateTo;
       if (filters.severity !== "all") payload.severity = filters.severity;
       
       const res = await api.post("/api/dtc-history-full", payload);
       setData(res.data.history);
+      
+      // Po získaní histórie, získame aj aktívne DTC pre toto VIN
+      await fetchActiveDtcs(vin.toUpperCase());
+      
     } catch (err) {
       setError(err.response?.data?.error || "Error fetching DTC history");
     } finally {
@@ -42,7 +87,36 @@ function DTCHistoryScreen({ onBack }) {
     return 'low';
   };
 
+  const getSeverityBadgeClass = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case "critical": return "badge-critical";
+      case "high": return "badge-high";
+      case "medium": return "badge-medium";
+      case "low": return "badge-low";
+      default: return "badge-info";
+    }
+  };
+
+  const getSeverityIcon = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case "critical": return "🔥";
+      case "high": return "⚠️";
+      case "medium": return "🔶";
+      case "low": return "ℹ️";
+      default: return "❓";
+    }
+  };
+
+  const getStatusBadge = (dtcCode) => {
+    const active = isDtcActive(dtcCode);
+    return {
+      class: active ? 'active' : 'resolved',
+      text: active ? 'ACTIVE' : 'RESOLVED'
+    };
+  };
+
   const formatDate = (dateString) => {
+    if (!dateString) return "—";
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -56,6 +130,16 @@ function DTCHistoryScreen({ onBack }) {
   return (
     <div className="dtc-history-container">
       {/* Header */}
+      <div className="devices-header">
+        <button className="btn btn-secondary" onClick={onBack}>
+          ← Back to Dashboard
+        </button>
+
+        <div className="header-content">
+          <h1>DTC History</h1>
+          <p className="subtitle">Search diagnostic trouble codes by VIN</p>
+        </div>
+      </div>
 
       {/* Search Card */}
       <div className="search-card card">
@@ -116,6 +200,7 @@ function DTCHistoryScreen({ onBack }) {
               <h2>Search Results</h2>
               <p className="results-summary">
                 Found <strong>{data.length}</strong> DTC records for VIN: <code>{vin}</code>
+                {loadingActive && <span className="spinner-tiny" style={{ marginLeft: '1rem' }}></span>}
               </p>
             </div>
           </div>
@@ -146,6 +231,12 @@ function DTCHistoryScreen({ onBack }) {
                   </span>
                   <span className="summary-label">Critical Issues</span>
                 </div>
+                <div className="summary-card">
+                  <span className="summary-value">
+                    {data.filter(d => isDtcActive(d.dtc_code)).length}
+                  </span>
+                  <span className="summary-label">Currently Active</span>
+                </div>
               </div>
 
               {/* DTC Table */}
@@ -163,10 +254,22 @@ function DTCHistoryScreen({ onBack }) {
                   <tbody>
                     {data.map((item, i) => {
                       const severity = getSeverityColor(item.dtc_code);
+                      const severityBadgeClass = getSeverityBadgeClass(severity);
+                      const severityIcon = getSeverityIcon(severity);
+                      const active = isDtcActive(item.dtc_code);
+                      const status = getStatusBadge(item.dtc_code);
+                      
                       return (
-                        <tr key={i}>
+                        <tr key={i} className={!active ? 'resolved-row' : ''}>
                           <td>
-                            <span className={`dtc-code ${severity}`}>
+                            <span
+                              className="dtc-code-badge"
+                              style={{
+                                borderLeft: `4px solid ${active ? '#d32f2f' : '#9e9e9e'}`,
+                                background: active ? '#ffebee' : '#f5f5f5',
+                                opacity: active ? 1 : 0.8
+                              }}
+                            >
                               {item.dtc_code}
                             </span>
                           </td>
@@ -179,8 +282,8 @@ function DTCHistoryScreen({ onBack }) {
                             </div>
                           </td>
                           <td>
-                            <span className={`severity-badge ${severity}`}>
-                              {severity.toUpperCase()}
+                            <span className={`severity-badge ${severityBadgeClass}`}>
+                              {severityIcon} {severity.toUpperCase()}
                             </span>
                           </td>
                           <td>
@@ -192,8 +295,8 @@ function DTCHistoryScreen({ onBack }) {
                             </div>
                           </td>
                           <td>
-                            <span className="status-badge resolved">
-                              {item.resolved ? 'Resolved' : 'Active'}
+                            <span className={`status-badge ${status.class}`}>
+                              {status.text}
                             </span>
                           </td>
                         </tr>
@@ -201,6 +304,18 @@ function DTCHistoryScreen({ onBack }) {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Legend */}
+              <div className="legend" style={{ marginTop: '2rem' }}>
+                <div className="legend-item">
+                  <span className="status-badge active" style={{ padding: '0.25rem 0.75rem' }}>ACTIVE</span>
+                  <span>Currently active DTC code</span>
+                </div>
+                <div className="legend-item">
+                  <span className="status-badge resolved" style={{ padding: '0.25rem 0.75rem' }}>RESOLVED</span>
+                  <span>Previously occurred, now resolved</span>
+                </div>
               </div>
 
               {/* Pagination (if needed) */}
