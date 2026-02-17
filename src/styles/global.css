@@ -2655,16 +2655,17 @@ body {
   margin-top: var(--space-xl);
 }
 
-/* Pridať štýl pre delete button v action-buttons */
+/* Delete button - always red */
 .btn-action.delete {
-  background: rgba(211, 47, 47, 0.1);
-  color: var(--danger-red);
+  background: var(--danger-red);
+  color: white;
   border: 1px solid var(--danger-red);
+  transition: all 0.2s ease;
 }
 
 .btn-action.delete:hover:not(:disabled) {
-  background: var(--danger-red);
-  color: white;
+  background: #b71c1c; /* tmavšia červená pri hoveri */
+  border-color: #b71c1c;
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
@@ -2672,6 +2673,7 @@ body {
 .btn-action.delete:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: var(--danger-red); /* stále červená, len transparentnejšia */
 }
 /* DTC Code Badge */
 .dtc-code-badge {
