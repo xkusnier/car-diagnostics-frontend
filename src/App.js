@@ -10,6 +10,7 @@ import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
 import DTCHistoryScreen from "./DTCHistoryScreen";
 import { api } from "./api";
 import AddDeviceScreen from "./AddDeviceScreen";
+import VehicleTelemetryComparison from "./VehicleTelemetryComparison"; // ✅ Už máš importované
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("login");
@@ -161,7 +162,11 @@ function App() {
   };
 
   // Navigation function
-  const navigateTo = (screen) => {
+  const navigateTo = (screen, params = {}) => {
+    // Ak máme paramete (napr. deviceId), uložíme ich
+    if (params.deviceId) {
+      setSelectedDeviceId(params.deviceId);
+    }
     setCurrentScreen(screen);
   };
 
@@ -213,6 +218,13 @@ function App() {
               onClick={() => navigateTo("dtc-history")}
             >
               DTC History
+            </button>
+            {/* ✅ NOVÉ: Telemetry Comparison v navigácii */}
+            <button
+              className={`nav-link ${currentScreen === "telemetry-comparison" ? "active" : ""}`}
+              onClick={() => navigateTo("telemetry-comparison")}
+            >
+              📊 Telemetry Comparison
             </button>
           </div>
           
@@ -271,15 +283,21 @@ function App() {
             onBack={() => navigateTo("main")}
           />
         )}
+        
         {currentScreen === "add-device" && user && (
           <AddDeviceScreen 
             onBack={() => navigateTo("main")}
           />
         )}
 
+        {/* ✅ NOVÁ OBRAZOVKA: Telemetry Comparison */}
+        {currentScreen === "telemetry-comparison" && user && (
+          <VehicleTelemetryComparison 
+            onNavigate={navigateTo}
+            user={user}
+          />
+        )}
       </main>
-
-
     </div>
   );
 }
