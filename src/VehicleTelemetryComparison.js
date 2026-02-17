@@ -230,8 +230,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         {sortedVehicles.length === 0 ? (
           <div className="empty-state">
             <p>No vehicles found</p>
-              No devices
-            </button>
           </div>
         ) : (
           <table className="vehicles-table">
