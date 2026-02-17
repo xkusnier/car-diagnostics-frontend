@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 
-function MyDevicesScreen({ onBack, onDiagnostics, role }) {
+function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
   const [devices, setDevices] = useState([]);
   const [filteredDevices, setFilteredDevices] = useState([]);
   const [error, setError] = useState(null);
