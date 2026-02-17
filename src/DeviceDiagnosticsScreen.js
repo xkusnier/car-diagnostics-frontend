@@ -520,6 +520,175 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         )}
       </div>
 
+
+      {/* DTC Codes Section */}
+      <div className="dtc-section">
+        <div className="section-header">
+          <h2>Active DTC Codes</h2>
+          <div className="dtc-count">
+            {data.dtc_codes ? data.dtc_codes.length : 0} active codes
+            {data.dtc_codes && data.dtc_codes.length > 0 && (
+              <span style={{ marginLeft: "1rem", fontSize: "0.875rem", color: "#5f6368" }}>
+                {data.dtc_codes.filter((d) => d.severity === "critical").length} critical
+              </span>
+            )}
+          </div>
+        </div>
+
+        {!data.dtc_codes || data.dtc_codes.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">✅</div>
+            <h3>No Active DTC Codes</h3>
+            <p>No diagnostic trouble codes found for this device.</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="dtc-table">
+              <thead>
+                <tr>
+                  <th>DTC Code</th>
+                  <th>Description</th>
+                  <th>Severity</th>
+                  <th>Date Detected</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.dtc_codes.map((item, i) => {
+                  const severityColor = getSeverityColor(item.severity);
+                  const severityBadgeClass = getSeverityBadgeClass(item.severity);
+                  const severityIcon = getSeverityIcon(item.severity);
+
+                  return (
+                    <tr key={i} className={i % 2 === 0 ? "even" : "odd"}>
+                      <td>
+                        <span
+                          className="dtc-code-badge"
+                          style={{
+                            borderLeft: `4px solid ${severityColor}`,
+                            background: `${severityColor}15`,
+                          }}
+                        >
+                          {item.dtc_code}
+                        </span>
+                      </td>
+                      <td className="description-cell">
+                        <div className="description-content">
+                          <strong>{item.description || "No description available"}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="severity-display">
+                          <span
+                            className={`severity-badge ${severityBadgeClass}`}
+                            style={{ background: severityColor, color: "white" }}
+                          >
+                            {severityIcon} {item.severity?.toUpperCase() || "MEDIUM"}
+                          </span>
+                          <div className="severity-info">
+                            <small>
+                              {item.severity === "critical" && "Requires immediate attention"}
+                              {item.severity === "high" && "Needs attention soon"}
+                              {item.severity === "medium" && "Monitor condition"}
+                              {item.severity === "low" && "Informational only"}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="date-cell">
+                          <div className="date">
+                            {item.created_at
+                              ? new Date(item.created_at).toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "—"}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* DTC Pattern Detection Section */}
+      {data.vin && data.dtc_codes && data.dtc_codes.length > 0 && (
+        <div className="pattern-section" style={{ marginBottom: "2rem" }}>
+          <div className="section-header">
+            <h2>🔍 DTC Pattern Detection</h2>
+            <div className="pattern-count">
+              {loadingPatterns ? <div className="spinner-tiny"></div> : `${patterns.length} pattern(s) detected`}
+            </div>
+          </div>
+
+          {loadingPatterns ? (
+            <div className="empty-state">
+              <div className="spinner-medium"></div>
+              <p>Analyzing DTC patterns...</p>
+            </div>
+          ) : patterns.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🔍</div>
+              <h3>No Patterns Detected</h3>
+              <p>No known diagnostic patterns match the current DTC combination.</p>
+            </div>
+          ) : (
+            <div className="pattern-cards">
+              {patterns.map((pattern, index) => (
+                <div key={index} className="pattern-card">
+                  <div className="pattern-header">
+                    <div className="pattern-title">
+                      <span className="pattern-icon">🎯</span>
+                      <h3>{pattern.pattern_name}</h3>
+                    </div>
+                    <div
+                      className="confidence-badge"
+                      style={{
+                        backgroundColor: getConfidenceColor(pattern.confidence),
+                        color: "white",
+                      }}
+                    >
+                      {pattern.confidence}% confidence
+                    </div>
+                  </div>
+
+                  <div className="pattern-body">
+                    <div className="pattern-cause">
+                      <strong>Primary Cause:</strong> {pattern.primary_cause}
+                    </div>
+
+                    <div className="pattern-codes">
+                      <strong>Required DTC Codes:</strong>
+                      <div className="dtc-code-list">
+                        {pattern.required_codes.map((code, idx) => (
+                          <span key={idx} className="dtc-tag">
+                            {code}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pattern-match">
+                      <strong>Match Status:</strong>
+                      <span className="match-badge success">✅ All required codes present</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+
+      
       {/* ✅ Live Data Section */}
       <div className="dtc-section" style={{ marginBottom: "2rem" }}>
         <div className="section-header">
@@ -642,204 +811,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         )}
       </div>
 
-      {/* DTC Pattern Detection Section */}
-      {data.vin && data.dtc_codes && data.dtc_codes.length > 0 && (
-        <div className="pattern-section" style={{ marginBottom: "2rem" }}>
-          <div className="section-header">
-            <h2>🔍 DTC Pattern Detection</h2>
-            <div className="pattern-count">
-              {loadingPatterns ? <div className="spinner-tiny"></div> : `${patterns.length} pattern(s) detected`}
-            </div>
-          </div>
 
-          {loadingPatterns ? (
-            <div className="empty-state">
-              <div className="spinner-medium"></div>
-              <p>Analyzing DTC patterns...</p>
-            </div>
-          ) : patterns.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🔍</div>
-              <h3>No Patterns Detected</h3>
-              <p>No known diagnostic patterns match the current DTC combination.</p>
-            </div>
-          ) : (
-            <div className="pattern-cards">
-              {patterns.map((pattern, index) => (
-                <div key={index} className="pattern-card">
-                  <div className="pattern-header">
-                    <div className="pattern-title">
-                      <span className="pattern-icon">🎯</span>
-                      <h3>{pattern.pattern_name}</h3>
-                    </div>
-                    <div
-                      className="confidence-badge"
-                      style={{
-                        backgroundColor: getConfidenceColor(pattern.confidence),
-                        color: "white",
-                      }}
-                    >
-                      {pattern.confidence}% confidence
-                    </div>
-                  </div>
-
-                  <div className="pattern-body">
-                    <div className="pattern-cause">
-                      <strong>Primary Cause:</strong> {pattern.primary_cause}
-                    </div>
-
-                    <div className="pattern-codes">
-                      <strong>Required DTC Codes:</strong>
-                      <div className="dtc-code-list">
-                        {pattern.required_codes.map((code, idx) => (
-                          <span key={idx} className="dtc-tag">
-                            {code}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pattern-match">
-                      <strong>Match Status:</strong>
-                      <span className="match-badge success">✅ All required codes present</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* DTC Codes Section */}
-      <div className="dtc-section">
-        <div className="section-header">
-          <h2>Active DTC Codes</h2>
-          <div className="dtc-count">
-            {data.dtc_codes ? data.dtc_codes.length : 0} active codes
-            {data.dtc_codes && data.dtc_codes.length > 0 && (
-              <span style={{ marginLeft: "1rem", fontSize: "0.875rem", color: "#5f6368" }}>
-                {data.dtc_codes.filter((d) => d.severity === "critical").length} critical
-              </span>
-            )}
-          </div>
-        </div>
-
-        {!data.dtc_codes || data.dtc_codes.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">✅</div>
-            <h3>No Active DTC Codes</h3>
-            <p>No diagnostic trouble codes found for this device.</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="dtc-table">
-              <thead>
-                <tr>
-                  <th>DTC Code</th>
-                  <th>Description</th>
-                  <th>Severity</th>
-                  <th>Date Detected</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.dtc_codes.map((item, i) => {
-                  const severityColor = getSeverityColor(item.severity);
-                  const severityBadgeClass = getSeverityBadgeClass(item.severity);
-                  const severityIcon = getSeverityIcon(item.severity);
-
-                  return (
-                    <tr key={i} className={i % 2 === 0 ? "even" : "odd"}>
-                      <td>
-                        <span
-                          className="dtc-code-badge"
-                          style={{
-                            borderLeft: `4px solid ${severityColor}`,
-                            background: `${severityColor}15`,
-                          }}
-                        >
-                          {item.dtc_code}
-                        </span>
-                      </td>
-                      <td className="description-cell">
-                        <div className="description-content">
-                          <strong>{item.description || "No description available"}</strong>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="severity-display">
-                          <span
-                            className={`severity-badge ${severityBadgeClass}`}
-                            style={{ background: severityColor, color: "white" }}
-                          >
-                            {severityIcon} {item.severity?.toUpperCase() || "MEDIUM"}
-                          </span>
-                          <div className="severity-info">
-                            <small>
-                              {item.severity === "critical" && "Requires immediate attention"}
-                              {item.severity === "high" && "Needs attention soon"}
-                              {item.severity === "medium" && "Monitor condition"}
-                              {item.severity === "low" && "Informational only"}
-                            </small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="date-cell">
-                          <div className="date">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleDateString("en-GB", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "—"}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Severity Legend */}
-      {data.dtc_codes && data.dtc_codes.length > 0 && (
-        <div className="quick-tips">
-          <h4>⚠️ Severity Legend</h4>
-          <div className="severity-legend">
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: "#d32f2f" }}></span>
-              <span className="legend-label">
-                <strong>CRITICAL</strong> - Requires immediate attention
-              </span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: "#f57c00" }}></span>
-              <span className="legend-label">
-                <strong>HIGH</strong> - Needs attention soon
-              </span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: "#ffb300" }}></span>
-              <span className="legend-label">
-                <strong>MEDIUM</strong> - Monitor condition
-              </span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: "#388e3c" }}></span>
-              <span className="legend-label">
-                <strong>LOW</strong> - Informational only
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
