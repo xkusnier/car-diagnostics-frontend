@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
-
+import { io } from "socket.io-client";
 function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
   const [live, setLive] = useState({
     odometer: null,
