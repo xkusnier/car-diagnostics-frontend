@@ -232,7 +232,7 @@ function App() {
               className={`nav-link ${currentScreen === "telemetry-comparison" ? "active" : ""}`}
               onClick={() => navigateTo("telemetry-comparison")}
             >
-              📊 Telemetry Comparison
+              Telemetry Comparison
             </button>
           </div>
           
