@@ -9,7 +9,6 @@ import MyDevicesScreen from "./MyDevicesScreen";
 import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
 import DTCHistoryScreen from "./DTCHistoryScreen";
 import { api } from "./api";
-import AddDeviceScreen from "./AddDeviceScreen";
 import VehicleTelemetryComparison from "./VehicleTelemetryComparison";
 import LiveDataScreen from "./LiveDataScreen"; // ✅ IMPORT pre LiveDataScreen
 
@@ -302,11 +301,6 @@ function App() {
           />
         )}
         
-        {currentScreen === "add-device" && user && (
-          <AddDeviceScreen 
-            onBack={() => navigateTo("main")}
-          />
-        )}
 
         {currentScreen === "telemetry-comparison" && user && (
           <VehicleTelemetryComparison 
