@@ -143,16 +143,6 @@ function MainScreen({ onNavigate, user }) {
             <p className="stat-label">Active DTCs</p>
           </div>
         </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
-            🔔
-          </div>
-          <div className="stat-content">
-            <h3 className="stat-value">{stats.recentIssues}</h3>
-            <p className="stat-label">Recent Issues</p>
-          </div>
-        </div>
       </div>
 
 
