@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
-
+import { io } from "socket.io-client";
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [data, setData] = useState(null);
