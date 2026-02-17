@@ -525,30 +525,6 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="legend" style={{ marginTop: '2rem' }}>
-        <div className="legend-item">
-          <span className="legend-dot online"></span> Connected
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot offline"></span> Disconnected
-        </div>
-        <div className="legend-item">
-          <span className="legend-icon">🟢</span> Engine Running
-        </div>
-        <div className="legend-item">
-          <span className="legend-icon">🔴</span> Engine Off
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: '#4caf50' }}></span> Battery Good (>12.2V)
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: '#ff9800' }}></span> Battery Warning (11.8-12.2V)
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: '#f44336' }}></span> Battery Critical (<11.8V)
-        </div>
-      </div>
 
       {/* Last Updated */}
       {live.updatedAt && (
