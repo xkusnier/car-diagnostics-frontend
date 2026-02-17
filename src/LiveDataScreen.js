@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
+import { io } from "socket.io-client";
 import "./styles/global.css";
 
 function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
