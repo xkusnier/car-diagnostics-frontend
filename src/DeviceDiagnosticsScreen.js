@@ -2,8 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 
-// ✅ websocket client - už nie je potrebný, ale necháme pre prípad
-import { io } from "socket.io-client";
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [data, setData] = useState(null);
