@@ -12,6 +12,8 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [deletingId, setDeletingId] = useState(null); // Pre loading stav pri mazaní
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // Pre potvrdzovací dialóg
 
   useEffect(() => {
     fetchDevices();
@@ -78,6 +80,20 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
     }
   };
 
+  const handleDeleteDevice = async (deviceId) => {
+    setDeletingId(deviceId);
+    try {
+      await api.delete(`/api/device/${deviceId}`);
+      alert("Device deleted successfully!");
+      await fetchDevices(); // Refresh zoznamu
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to delete device");
+    } finally {
+      setDeletingId(null);
+      setShowDeleteConfirm(null);
+    }
+  };
+
   const handleRefresh = () => {
     setLoading(true);
     fetchDevices();
@@ -91,6 +107,33 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
       default: return 'secondary';
     }
   };
+
+  // Potvrdzovací dialóg
+  const DeleteConfirmDialog = ({ deviceId, onConfirm, onCancel }) => (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>Delete Device</h3>
+        <p>Are you sure you want to delete device <strong>#{deviceId}</strong>?</p>
+        <p className="warning-text">This action cannot be undone. All device data including telemetry and DTC history will be permanently removed.</p>
+        <div className="modal-actions">
+          <button 
+            className="btn btn-secondary" 
+            onClick={onCancel}
+            disabled={deletingId === deviceId}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn btn-danger" 
+            onClick={() => onConfirm(deviceId)}
+            disabled={deletingId === deviceId}
+          >
+            {deletingId === deviceId ? 'Deleting...' : 'Delete Permanently'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -300,10 +343,19 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
                           className="btn-action diagnostics"
                           onClick={() => onDiagnostics(device.device_id)}
                           title="View Diagnostics"
+                          disabled={deletingId === device.device_id}
                         >
                           🔧 Diagnostics
                         </button>
                         
+                        <button
+                          className="btn-action delete"
+                          onClick={() => setShowDeleteConfirm(device.device_id)}
+                          title="Delete Device"
+                          disabled={deletingId === device.device_id}
+                        >
+                          🗑️ Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -314,6 +366,14 @@ function MyDevicesScreen({ onBack, onDiagnostics, role }) {
         )}
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <DeleteConfirmDialog
+          deviceId={showDeleteConfirm}
+          onConfirm={handleDeleteDevice}
+          onCancel={() => setShowDeleteConfirm(null)}
+        />
+      )}
     </div>
   );
 }
