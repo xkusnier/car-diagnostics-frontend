@@ -223,7 +223,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
             <tbody>
               {sortedVehicles.map((vehicle) => (
                 <tr 
-                  key={vehicle.device_id} 
+                  key={vehicle.vin} 
                   className={!vehicle.online ? 'offline-row' : ''}
                 >
                   <td>
@@ -272,17 +272,43 @@ function VehicleTelemetryComparison({ onNavigate }) {
                     ) : '0'}
                   </td>
                   <td>
-                    <button
-                      className="btn-action diagnostics"
-                      onClick={() => onNavigate('device-diagnostics', { deviceId: vehicle.device_id })}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        fontSize: '0.85rem',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      🔍 Diagnostics
-                    </button>
+                    <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem' }}>
+                      {vehicle.device_id ? (
+                        <>
+                          <button
+                            className="btn-action diagnostics"
+                            onClick={() => onNavigate('device-diagnostics', { deviceId: vehicle.device_id })}
+                            style={{
+                              padding: '0.5rem 0.8rem',
+                              fontSize: '0.85rem',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            🔧 Diagnostics
+                          </button>
+                          <button
+                            className="btn-action live-data"
+                            onClick={() => onNavigate('live-data', { 
+                              deviceId: vehicle.device_id,
+                              deviceInfo: vehicle 
+                            })}
+                            style={{
+                              padding: '0.5rem 0.8rem',
+                              fontSize: '0.85rem',
+                              whiteSpace: 'nowrap',
+                              backgroundColor: '#4caf50',
+                              color: 'white'
+                            }}
+                          >
+                            📊 Live Data
+                          </button>
+                        </>
+                      ) : (
+                        <span className="no-device" style={{ color: '#999', fontSize: '0.85rem' }}>
+                          No device connected
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
