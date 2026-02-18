@@ -18,6 +18,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   // ✅ Socket ref
   const socketRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+  const readPollingIntervalRef = useRef(null); // ✅ Nový ref pre read polling
 
   // -------------------- INIT --------------------
   useEffect(() => {
@@ -56,6 +57,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (readPollingIntervalRef.current) clearInterval(readPollingIntervalRef.current); // ✅ Vyčistenie
       if (socketRef.current) socketRef.current.disconnect();
     };
   }, [deviceId]);
@@ -90,23 +92,59 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // ✅ Nová funkcia pre read polling
+  const startReadPolling = () => {
+    if (readPollingIntervalRef.current) clearInterval(readPollingIntervalRef.current);
+    
+    let attempts = 0;
+    const maxAttempts = 10; // 30 sekúnd (10 * 3s)
+    
+    readPollingIntervalRef.current = setInterval(async () => {
+      attempts++;
+      
+      try {
+        const res = await api.get(`/api/device/${deviceId}/diagnostics`);
+        const newData = res.data;
+        
+        // Ak sa zmenil počet DTC kódov (pribudli nové)
+        if (JSON.stringify(data?.dtc_codes) !== JSON.stringify(newData.dtc_codes)) {
+          setData(newData);
+          setReading(false);
+          setReadStatus("DTC read completed ✔");
+          if (newData.vin) checkDtcPatterns(newData.vin);
+          
+          // Zastavíme polling
+          clearInterval(readPollingIntervalRef.current);
+          readPollingIntervalRef.current = null;
+          
+          // Po 3 sekundách skryjeme status
+          setTimeout(() => setReadStatus(""), 3000);
+        } else if (attempts >= maxAttempts) {
+          // Ak sa nič nezmenilo po max pokusoch, zastavíme polling
+          clearInterval(readPollingIntervalRef.current);
+          readPollingIntervalRef.current = null;
+          setReading(false);
+          setReadStatus("Read timeout - no new DTCs detected");
+          setTimeout(() => setReadStatus(""), 3000);
+        } else {
+          setReadStatus(`Waiting for DTCs... (attempt ${attempts}/${maxAttempts})`);
+        }
+      } catch (e) {
+        console.error("Read polling error:", e);
+      }
+    }, 3000); // Každé 3 sekundy
+  };
+
   const handleReadDTCs = async () => {
     setReading(true);
     setReadStatus("Sending read DTC command...");
 
     try {
       await api.post(`/api/device/${deviceId}/read-dtcs`);
-      setReadStatus("Command sent. Device will read DTC codes...");
-
-      // ✅ Po 5 sekundách automaticky načítame nové dáta
-      setTimeout(() => {
-        fetchDiagnostics();
-        setReading(false);
-        setReadStatus("DTC read command completed ✔");
-        
-        // Po 3 sekundách skryjeme status
-        setTimeout(() => setReadStatus(""), 3000);
-      }, 5000);
+      setReadStatus("Command sent. Waiting for DTCs...");
+      
+      // ✅ Spustíme polling
+      startReadPolling();
       
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send read DTC command.");
@@ -286,8 +324,12 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
         {/* Status Messages */}
         {readStatus && (
-          <div className={`status-message ${readStatus.includes("✔") ? "success" : "info"}`}>
-            <span className="icon">{readStatus.includes("✔") ? "✅" : "ℹ️"}</span>
+          <div className={`status-message ${readStatus.includes("✔") ? "success" : readStatus.includes("timeout") ? "error" : "info"}`}>
+            <span className="icon">
+              {readStatus.includes("✔") ? "✅" : 
+               readStatus.includes("timeout") ? "⚠️" : 
+               readStatus.includes("Waiting") ? "⏳" : "ℹ️"}
+            </span>
             {readStatus}
           </div>
         )}
