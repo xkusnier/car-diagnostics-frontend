@@ -15,15 +15,42 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
 
+  // ✅ NOVÉ: Socket ref
+  const socketRef = useRef(null);
+
   // refs
   const pollingIntervalRef = useRef(null);
 
   // -------------------- INIT --------------------
   useEffect(() => {
     fetchDiagnostics();
+    
+    // ✅ Vytvorenie socket pripojenia
+    const socketUrl = process.env.REACT_APP_API_URL || "https://car-diagnostics.onrender.com";
+    socketRef.current = io(socketUrl, {
+      transports: ['websocket'],
+      reconnection: true
+    });
+    
+    // ✅ Počúvanie na clear confirmation
+    socketRef.current.on("clear_confirmation", (data) => {
+      console.log("Clear confirmation received:", data);
+      if (data.device_id === deviceId) {
+        handleClearSuccess();
+      }
+    });
+    
+    // ✅ Počúvanie na DTC update
+    socketRef.current.on("dtc_updated", (data) => {
+      console.log("DTC update received:", data);
+      if (data.device_id === deviceId) {
+        refreshDiagnostics();
+      }
+    });
 
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (socketRef.current) socketRef.current.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId]);
@@ -43,6 +70,38 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Nová funkcia na refresh diagnostiky
+  const refreshDiagnostics = async () => {
+    try {
+      const res = await api.get(`/api/device/${deviceId}/diagnostics`);
+      setData(res.data);
+      if (res.data.vin) checkDtcPatterns(res.data.vin);
+    } catch (err) {
+      console.error("Error refreshing diagnostics:", err);
+    }
+  };
+
+  // ✅ Nová funkcia pre úspešné vymazanie
+  const handleClearSuccess = () => {
+    // Zastavíme polling ak beží
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
+    setPolling(false);
+    setClearing(false);
+    setClearStatus("DTC successfully cleared ✔");
+    
+    // Načítame nové dáta
+    refreshDiagnostics();
+    
+    // Po 3 sekundách skryjeme status
+    setTimeout(() => {
+      setClearStatus("");
+    }, 3000);
   };
 
   const checkDtcPatterns = async (vin) => {
@@ -70,15 +129,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         const diag = res.data;
 
         if (!diag.dtc_codes || diag.dtc_codes.length === 0) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-
-          setPolling(false);
-          setClearing(false);
-          setClearStatus("DTC successfully cleared ✔");
-
-          setData(diag);
-          if (diag.vin) checkDtcPatterns(diag.vin);
+          handleClearSuccess();
         } else {
           setClearStatus("Waiting for RPi to clear DTC...");
         }
@@ -97,7 +148,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       setReadStatus("Command sent. Device will read DTC codes...");
 
       setTimeout(() => {
-        fetchDiagnostics();
+        refreshDiagnostics();
         setReading(false);
         setReadStatus("DTC read command completed");
         setTimeout(() => setReadStatus(""), 3000);
