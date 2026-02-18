@@ -17,6 +17,13 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
 
   useEffect(() => {
     fetchDevices();
+    
+    // ✅ JEDNODUCHÉ RIEŠENIE: Kontrola každých 5 sekúnd či pribudlo VIN
+    const interval = setInterval(() => {
+      fetchDevices();
+    }, 5000); // 5 sekúnd
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
