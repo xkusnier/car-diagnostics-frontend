@@ -15,10 +15,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
 
-  // ✅ NOVÉ: Socket ref
+  // ✅ Socket ref
   const socketRef = useRef(null);
-
-  // refs
   const pollingIntervalRef = useRef(null);
 
   // -------------------- INIT --------------------
@@ -35,16 +33,24 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     // ✅ Počúvanie na clear confirmation
     socketRef.current.on("clear_confirmation", (data) => {
       console.log("Clear confirmation received:", data);
-      if (data.device_id === deviceId) {
-        handleClearSuccess();
-      }
-    });
-    
-    // ✅ Počúvanie na DTC update
-    socketRef.current.on("dtc_updated", (data) => {
-      console.log("DTC update received:", data);
-      if (data.device_id === deviceId) {
-        refreshDiagnostics();
+      if (data.device_id === deviceId && data.status === "success") {
+        // Zastavíme polling ak beží
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        
+        setPolling(false);
+        setClearing(false);
+        setClearStatus("DTC successfully cleared ✔");
+        
+        // ✅ OKAMŽITE načítame nové dáta
+        fetchDiagnostics();
+        
+        // Po 3 sekundách skryjeme status
+        setTimeout(() => {
+          setClearStatus("");
+        }, 3000);
       }
     });
 
@@ -52,12 +58,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
       if (socketRef.current) socketRef.current.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId]);
 
   useEffect(() => {
     if (data?.vin) checkDtcPatterns(data.vin);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.vin]);
 
   // -------------------- REST --------------------
@@ -70,38 +74,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ✅ Nová funkcia na refresh diagnostiky
-  const refreshDiagnostics = async () => {
-    try {
-      const res = await api.get(`/api/device/${deviceId}/diagnostics`);
-      setData(res.data);
-      if (res.data.vin) checkDtcPatterns(res.data.vin);
-    } catch (err) {
-      console.error("Error refreshing diagnostics:", err);
-    }
-  };
-
-  // ✅ Nová funkcia pre úspešné vymazanie
-  const handleClearSuccess = () => {
-    // Zastavíme polling ak beží
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    
-    setPolling(false);
-    setClearing(false);
-    setClearStatus("DTC successfully cleared ✔");
-    
-    // Načítame nové dáta
-    refreshDiagnostics();
-    
-    // Po 3 sekundách skryjeme status
-    setTimeout(() => {
-      setClearStatus("");
-    }, 3000);
   };
 
   const checkDtcPatterns = async (vin) => {
@@ -118,26 +90,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  const startPollingDiagnostics = () => {
-    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-
-    setPolling(true);
-
-    pollingIntervalRef.current = setInterval(async () => {
-      try {
-        const res = await api.get(`/api/device/${deviceId}/diagnostics`);
-        const diag = res.data;
-
-        if (!diag.dtc_codes || diag.dtc_codes.length === 0) {
-          handleClearSuccess();
-        } else {
-          setClearStatus("Waiting for RPi to clear DTC...");
-        }
-      } catch (e) {
-        console.error("Polling error:", e);
-      }
-    }, 3000);
-  };
+  // ✅ Túto funkciu už nepotrebujeme, lebo používame WebSocket
+  // const startPollingDiagnostics = () => { ... };
 
   const handleReadDTCs = async () => {
     setReading(true);
@@ -148,7 +102,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       setReadStatus("Command sent. Device will read DTC codes...");
 
       setTimeout(() => {
-        refreshDiagnostics();
+        fetchDiagnostics();
         setReading(false);
         setReadStatus("DTC read command completed");
         setTimeout(() => setReadStatus(""), 3000);
@@ -169,7 +123,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     try {
       await api.post(`/api/device/${deviceId}/clear-dtcs`);
       setClearStatus("Command sent. Waiting for RPi...");
-      startPollingDiagnostics();
+      
+      // ✅ UŽ NESPÚŠŤAME POLLING, LEN ČAKÁME NA WEBSOCKET
+      // startPollingDiagnostics();
+      
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send clear command.");
       setClearing(false);
@@ -179,46 +136,31 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   // -------------------- UI helpers --------------------
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
-      case "critical":
-        return "#d32f2f";
-      case "high":
-        return "#f57c00";
-      case "medium":
-        return "#ffb300";
-      case "low":
-        return "#388e3c";
-      default:
-        return "#5f6368";
+      case "critical": return "#d32f2f";
+      case "high": return "#f57c00";
+      case "medium": return "#ffb300";
+      case "low": return "#388e3c";
+      default: return "#5f6368";
     }
   };
 
   const getSeverityBadgeClass = (severity) => {
     switch (severity?.toLowerCase()) {
-      case "critical":
-        return "badge-critical";
-      case "high":
-        return "badge-high";
-      case "medium":
-        return "badge-medium";
-      case "low":
-        return "badge-low";
-      default:
-        return "badge-info";
+      case "critical": return "badge-critical";
+      case "high": return "badge-high";
+      case "medium": return "badge-medium";
+      case "low": return "badge-low";
+      default: return "badge-info";
     }
   };
 
   const getSeverityIcon = (severity) => {
     switch (severity?.toLowerCase()) {
-      case "critical":
-        return "🔥";
-      case "high":
-        return "⚠️";
-      case "medium":
-        return "🔶";
-      case "low":
-        return "ℹ️";
-      default:
-        return "❓";
+      case "critical": return "🔥";
+      case "high": return "⚠️";
+      case "medium": return "🔶";
+      case "low": return "ℹ️";
+      default: return "❓";
     }
   };
 
@@ -349,9 +291,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           </div>
         )}
 
-        {(clearing || polling) && (
-          <div className="status-message warning">
-            <span className="icon">⏳</span>
+        {clearStatus && (
+          <div className={`status-message ${clearStatus.includes("✔") ? "success" : "warning"}`}>
+            <span className="icon">{clearStatus.includes("✔") ? "✅" : "⏳"}</span>
             {clearStatus}
           </div>
         )}
