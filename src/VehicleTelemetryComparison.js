@@ -7,9 +7,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
   const [summary, setSummary] = useState({
     totalVehicles: 0,
     onlineVehicles: 0,
-    avgConsumption: null,
-    avgSpeed: null,
-    totalOdometer: 0
+    totalSamples: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,9 +40,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
         setSummary({
           totalVehicles: response.data.summary.total_vehicles,
           onlineVehicles: response.data.summary.online_vehicles,
-          avgConsumption: response.data.summary.avg_consumption,
-          avgSpeed: response.data.summary.avg_speed,
-          totalOdometer: response.data.summary.total_odometer
+          totalSamples: response.data.summary.total_samples || 0
         });
       }
       
@@ -86,21 +82,21 @@ function VehicleTelemetryComparison({ onNavigate }) {
           aVal = a.brand || 'ZZZ';
           bVal = b.brand || 'ZZZ';
           break;
-        case 'speed':
-          aVal = a.telemetry?.speed || -1;
-          bVal = b.telemetry?.speed || -1;
+        case 'avg_speed':
+          aVal = a.statistics?.avg_speed || -1;
+          bVal = b.statistics?.avg_speed || -1;
           break;
-        case 'rpm':
-          aVal = a.telemetry?.engine_rpm || -1;
-          bVal = b.telemetry?.engine_rpm || -1;
+        case 'avg_rpm':
+          aVal = a.statistics?.avg_rpm || -1;
+          bVal = b.statistics?.avg_rpm || -1;
           break;
-        case 'consumption':
-          aVal = a.telemetry?.consumption_l100km || 999;
-          bVal = b.telemetry?.consumption_l100km || 999;
+        case 'avg_consumption':
+          aVal = a.statistics?.avg_consumption || 999;
+          bVal = b.statistics?.avg_consumption || 999;
           break;
-        case 'battery':
-          aVal = a.telemetry?.battery_voltage || 0;
-          bVal = b.telemetry?.battery_voltage || 0;
+        case 'samples':
+          aVal = a.statistics?.samples || 0;
+          bVal = b.statistics?.samples || 0;
           break;
         default:
           aVal = a[sortConfig.key];
@@ -118,18 +114,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
     return num.toFixed(decimals);
   };
 
-  const getBatteryColor = (voltage) => {
-    if (!voltage) return '#999';
-    if (voltage < 11.8) return '#f44336'; // critical
-    if (voltage < 12.2) return '#ff9800'; // warning
-    return '#4caf50'; // good
-  };
-
-  const getEngineStatusIcon = (running) => {
-    if (running === null || running === undefined) return '⚫';
-    return running ? '🟢' : '🔴';
-  };
-
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return '↕️';
     return sortConfig.direction === 'asc' ? '↑' : '↓';
@@ -140,7 +124,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
       <div className="telemetry-comparison">
         <div className="loading-container">
           <div className="spinner-large"></div>
-          <p>Loading vehicle telemetry...</p>
+          <p>Loading vehicle statistics...</p>
         </div>
       </div>
     );
@@ -150,7 +134,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   return (
     <div className="telemetry-comparison">
-      {/* Summary Cards - bez headeru */}
+      {/* Summary Cards */}
       <div className="summary-cards" style={{ marginTop: 0 }}>
         <div className="summary-card">
           <div className="summary-icon">🚗</div>
@@ -169,32 +153,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
         </div>
 
         <div className="summary-card">
-          <div className="summary-icon">⛽</div>
-          <div className="summary-content">
-            <span className="summary-label">Avg Consumption</span>
-            <span className="summary-value">
-              {summary.avgConsumption ? `${summary.avgConsumption} L/100km` : '—'}
-            </span>
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-icon">📏</div>
-          <div className="summary-content">
-            <span className="summary-label">Avg Speed</span>
-            <span className="summary-value">
-              {summary.avgSpeed ? `${summary.avgSpeed} km/h` : '—'}
-            </span>
-          </div>
-        </div>
-
-        <div className="summary-card">
           <div className="summary-icon">📊</div>
           <div className="summary-content">
-            <span className="summary-label">Total Odometer</span>
-            <span className="summary-value">
-              {summary.totalOdometer ? `${(summary.totalOdometer / 1000).toFixed(1)}k km` : '—'}
-            </span>
+            <span className="summary-label">Total Samples</span>
+            <span className="summary-value">{summary.totalSamples.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -214,7 +176,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
           </select>
         </div>
         <div className="filter-info">
-          Click on column headers to sort
+          Click on column headers to sort • Historical averages from {summary.totalSamples} data points
         </div>
       </div>
 
@@ -241,22 +203,21 @@ function VehicleTelemetryComparison({ onNavigate }) {
                 <th onClick={() => handleSort('vin')}>
                   Vehicle {getSortIcon('vin')}
                 </th>
-                <th onClick={() => handleSort('speed')}>
-                  Speed {getSortIcon('speed')}
+                <th onClick={() => handleSort('avg_speed')}>
+                  Avg Speed {getSortIcon('avg_speed')}
                 </th>
-                <th onClick={() => handleSort('rpm')}>
-                  RPM {getSortIcon('rpm')}
+                <th onClick={() => handleSort('avg_rpm')}>
+                  Avg RPM {getSortIcon('avg_rpm')}
                 </th>
-                <th onClick={() => handleSort('consumption')}>
-                  Consumption {getSortIcon('consumption')}
+                <th onClick={() => handleSort('avg_consumption')}>
+                  Avg Consumption {getSortIcon('avg_consumption')}
                 </th>
-                <th onClick={() => handleSort('battery')}>
-                  Battery {getSortIcon('battery')}
+                <th>Range (RPM)</th>
+                <th>Total Odometer</th>
+                <th onClick={() => handleSort('samples')}>
+                  Samples {getSortIcon('samples')}
                 </th>
-                <th>Engine</th>
-                <th>Temperatures</th>
-                <th>Odometer</th>
-                <th>Actions</th> {/* NOVÝ STĹPEC */}
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -264,7 +225,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
                 <tr 
                   key={vehicle.device_id} 
                   className={!vehicle.online ? 'offline-row' : ''}
-                  // ODSTRÁNENÉ onClick na celý riadok
                 >
                   <td>
                     <span className={`status-indicator ${vehicle.online ? 'online' : 'offline'}`}>
@@ -279,56 +239,37 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       {vehicle.vin ? `${vehicle.vin.slice(0, 8)}...` : 'No VIN'}
                     </div>
                   </td>
-                  <td className="speed-cell">
-                    {vehicle.telemetry?.speed !== undefined ? (
-                      <span className="speed-value">{vehicle.telemetry.speed} km/h</span>
+                  <td>
+                    {vehicle.statistics?.avg_speed ? (
+                      <span className="speed-value">{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
                     ) : '—'}
                   </td>
                   <td>
-                    {vehicle.telemetry?.engine_rpm ? (
-                      <span className="rpm-value">{vehicle.telemetry.engine_rpm} rpm</span>
+                    {vehicle.statistics?.avg_rpm ? (
+                      <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
                     ) : '—'}
                   </td>
                   <td>
-                    {vehicle.telemetry?.consumption_l100km ? (
-                      <span>{formatNumber(vehicle.telemetry.consumption_l100km)} L/100km</span>
+                    {vehicle.statistics?.avg_consumption ? (
+                      <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
                     ) : '—'}
                   </td>
                   <td>
-                    {vehicle.telemetry?.battery_voltage ? (
-                      <span style={{ color: getBatteryColor(vehicle.telemetry.battery_voltage) }}>
-                        {formatNumber(vehicle.telemetry.battery_voltage)} V
+                    {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
+                      <span>
+                        {vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm} rpm
                       </span>
                     ) : '—'}
                   </td>
                   <td>
-                    {vehicle.telemetry ? (
-                      <div className="engine-indicator">
-                        <span title={vehicle.telemetry.engine_running ? 'Engine On' : 'Engine Off'}>
-                          {getEngineStatusIcon(vehicle.telemetry.engine_running)}
-                        </span>
-                        {vehicle.telemetry.engine_load ? (
-                          <span className="load-indicator">
-                            {vehicle.telemetry.engine_load}%
-                          </span>
-                        ) : null}
-                      </div>
+                    {vehicle.statistics?.total_odometer ? (
+                      <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
                     ) : '—'}
                   </td>
                   <td>
-                    {vehicle.telemetry?.coolant_temp ? (
-                      <div className="temps">
-                        <span title="Coolant">🌡️{vehicle.telemetry.coolant_temp}°C</span>
-                        {vehicle.telemetry.oil_temp && (
-                          <span title="Oil" className="oil-temp">🛢️{vehicle.telemetry.oil_temp}°C</span>
-                        )}
-                      </div>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    {vehicle.telemetry?.odometer ? (
-                      <span>{(vehicle.telemetry.odometer / 1000).toFixed(1)}k km</span>
-                    ) : '—'}
+                    {vehicle.statistics?.samples ? (
+                      <span className="samples-badge">{vehicle.statistics.samples}</span>
+                    ) : '0'}
                   </td>
                   <td>
                     <button
@@ -359,19 +300,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
           <span className="legend-dot offline"></span> Offline
         </div>
         <div className="legend-item">
-          <span className="legend-icon">🟢</span> Engine Running
-        </div>
-        <div className="legend-item">
-          <span className="legend-icon">🔴</span> Engine Off
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: '#4caf50' }}></span> Battery Good
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: '#ff9800' }}></span> Battery Warning
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: '#f44336' }}></span> Battery Critical
+          <span className="legend-icon">📊</span> Historical averages
         </div>
       </div>
     </div>
