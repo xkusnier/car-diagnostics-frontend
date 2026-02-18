@@ -90,9 +90,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  // ✅ Túto funkciu už nepotrebujeme, lebo používame WebSocket
-  // const startPollingDiagnostics = () => { ... };
-
   const handleReadDTCs = async () => {
     setReading(true);
     setReadStatus("Sending read DTC command...");
@@ -101,12 +98,16 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       await api.post(`/api/device/${deviceId}/read-dtcs`);
       setReadStatus("Command sent. Device will read DTC codes...");
 
+      // ✅ Po 5 sekundách automaticky načítame nové dáta
       setTimeout(() => {
         fetchDiagnostics();
         setReading(false);
-        setReadStatus("DTC read command completed");
+        setReadStatus("DTC read command completed ✔");
+        
+        // Po 3 sekundách skryjeme status
         setTimeout(() => setReadStatus(""), 3000);
       }, 5000);
+      
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send read DTC command.");
       setReading(false);
@@ -285,8 +286,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
         {/* Status Messages */}
         {readStatus && (
-          <div className="status-message info">
-            <span className="icon">ℹ️</span>
+          <div className={`status-message ${readStatus.includes("✔") ? "success" : "info"}`}>
+            <span className="icon">{readStatus.includes("✔") ? "✅" : "ℹ️"}</span>
             {readStatus}
           </div>
         )}
