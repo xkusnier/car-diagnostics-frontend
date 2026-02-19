@@ -196,9 +196,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           <div className="error-content">
             <h3>Error Loading Diagnostics</h3>
             <p>{error}</p>
-            <button className="btn btn-secondary" onClick={onBack}>
-              ← Back to Devices
-            </button>
           </div>
         </div>
       </div>
@@ -209,9 +206,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     <div className="devices-container">
       {/* Header */}
       <div className="devices-header">
-        <button className="btn btn-secondary" onClick={onBack}>
-          ← Back to Devices
-        </button>
 
         <div className="header-content">
           <h1>Device Diagnostics</h1>
