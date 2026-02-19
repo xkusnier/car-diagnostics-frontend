@@ -301,7 +301,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
                         <>
                           <button
                             className="btn-action diagnostics"
-                            onClick={() => onNavigate('device-diagnostics', { deviceId: vehicle.device_id })}
+                            onClick={() => {
+                              console.log("Navigating to diagnostics with deviceId:", vehicle.device_id);
+                              onNavigate('device-diagnostics', { deviceId: vehicle.device_id });
+                            }}
                             style={{
                               padding: '0.5rem 0.8rem',
                               fontSize: '0.85rem',
@@ -314,10 +317,13 @@ function VehicleTelemetryComparison({ onNavigate }) {
                             className="btn-action live-data"
                             onClick={() => {
                               console.log("Navigating to live-data with deviceId:", vehicle.device_id);
+                              console.log("Vehicle object:", vehicle);
+                              // Uisti sa, že deviceId je číslo
+                              const deviceId = Number(vehicle.device_id);
                               onNavigate('live-data', { 
-                                deviceId: vehicle.device_id,
+                                deviceId: deviceId,
                                 deviceInfo: {
-                                  device_id: vehicle.device_id,
+                                  device_id: deviceId,
                                   vin: vehicle.vin,
                                   brand: vehicle.brand,
                                   model: vehicle.model
