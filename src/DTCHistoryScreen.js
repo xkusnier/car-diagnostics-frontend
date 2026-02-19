@@ -131,9 +131,6 @@ function DTCHistoryScreen({ onBack }) {
     <div className="dtc-history-container">
       {/* Header */}
       <div className="devices-header">
-        <button className="btn btn-secondary" onClick={onBack}>
-          ← Back to Dashboard
-        </button>
 
         <div className="header-content">
           <h1>DTC History</h1>
