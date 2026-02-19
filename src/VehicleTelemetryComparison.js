@@ -317,8 +317,17 @@ function VehicleTelemetryComparison({ onNavigate }) {
                             className="btn-action live-data"
                             onClick={() => {
                               console.log("Navigating to live-data with deviceId:", vehicle.device_id);
-                              // Zavolaj funkciu presne tak ako v MyDevicesScreen
-                              onNavigate('live-data', vehicle.device_id, vehicle);
+                              // Zavolaj špeciálnu funkciu pre live data
+                              onNavigate('live-data', { 
+                                type: 'live',
+                                deviceId: vehicle.device_id,
+                                deviceInfo: {
+                                  device_id: vehicle.device_id,
+                                  vin: vehicle.vin,
+                                  brand: vehicle.brand,
+                                  model: vehicle.model
+                                }
+                              });
                             }}
                             style={{
                               padding: '0.5rem 0.8rem',
