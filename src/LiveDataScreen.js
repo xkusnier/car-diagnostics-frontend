@@ -98,14 +98,23 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     const onTelemetry = (payload) => {
       if (!payload || Number(payload.device_id) !== Number(deviceId)) return;
 
-      // ✅ SPRÁVNE: Použi funkčnú formu setState
+      console.log("Telemetry payload:", payload); // Pre debug
+
       setLive(prev => {
         const newData = { ...(prev.data || {}) };
         
         // Aktualizuj len hodnoty ktoré prišli v payload
         if (payload.odometer !== undefined) newData.odometer = payload.odometer;
         if (payload.speed !== undefined) newData.speed = payload.speed;
-        if (payload.battery) newData.battery = payload.battery;
+        
+        // Špeciálne spracovanie pre battery - premenuj battery_voltage na voltage
+        if (payload.battery) {
+          newData.battery = {
+            voltage: payload.battery.battery_voltage,
+            health: payload.battery.health
+          };
+        }
+        
         if (payload.engine) newData.engine = payload.engine;
         if (payload.fuel) newData.fuel = payload.fuel;
         newData.timestamp = payload.timestamp || new Date().toISOString();
