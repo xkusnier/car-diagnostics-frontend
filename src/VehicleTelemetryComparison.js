@@ -13,6 +13,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'online', direction: 'desc' });
   const [filterOnline, setFilterOnline] = useState('all');
+  const [deletingVin, setDeletingVin] = useState(null); // Pre loading stav pri mazaní
 
   useEffect(() => {
     fetchTelemetryComparison();
@@ -50,6 +51,29 @@ function VehicleTelemetryComparison({ onNavigate }) {
       setError("Failed to load vehicle telemetry. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (vin) => {
+    if (!window.confirm(`Are you sure you want to delete vehicle ${vin}? This will remove it from your vehicle list.`)) {
+      return;
+    }
+
+    setDeletingVin(vin);
+    try {
+      const token = localStorage.getItem("token");
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
+      await api.delete(`/api/user-vehicle/${vin}`);
+      
+      // Refresh the list after successful delete
+      await fetchTelemetryComparison();
+      alert("Vehicle deleted successfully");
+    } catch (err) {
+      console.error("Error deleting vehicle:", err);
+      alert(err.response?.data?.error || "Failed to delete vehicle");
+    } finally {
+      setDeletingVin(null);
     }
   };
 
@@ -272,7 +296,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
                     ) : '0'}
                   </td>
                   <td>
-                    <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       {vehicle.device_id ? (
                         <>
                           <button
@@ -313,9 +337,25 @@ function VehicleTelemetryComparison({ onNavigate }) {
                         </>
                       ) : (
                         <span className="no-device" style={{ color: '#999', fontSize: '0.85rem' }}>
-                          No device connected
+                          No device
                         </span>
                       )}
+                      {/* DELETE BUTTON - vždy viditeľný */}
+                      <button
+                        className="btn-action delete"
+                        onClick={() => handleDeleteVehicle(vehicle.vin)}
+                        disabled={deletingVin === vehicle.vin}
+                        style={{
+                          padding: '0.5rem 0.8rem',
+                          fontSize: '0.85rem',
+                          whiteSpace: 'nowrap',
+                          backgroundColor: '#dc3545',
+                          color: 'white',
+                          opacity: deletingVin === vehicle.vin ? 0.7 : 1
+                        }}
+                      >
+                        {deletingVin === vehicle.vin ? '🗑️ Deleting...' : '🗑️ Delete'}
+                      </button>
                     </div>
                   </td>
                 </tr>
