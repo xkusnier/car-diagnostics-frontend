@@ -288,10 +288,18 @@ function VehicleTelemetryComparison({ onNavigate }) {
                           </button>
                           <button
                             className="btn-action live-data"
-                            onClick={() => onNavigate('live-data', { 
-                              deviceId: vehicle.device_id,
-                              deviceInfo: vehicle 
-                            })}
+                            onClick={() => {
+                              console.log("Navigating to live-data with deviceId:", vehicle.device_id);
+                              onNavigate('live-data', { 
+                                deviceId: vehicle.device_id,
+                                deviceInfo: {
+                                  device_id: vehicle.device_id,
+                                  vin: vehicle.vin,
+                                  brand: vehicle.brand,
+                                  model: vehicle.model
+                                }
+                              });
+                            }}
                             style={{
                               padding: '0.5rem 0.8rem',
                               fontSize: '0.85rem',
