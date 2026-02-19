@@ -98,19 +98,23 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     const onTelemetry = (payload) => {
       if (!payload || Number(payload.device_id) !== Number(deviceId)) return;
 
-      // Aktualizujeme live data z WebSocketu
-      setLive({
-        data: {
-          ...live.data,
-          odometer: payload.odometer,
-          battery: payload.battery,
-          engine: payload.engine,
-          fuel: payload.fuel,
-          speed: payload.speed,
-          timestamp: payload.timestamp
-        },
-        updatedAt: payload.timestamp || new Date().toISOString(),
-        error: null,
+      // ✅ SPRÁVNE: Použi funkčnú formu setState
+      setLive(prev => {
+        const newData = { ...(prev.data || {}) };
+        
+        // Aktualizuj len hodnoty ktoré prišli v payload
+        if (payload.odometer !== undefined) newData.odometer = payload.odometer;
+        if (payload.speed !== undefined) newData.speed = payload.speed;
+        if (payload.battery) newData.battery = payload.battery;
+        if (payload.engine) newData.engine = payload.engine;
+        if (payload.fuel) newData.fuel = payload.fuel;
+        newData.timestamp = payload.timestamp || new Date().toISOString();
+        
+        return {
+          data: newData,
+          updatedAt: payload.timestamp || new Date().toISOString(),
+          error: null,
+        };
       });
     };
 
