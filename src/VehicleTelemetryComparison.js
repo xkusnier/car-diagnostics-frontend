@@ -345,6 +345,30 @@ function VehicleTelemetryComparison({ onNavigate }) {
                           No device
                         </span>
                       )}
+                      <button
+                        className="btn-action trips"
+                        onClick={() => {
+                          console.log("Navigating to trips for vehicle:", vehicle.vin);
+                          onNavigate('vehicle-trips', { 
+                            vin: vehicle.vin,
+                            vehicleInfo: {
+                              vin: vehicle.vin,
+                              brand: vehicle.brand,
+                              model: vehicle.model,
+                              year: vehicle.year
+                            }
+                          });
+                        }}
+                        style={{
+                          padding: '0.5rem 0.8rem',
+                          fontSize: '0.85rem',
+                          whiteSpace: 'nowrap',
+                          backgroundColor: '#9c27b0',
+                          color: 'white'
+                        }}
+                      >
+                        🗺️ Trips
+                      </button>
                       {/* DELETE BUTTON - vždy viditeľný */}
                       <button
                         className="btn-action delete"
