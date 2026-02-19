@@ -156,9 +156,6 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           <div className="error-content">
             <h3>No Device Selected</h3>
             <p>Please select a device to view live data.</p>
-            <button className="btn btn-secondary" onClick={onBack}>
-              ← Back to Devices
-            </button>
           </div>
         </div>
       </div>
@@ -171,9 +168,6 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     <div className="devices-container">
       {/* Header */}
       <div className="devices-header">
-        <button className="btn btn-secondary" onClick={onBack}>
-          ← Back to Devices
-        </button>
 
         <div className="header-content">
           <h1>Live Data Stream</h1>
