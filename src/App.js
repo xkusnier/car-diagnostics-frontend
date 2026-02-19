@@ -171,16 +171,38 @@ function App() {
     setCurrentScreen("login");
   };
 
-  // Navigation function
+  // ✅ UPRAVENÁ NAVIGAČNÁ FUNKCIA - podporuje oba spôsoby volania
   const navigateTo = (screen, params = {}) => {
-    // Ak máme parameter deviceId, uložíme ho
+    // Ak je params priamo číslo (deviceId) - pre diagnostiku
+    if (typeof params === 'number') {
+      setSelectedDeviceId(params);
+      setCurrentScreen(screen);
+      return;
+    }
+    
+    // Ak je params objekt s deviceId - pre diagnostiku
     if (params.deviceId) {
       setSelectedDeviceId(params.deviceId);
     }
+    
+    // Špeciálne pre live-data - ak máme type:'live' alebo ak je to volanie z MyDevicesScreen
+    if (screen === 'live-data') {
+      // Pre volanie z MyDevicesScreen (deviceId, deviceInfo)
+      if (arguments.length === 3) {
+        setSelectedDeviceForLive(arguments[1]);
+        setSelectedDeviceInfo(arguments[2]);
+      }
+      // Pre volanie z VehicleTelemetryComparison s objektom
+      else if (params.type === 'live' || (params.deviceId && params.deviceInfo)) {
+        setSelectedDeviceForLive(params.deviceId);
+        setSelectedDeviceInfo(params.deviceInfo);
+      }
+    }
+    
     setCurrentScreen(screen);
   };
 
-  // ✅ NOVÁ FUNKCIA pre navigáciu na Live Data
+  // ✅ ZACHOVÁVAME SAMOSTATNÚ FUNKCIU pre Live Data (pre MyDevicesScreen)
   const navigateToLiveData = (deviceId, deviceInfo) => {
     setSelectedDeviceForLive(deviceId);
     setSelectedDeviceInfo(deviceInfo);
