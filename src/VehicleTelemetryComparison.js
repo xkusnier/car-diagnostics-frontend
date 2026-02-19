@@ -260,7 +260,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       {vehicle.brand || 'Unknown'} {vehicle.model || ''}
                     </div>
                     <div className="vehicle-vin">
-                      {vehicle.vin ? `${vehicle.vin.slice(0, 8)}...` : 'No VIN'}
+                      {vehicle.vin ? vehicle.vin : 'No VIN'}
                     </div>
                   </td>
                   <td>
