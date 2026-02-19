@@ -10,7 +10,8 @@ import DeviceDiagnosticsScreen from "./DeviceDiagnosticsScreen";
 import DTCHistoryScreen from "./DTCHistoryScreen";
 import { api } from "./api";
 import VehicleTelemetryComparison from "./VehicleTelemetryComparison";
-import LiveDataScreen from "./LiveDataScreen"; // ✅ IMPORT pre LiveDataScreen
+import LiveDataScreen from "./LiveDataScreen";
+import VehicleTripsScreen from "./VehicleTripsScreen"; // ✅ IMPORT pre Trips screen
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("login");
@@ -18,6 +19,8 @@ function App() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [selectedDeviceForLive, setSelectedDeviceForLive] = useState(null); // ✅ PRE LIVE DATA
   const [selectedDeviceInfo, setSelectedDeviceInfo] = useState(null); // ✅ PRE LIVE DATA
+  const [selectedVin, setSelectedVin] = useState(null); // ✅ PRE TRIPS
+  const [selectedVehicleInfo, setSelectedVehicleInfo] = useState(null); // ✅ PRE TRIPS
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   // ✅ Refresh key pre remountovanie komponentov
   const [refreshKey, setRefreshKey] = useState(0);
@@ -185,7 +188,7 @@ function App() {
       setSelectedDeviceId(params.deviceId);
     }
     
-    // Špeciálne pre live-data - ak máme type:'live' alebo ak je to volanie z MyDevicesScreen
+    // Špeciálne pre live-data
     if (screen === 'live-data') {
       // Pre volanie z MyDevicesScreen (deviceId, deviceInfo)
       if (arguments.length === 3) {
@@ -197,6 +200,12 @@ function App() {
         setSelectedDeviceForLive(params.deviceId);
         setSelectedDeviceInfo(params.deviceInfo);
       }
+    }
+    
+    // ✅ Špeciálne pre trips
+    if (screen === 'vehicle-trips') {
+      if (params.vin) setSelectedVin(params.vin);
+      if (params.vehicleInfo) setSelectedVehicleInfo(params.vehicleInfo);
     }
     
     setCurrentScreen(screen);
@@ -344,12 +353,20 @@ function App() {
           />
         )}
         
-
         {currentScreen === "telemetry-comparison" && user && (
           <VehicleTelemetryComparison 
             key={`telemetry-${refreshKey}`} // ✅ Pridaný refresh key
             onNavigate={navigateTo}
             user={user}
+          />
+        )}
+        
+        {currentScreen === "vehicle-trips" && user && ( // ✅ NOVÝ TRIPS SCREEN
+          <VehicleTripsScreen 
+            key={`trips-${refreshKey}`} // ✅ Pridaný refresh key
+            vin={selectedVin}
+            vehicleInfo={selectedVehicleInfo}
+            onBack={() => navigateTo("telemetry-comparison")}
           />
         )}
       </main>
