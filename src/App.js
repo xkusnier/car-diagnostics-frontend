@@ -262,16 +262,16 @@ function App() {
               My Devices
             </button>
             <button
+              className={`nav-link ${currentScreen === "telemetry-comparison" ? "active" : ""}`}
+              onClick={() => navigateTo("telemetry-comparison")}
+            >
+              My Vehicles
+            </button>
+            <button
               className={`nav-link ${currentScreen === "dtc-history" ? "active" : ""}`}
               onClick={() => navigateTo("dtc-history")}
             >
               DTC History
-            </button>
-            <button
-              className={`nav-link ${currentScreen === "telemetry-comparison" ? "active" : ""}`}
-              onClick={() => navigateTo("telemetry-comparison")}
-            >
-              Telemetry Comparison
             </button>
           </div>
           
