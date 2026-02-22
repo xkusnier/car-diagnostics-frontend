@@ -12,7 +12,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'online', direction: 'desc' });
-  const [filterOnline, setFilterOnline] = useState('all');
   const [deletingVin, setDeletingVin] = useState(null);
 
   useEffect(() => {
@@ -79,11 +78,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
   };
 
   const getSortedVehicles = () => {
-    const filteredVehicles = filterOnline === 'all' 
-      ? vehicles 
-      : vehicles.filter(v => filterOnline === 'online' ? v.online : !v.online);
-
-    return [...filteredVehicles].sort((a, b) => {
+    return [...vehicles].sort((a, b) => {
       let aVal, bVal;
 
       switch (sortConfig.key) {
@@ -159,9 +154,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
         <div className="header-content">
           <h1>My Vehicles</h1>
         </div>
-        <button className="btn btn-primary" onClick={fetchTelemetryComparison}>
-          🔄 Refresh
-        </button>
+        {/* Refresh button removed as requested */}
       </div>
 
       <div className="stats-bar">
@@ -179,24 +172,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
         </div>
       </div>
 
-      <div className="control-bar">
-        <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <label>Status:</label>
-          <select
-            value={filterOnline}
-            onChange={(e) => setFilterOnline(e.target.value)}
-            className="filter-select"
-            style={{ width: 'auto' }}
-          >
-            <option value="all">All Vehicles</option>
-            <option value="online">Online Only</option>
-            <option value="offline">Offline Only</option>
-          </select>
-        </div>
-        <div className="filter-info" style={{ color: '#666', fontSize: '0.9rem' }}>
-          Click on column headers to sort • Historical averages from {summary.totalSamples} data points
-        </div>
-      </div>
+      {/* Filter section completely removed as requested */}
 
       {error && (
         <div className="error-message card">
@@ -217,25 +193,21 @@ function VehicleTelemetryComparison({ onNavigate }) {
           <div className="empty-state">
             <div className="empty-icon">🚗</div>
             <h3>No Vehicles Found</h3>
-            <p>
-              {filterOnline !== 'all' 
-                ? "Try changing your filter criteria"
-                : "No vehicles are currently registered to your account"}
-            </p>
+            <p>No vehicles are currently registered to your account</p>
           </div>
         ) : (
           <div className="table-responsive">
             <table className="devices-table" style={{ tableLayout: 'fixed', width: '100%' }}>
               <colgroup>
-                <col style={{ width: '8%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '8%' }} />
-                <col style={{ width: '8%' }} />
+                <col style={{ width: '7%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '9%' }} />
                 <col style={{ width: '10%' }} />
                 <col style={{ width: '10%' }} />
                 <col style={{ width: '8%' }} />
-                <col style={{ width: '8%' }} />
-                <col style={{ width: '25%' }} />
+                <col style={{ width: '7%' }} />
+                <col style={{ width: '22%' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -246,10 +218,14 @@ function VehicleTelemetryComparison({ onNavigate }) {
                     Vehicle {getSortIcon('vin')}
                   </th>
                   <th onClick={() => handleSort('avg_speed')}>
-                    Avg Speed {getSortIcon('avg_speed')}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Avg Speed {getSortIcon('avg_speed')}
+                    </span>
                   </th>
                   <th onClick={() => handleSort('avg_rpm')}>
-                    Avg RPM {getSortIcon('avg_rpm')}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Avg RPM {getSortIcon('avg_rpm')}
+                    </span>
                   </th>
                   <th onClick={() => handleSort('avg_consumption')}>
                     Avg Cons. {getSortIcon('avg_consumption')}
@@ -281,37 +257,37 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       </div>
                     </td>
                     
-                    <td style={{ fontSize: '0.9rem' }}>
+                    <td style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                       {vehicle.statistics?.avg_speed ? (
                         <span>{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
                       ) : '—'}
                     </td>
                     
-                    <td style={{ fontSize: '0.9rem' }}>
+                    <td style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                       {vehicle.statistics?.avg_rpm ? (
                         <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
                       ) : '—'}
                     </td>
                     
-                    <td style={{ fontSize: '0.9rem' }}>
+                    <td style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                       {vehicle.statistics?.avg_consumption ? (
                         <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
                       ) : '—'}
                     </td>
                     
-                    <td style={{ fontSize: '0.9rem' }}>
+                    <td style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                       {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
                         <span>{vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm}</span>
                       ) : '—'}
                     </td>
                     
-                    <td style={{ fontSize: '0.9rem' }}>
+                    <td style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                       {vehicle.statistics?.total_odometer ? (
                         <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
                       ) : '—'}
                     </td>
                     
-                    <td style={{ fontSize: '0.9rem' }}>
+                    <td style={{ fontSize: '0.9rem', textAlign: 'center' }}>
                       {vehicle.statistics?.samples ? (
                         <span className="samples-badge">{vehicle.statistics.samples}</span>
                       ) : '0'}
