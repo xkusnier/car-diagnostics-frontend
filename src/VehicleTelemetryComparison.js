@@ -13,12 +13,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'online', direction: 'desc' });
   const [filterOnline, setFilterOnline] = useState('all');
-  const [deletingVin, setDeletingVin] = useState(null); // Pre loading stav pri mazaní
+  const [deletingVin, setDeletingVin] = useState(null);
 
   useEffect(() => {
     fetchTelemetryComparison();
-    
-    // Refresh každých 30 sekúnd
     const interval = setInterval(fetchTelemetryComparison, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -55,18 +53,13 @@ function VehicleTelemetryComparison({ onNavigate }) {
   };
 
   const handleDeleteVehicle = async (vin) => {
-    if (!window.confirm(`Are you sure you want to delete vehicle ${vin}? This will remove it from your vehicle list.`)) {
-      return;
-    }
+    if (!window.confirm(`Are you sure you want to delete vehicle ${vin}?`)) return;
 
     setDeletingVin(vin);
     try {
       const token = localStorage.getItem("token");
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      
       await api.delete(`/api/user-vehicle/${vin}`);
-      
-      // Refresh the list after successful delete
       await fetchTelemetryComparison();
       alert("Vehicle deleted successfully");
     } catch (err) {
@@ -162,7 +155,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   return (
     <div className="devices-container">
-      {/* Header */}
       <div className="devices-header">
         <div className="header-content">
           <h1>My Vehicles</h1>
@@ -172,7 +164,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         </button>
       </div>
 
-      {/* Stats Bar - zachovaná z MyDevicesScreen */}
       <div className="stats-bar">
         <div className="stat-item">
           <span className="stat-number">{summary.totalVehicles}</span>
@@ -188,7 +179,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         </div>
       </div>
 
-      {/* Control Bar - upravená pre vehicles */}
       <div className="control-bar">
         <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <label>Status:</label>
@@ -208,7 +198,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         </div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="error-message card">
           <span className="error-icon">⚠️</span>
@@ -216,7 +205,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         </div>
       )}
 
-      {/* Vehicles Table */}
       <div className="devices-table-container card">
         <div className="table-header">
           <h3>Vehicles ({sortedVehicles.length})</h3>
@@ -237,7 +225,18 @@ function VehicleTelemetryComparison({ onNavigate }) {
           </div>
         ) : (
           <div className="table-responsive">
-            <table className="devices-table">
+            <table className="devices-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '25%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th onClick={() => handleSort('online')}>
@@ -253,10 +252,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
                     Avg RPM {getSortIcon('avg_rpm')}
                   </th>
                   <th onClick={() => handleSort('avg_consumption')}>
-                    Avg Consumption {getSortIcon('avg_consumption')}
+                    Avg Cons. {getSortIcon('avg_consumption')}
                   </th>
                   <th>Range (RPM)</th>
-                  <th>Total Odometer</th>
+                  <th>Odometer</th>
                   <th onClick={() => handleSort('samples')}>
                     Samples {getSortIcon('samples')}
                   </th>
@@ -273,53 +272,53 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       </span>
                     </td>
                     
-                    <td className="vehicle-info">
-                      <div className="vehicle-name">
+                    <td className="vehicle-info" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      <div className="vehicle-name" style={{ fontSize: '0.9rem' }}>
                         {vehicle.brand || 'Unknown'} {vehicle.model || ''}
                       </div>
-                      <div className="vehicle-vin">
-                        <code className="vin-code">{vehicle.vin || 'No VIN'}</code>
+                      <div className="vehicle-vin" style={{ fontSize: '0.8rem' }}>
+                        <code className="vin-code" style={{ fontSize: '0.8rem' }}>{vehicle.vin || 'No VIN'}</code>
                       </div>
                     </td>
                     
-                    <td>
+                    <td style={{ fontSize: '0.9rem' }}>
                       {vehicle.statistics?.avg_speed ? (
                         <span>{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
                       ) : '—'}
                     </td>
                     
-                    <td>
+                    <td style={{ fontSize: '0.9rem' }}>
                       {vehicle.statistics?.avg_rpm ? (
                         <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
                       ) : '—'}
                     </td>
                     
-                    <td>
+                    <td style={{ fontSize: '0.9rem' }}>
                       {vehicle.statistics?.avg_consumption ? (
                         <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
                       ) : '—'}
                     </td>
                     
-                    <td>
+                    <td style={{ fontSize: '0.9rem' }}>
                       {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
-                        <span>{vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm} rpm</span>
+                        <span>{vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm}</span>
                       ) : '—'}
                     </td>
                     
-                    <td>
+                    <td style={{ fontSize: '0.9rem' }}>
                       {vehicle.statistics?.total_odometer ? (
                         <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
                       ) : '—'}
                     </td>
                     
-                    <td>
+                    <td style={{ fontSize: '0.9rem' }}>
                       {vehicle.statistics?.samples ? (
                         <span className="samples-badge">{vehicle.statistics.samples}</span>
                       ) : '0'}
                     </td>
                     
                     <td>
-                      <div className="action-buttons">
+                      <div className="action-buttons" style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                         {vehicle.device_id ? (
                           <>
                             <button
@@ -327,8 +326,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
                               onClick={() => onNavigate('device-diagnostics', { deviceId: vehicle.device_id })}
                               title="View Diagnostics"
                               disabled={deletingVin === vehicle.vin}
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem' }}
                             >
-                              🔧 Diagnostics
+                              🔧 Diag
                             </button>
                             <button
                               className="btn-action live-data"
@@ -344,12 +344,13 @@ function VehicleTelemetryComparison({ onNavigate }) {
                               })}
                               title="View Live Data"
                               disabled={deletingVin === vehicle.vin}
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#4caf50' }}
                             >
-                              📊 Live Data
+                              📊 Live
                             </button>
                           </>
                         ) : (
-                          <span className="no-device" style={{ color: '#999', fontSize: '0.85rem' }}>
+                          <span className="no-device" style={{ color: '#999', fontSize: '0.8rem' }}>
                             No device
                           </span>
                         )}
@@ -367,10 +368,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
                           })}
                           title="View Trips"
                           disabled={deletingVin === vehicle.vin}
-                          style={{
-                            backgroundColor: '#9c27b0',
-                            color: 'white'
-                          }}
+                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#9c27b0' }}
                         >
                           🗺️ Trips
                         </button>
@@ -380,8 +378,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
                           onClick={() => handleDeleteVehicle(vehicle.vin)}
                           title="Delete Vehicle"
                           disabled={deletingVin === vehicle.vin}
+                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem' }}
                         >
-                          {deletingVin === vehicle.vin ? '⌛' : '🗑️ Delete'}
+                          {deletingVin === vehicle.vin ? '⌛' : '🗑️'}
                         </button>
                       </div>
                     </td>
@@ -393,7 +392,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         )}
       </div>
 
-      {/* Legend */}
       <div className="legend">
         <div className="legend-item">
           <span className="legend-dot" style={{ background: '#4caf50' }}></span> Online
