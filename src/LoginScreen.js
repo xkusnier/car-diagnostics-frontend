@@ -4,6 +4,7 @@ import "./styles/global.css";
 function LoginScreen({ onLogin, onNavigateToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // ✅ PREPÍNANIE ZOBRAZENIA HESLA
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -76,18 +77,26 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
             <label htmlFor="password" className="form-label">
               Password
             </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-              placeholder="Enter your password"
-              disabled={loading}
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="form-input password-input"
+                placeholder="Enter your password"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
           </div>
-
-
 
           <button
             type="submit"
@@ -104,7 +113,6 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
             )}
           </button>
         </form>
-
 
         <div className="auth-footer">
           <p>
