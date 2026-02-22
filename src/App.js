@@ -13,6 +13,8 @@ import VehicleTelemetryComparison from "./VehicleTelemetryComparison";
 import LiveDataScreen from "./LiveDataScreen";
 import VehicleTripsScreen from "./VehicleTripsScreen"; // ✅ IMPORT pre Trips screen
 
+import LoadingScreen from "./LoadingScreen"; // ✅ NOVÝ IMPORT
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState("login");
   const [user, setUser] = useState(null);
@@ -24,9 +26,47 @@ function App() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   // ✅ Refresh key pre remountovanie komponentov
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // ✅ NOVÉ STATE PRE LOADING
+  const [loadingStage, setLoadingStage] = useState("auth"); // 'auth' alebo 'backend'
+  const [loadingMessage, setLoadingMessage] = useState("Checking authentication...");
+  const [loadingAttempt, setLoadingAttempt] = useState(0);
+
+  // ✅ NOVÁ FUNKCIA na prebudenie backendu
+  const wakeUpBackend = async () => {
+    setLoadingStage("backend");
+    setLoadingMessage("Waking up the server...");
+    
+    const maxAttempts = 30;
+    const delay = 2000;
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      setLoadingAttempt(i + 1);
+      try {
+        const response = await fetch('https://car-diagnostics.onrender.com/api/health', { 
+          method: 'GET',
+          mode: 'cors'
+        });
+        
+        if (response.ok) {
+          console.log("Backend is awake!");
+          setLoadingStage("auth");
+          checkAuthStatus();
+          return;
+        }
+      } catch (err) {
+        console.log(`Attempt ${i + 1}: Backend not responding yet...`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    setLoadingMessage("Server is taking too long to respond. Please refresh the page.");
+  };
 
   useEffect(() => {
-    checkAuthStatus();
+    // ✅ Namiesto checkAuthStatus zavoláme wakeUpBackend
+    wakeUpBackend();
     
     // Listen for registration event from LoginScreen
     const handleRegister = () => setCurrentScreen("register");
@@ -218,24 +258,9 @@ function App() {
     setCurrentScreen('live-data');
   };
 
-  // Show loading while checking auth
-  if (isCheckingAuth) {
-    return (
-      <div className="auth-container">
-        <div className="auth-card" style={{ textAlign: 'center' }}>
-          <div className="auth-header">
-            <div className="auth-logo">
-              <span className="logo-icon">🚗</span>
-              <h1 className="logo-text">Car Diagnostics</h1>
-            </div>
-            <div style={{ margin: '2rem 0' }}>
-              <div className="spinner-large" style={{ margin: '0 auto' }}></div>
-              <p style={{ marginTop: '1rem' }}>Checking authentication...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  // ✅ Upravená loading podmienka
+  if (isCheckingAuth || loadingStage === "backend") {
+    return <LoadingScreen message={loadingMessage} attempt={loadingAttempt} />;
   }
 
   return (
