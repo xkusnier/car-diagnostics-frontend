@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 
-function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
+function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   const [devices, setDevices] = useState([]);
   const [filteredDevices, setFilteredDevices] = useState([]);
   const [error, setError] = useState(null);
@@ -10,25 +10,24 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
   const [newDeviceId, setNewDeviceId] = useState("");
   const [assignUserId, setAssignUserId] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [deletingId, setDeletingId] = useState(null); // Pre loading stav pri mazaní
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // Pre potvrdzovací dialóg
+  const [deletingId, setDeletingId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   useEffect(() => {
     fetchDevices();
     
-    // ✅ JEDNODUCHÉ RIEŠENIE: Kontrola každých 5 sekúnd či pribudlo VIN
+    // Kontrola každých 5 sekúnd či pribudlo VIN
     const interval = setInterval(() => {
       fetchDevices();
-    }, 5000); // 5 sekúnd
+    }, 5000);
     
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    filterDevices();
-  }, [devices, searchTerm, statusFilter]);
+    // Jednoduché filtrovanie - zobrazujeme všetky zariadenia
+    setFilteredDevices(devices);
+  }, [devices]);
 
   const fetchDevices = async () => {
     try {
@@ -39,27 +38,6 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const filterDevices = () => {
-    let filtered = [...devices];
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(device =>
-        device.device_id.toString().includes(searchTerm) ||
-        (device.vin && device.vin.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(device => 
-        device.status.toLowerCase() === statusFilter.toLowerCase()
-      );
-    }
-
-    setFilteredDevices(filtered);
   };
 
   const handleAddDevice = async () => {
@@ -80,7 +58,6 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
       setAssignUserId("");
       setShowAddForm(false);
       
-      // Refresh device list
       await fetchDevices();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to add device");
@@ -92,18 +69,13 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
     try {
       await api.delete(`/api/device/${deviceId}`);
       alert("Device deleted successfully!");
-      await fetchDevices(); // Refresh zoznamu
+      await fetchDevices();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to delete device");
     } finally {
       setDeletingId(null);
       setShowDeleteConfirm(null);
     }
-  };
-
-  const handleRefresh = () => {
-    setLoading(true);
-    fetchDevices();
   };
 
   const getStatusColor = (status) => {
@@ -155,14 +127,12 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
 
   return (
     <div className="devices-container">
-      {/* Header */}
+      {/* Header - bez refresh buttonu */}
       <div className="devices-header">
         <div className="header-content">
           <h1>{role === "admin" ? "Device Management" : "My Devices"}</h1>
         </div>
-        <button className="btn btn-primary" onClick={handleRefresh}>
-          🔄 Refresh
-        </button>
+        {/* Refresh button removed */}
       </div>
 
       {/* Stats Bar */}
@@ -185,31 +155,9 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
         </div>
       </div>
 
-      {/* Control Bar */}
-      <div className="control-bar">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Search devices by ID or VIN..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <span className="search-icon">🔍</span>
-        </div>
-
+      {/* Control Bar - bez search a filtra, len Add Device button */}
+      <div className="control-bar" style={{ justifyContent: 'flex-end' }}>
         <div className="filters">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Status</option>
-            <option value="online">Online Only</option>
-            <option value="offline">Offline Only</option>
-            <option value="error">Error</option>
-          </select>
-
           <button
             className={`btn ${showAddForm ? 'btn-secondary' : 'btn-success'}`}
             onClick={() => setShowAddForm(!showAddForm)}
@@ -282,11 +230,7 @@ function MyDevicesScreen({ onBack, onDiagnostics,onLiveData ,role }) {
           <div className="empty-state">
             <div className="empty-icon">📱</div>
             <h3>No Devices Found</h3>
-            <p>
-              {searchTerm || statusFilter !== "all" 
-                ? "Try changing your search or filter criteria"
-                : "No devices are currently registered to your account"}
-            </p>
+            <p>No devices are currently registered to your account</p>
           </div>
         ) : (
           <div className="table-responsive">
