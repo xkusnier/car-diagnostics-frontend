@@ -5,9 +5,10 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // ✅ PREPÍNANIE ZOBRAZENIA HESLA
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ✅ PREPÍNANIE ZOBRAZENIA POTVRDENIA
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,11 +21,6 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
     
     if (password !== confirmPassword) {
       setError("Passwords do not match");
-      return;
-    }
-    
-    if (!termsAccepted) {
-      setError("You must accept the terms and conditions");
       return;
     }
     
@@ -94,15 +90,25 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
             <label htmlFor="password" className="form-label">
               Password
             </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-              placeholder="Create a password"
-              disabled={loading}
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="form-input password-input"
+                placeholder="Create a password"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
             <small className="input-hint">At least 6 characters</small>
           </div>
 
@@ -110,26 +116,25 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
             <label htmlFor="confirmPassword" className="form-label">
               Confirm Password
             </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="form-input"
-              placeholder="Confirm your password"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-options">
-            <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
+            <div className="password-input-wrapper">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="form-input password-input"
+                placeholder="Confirm your password"
                 disabled={loading}
               />
-            </label>
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                tabIndex="-1"
+              >
+                {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
           </div>
 
           <button
