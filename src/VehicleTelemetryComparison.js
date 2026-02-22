@@ -143,10 +143,14 @@ function VehicleTelemetryComparison({ onNavigate }) {
     return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
+  const getStatusColor = (status) => {
+    return status ? 'success' : 'danger';
+  };
+
   if (loading) {
     return (
-      <div className="telemetry-comparison">
-        <div className="loading-container">
+      <div className="devices-container">
+        <div className="loading-center">
           <div className="spinner-large"></div>
           <p>Loading vehicle statistics...</p>
         </div>
@@ -157,168 +161,178 @@ function VehicleTelemetryComparison({ onNavigate }) {
   const sortedVehicles = getSortedVehicles();
 
   return (
-    <div className="telemetry-comparison">
-      {/* Summary Cards */}
-      <div className="summary-cards" style={{ marginTop: 0 }}>
-        <div className="summary-card">
-          <div className="summary-icon">🚗</div>
-          <div className="summary-content">
-            <span className="summary-label">Total Vehicles</span>
-            <span className="summary-value">{summary.totalVehicles}</span>
-          </div>
+    <div className="devices-container">
+      {/* Header */}
+      <div className="devices-header">
+        <div className="header-content">
+          <h1>My Vehicles</h1>
         </div>
+        <button className="btn btn-primary" onClick={fetchTelemetryComparison}>
+          🔄 Refresh
+        </button>
+      </div>
 
-        <div className="summary-card">
-          <div className="summary-icon">✅</div>
-          <div className="summary-content">
-            <span className="summary-label">Online</span>
-            <span className="summary-value">{summary.onlineVehicles}</span>
-          </div>
+      {/* Stats Bar - zachovaná z MyDevicesScreen */}
+      <div className="stats-bar">
+        <div className="stat-item">
+          <span className="stat-number">{summary.totalVehicles}</span>
+          <span className="stat-label">Total Vehicles</span>
         </div>
-
-        <div className="summary-card">
-          <div className="summary-icon">📊</div>
-          <div className="summary-content">
-            <span className="summary-label">Total Samples</span>
-            <span className="summary-value">{summary.totalSamples.toLocaleString()}</span>
-          </div>
+        <div className="stat-item">
+          <span className="stat-number">{summary.onlineVehicles}</span>
+          <span className="stat-label">Online</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-number">{summary.totalSamples.toLocaleString()}</span>
+          <span className="stat-label">Total Samples</span>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="filters-bar">
-        <div className="filter-group">
+      {/* Control Bar - upravená pre vehicles */}
+      <div className="control-bar">
+        <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <label>Status:</label>
-          <select 
-            value={filterOnline} 
+          <select
+            value={filterOnline}
             onChange={(e) => setFilterOnline(e.target.value)}
             className="filter-select"
+            style={{ width: 'auto' }}
           >
             <option value="all">All Vehicles</option>
             <option value="online">Online Only</option>
             <option value="offline">Offline Only</option>
           </select>
         </div>
-        <div className="filter-info">
+        <div className="filter-info" style={{ color: '#666', fontSize: '0.9rem' }}>
           Click on column headers to sort • Historical averages from {summary.totalSamples} data points
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="error-message">
-          ⚠️ {error}
+        <div className="error-message card">
+          <span className="error-icon">⚠️</span>
+          <p>{error}</p>
         </div>
       )}
 
       {/* Vehicles Table */}
-      <div className="vehicles-table-container">
+      <div className="devices-table-container card">
+        <div className="table-header">
+          <h3>Vehicles ({sortedVehicles.length})</h3>
+          <span className="table-info">
+            Showing {sortedVehicles.length} of {vehicles.length} vehicles
+          </span>
+        </div>
+
         {sortedVehicles.length === 0 ? (
           <div className="empty-state">
-            <p>No vehicles found</p>
+            <div className="empty-icon">🚗</div>
+            <h3>No Vehicles Found</h3>
+            <p>
+              {filterOnline !== 'all' 
+                ? "Try changing your filter criteria"
+                : "No vehicles are currently registered to your account"}
+            </p>
           </div>
         ) : (
-          <table className="vehicles-table">
-            <thead>
-              <tr>
-                <th onClick={() => handleSort('online')}>
-                  Status {getSortIcon('online')}
-                </th>
-                <th onClick={() => handleSort('vin')}>
-                  Vehicle {getSortIcon('vin')}
-                </th>
-                <th onClick={() => handleSort('avg_speed')}>
-                  Avg Speed {getSortIcon('avg_speed')}
-                </th>
-                <th onClick={() => handleSort('avg_rpm')}>
-                  Avg RPM {getSortIcon('avg_rpm')}
-                </th>
-                <th onClick={() => handleSort('avg_consumption')}>
-                  Avg Consumption {getSortIcon('avg_consumption')}
-                </th>
-                <th>Range (RPM)</th>
-                <th>Total Odometer</th>
-                <th onClick={() => handleSort('samples')}>
-                  Samples {getSortIcon('samples')}
-                </th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedVehicles.map((vehicle) => (
-                <tr 
-                  key={vehicle.vin} 
-                  className={!vehicle.online ? 'offline-row' : ''}
-                >
-                  <td>
-                    <span className={`status-indicator ${vehicle.online ? 'online' : 'offline'}`}>
-                      {vehicle.online ? '●' : '○'}
-                    </span>
-                  </td>
-                  <td className="vehicle-info">
-                    <div className="vehicle-name">
-                      {vehicle.brand || 'Unknown'} {vehicle.model || ''}
-                    </div>
-                    <div className="vehicle-vin">
-                      {vehicle.vin ? vehicle.vin : 'No VIN'}
-                    </div>
-                  </td>
-                  <td>
-                    {vehicle.statistics?.avg_speed ? (
-                      <span className="speed-value">{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    {vehicle.statistics?.avg_rpm ? (
-                      <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    {vehicle.statistics?.avg_consumption ? (
-                      <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
-                      <span>
-                        {vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm} rpm
+          <div className="table-responsive">
+            <table className="devices-table">
+              <thead>
+                <tr>
+                  <th onClick={() => handleSort('online')}>
+                    Status {getSortIcon('online')}
+                  </th>
+                  <th onClick={() => handleSort('vin')}>
+                    Vehicle {getSortIcon('vin')}
+                  </th>
+                  <th onClick={() => handleSort('avg_speed')}>
+                    Avg Speed {getSortIcon('avg_speed')}
+                  </th>
+                  <th onClick={() => handleSort('avg_rpm')}>
+                    Avg RPM {getSortIcon('avg_rpm')}
+                  </th>
+                  <th onClick={() => handleSort('avg_consumption')}>
+                    Avg Consumption {getSortIcon('avg_consumption')}
+                  </th>
+                  <th>Range (RPM)</th>
+                  <th>Total Odometer</th>
+                  <th onClick={() => handleSort('samples')}>
+                    Samples {getSortIcon('samples')}
+                  </th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedVehicles.map((vehicle) => (
+                  <tr key={vehicle.vin} className="device-row">
+                    <td>
+                      <span className={`status-badge ${getStatusColor(vehicle.online)}`}>
+                        <span className="status-dot"></span>
+                        {vehicle.online ? 'Online' : 'Offline'}
                       </span>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    {vehicle.statistics?.total_odometer ? (
-                      <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
-                    ) : '—'}
-                  </td>
-                  <td>
-                    {vehicle.statistics?.samples ? (
-                      <span className="samples-badge">{vehicle.statistics.samples}</span>
-                    ) : '0'}
-                  </td>
-                  <td>
-                    <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {vehicle.device_id ? (
-                        <>
-                          <button
-                            className="btn-action diagnostics"
-                            onClick={() => {
-                              console.log("Navigating to diagnostics with deviceId:", vehicle.device_id);
-                              onNavigate('device-diagnostics', { deviceId: vehicle.device_id });
-                            }}
-                            style={{
-                              padding: '0.5rem 0.8rem',
-                              fontSize: '0.85rem',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            🔧 Diagnostics
-                          </button>
-                          <button
-                            className="btn-action live-data"
-                            onClick={() => {
-                              console.log("Navigating to live-data with deviceId:", vehicle.device_id);
-                              // Zavolaj špeciálnu funkciu pre live data
-                              onNavigate('live-data', { 
+                    </td>
+                    
+                    <td className="vehicle-info">
+                      <div className="vehicle-name">
+                        {vehicle.brand || 'Unknown'} {vehicle.model || ''}
+                      </div>
+                      <div className="vehicle-vin">
+                        <code className="vin-code">{vehicle.vin || 'No VIN'}</code>
+                      </div>
+                    </td>
+                    
+                    <td>
+                      {vehicle.statistics?.avg_speed ? (
+                        <span>{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
+                      ) : '—'}
+                    </td>
+                    
+                    <td>
+                      {vehicle.statistics?.avg_rpm ? (
+                        <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
+                      ) : '—'}
+                    </td>
+                    
+                    <td>
+                      {vehicle.statistics?.avg_consumption ? (
+                        <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
+                      ) : '—'}
+                    </td>
+                    
+                    <td>
+                      {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
+                        <span>{vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm} rpm</span>
+                      ) : '—'}
+                    </td>
+                    
+                    <td>
+                      {vehicle.statistics?.total_odometer ? (
+                        <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
+                      ) : '—'}
+                    </td>
+                    
+                    <td>
+                      {vehicle.statistics?.samples ? (
+                        <span className="samples-badge">{vehicle.statistics.samples}</span>
+                      ) : '0'}
+                    </td>
+                    
+                    <td>
+                      <div className="action-buttons">
+                        {vehicle.device_id ? (
+                          <>
+                            <button
+                              className="btn-action diagnostics"
+                              onClick={() => onNavigate('device-diagnostics', { deviceId: vehicle.device_id })}
+                              title="View Diagnostics"
+                              disabled={deletingVin === vehicle.vin}
+                            >
+                              🔧 Diagnostics
+                            </button>
+                            <button
+                              className="btn-action live-data"
+                              onClick={() => onNavigate('live-data', { 
                                 type: 'live',
                                 deviceId: vehicle.device_id,
                                 deviceInfo: {
@@ -327,29 +341,22 @@ function VehicleTelemetryComparison({ onNavigate }) {
                                   brand: vehicle.brand,
                                   model: vehicle.model
                                 }
-                              });
-                            }}
-                            style={{
-                              padding: '0.5rem 0.8rem',
-                              fontSize: '0.85rem',
-                              whiteSpace: 'nowrap',
-                              backgroundColor: '#4caf50',
-                              color: 'white'
-                            }}
-                          >
-                            📊 Live Data
-                          </button>
-                        </>
-                      ) : (
-                        <span className="no-device" style={{ color: '#999', fontSize: '0.85rem' }}>
-                          No device
-                        </span>
-                      )}
-                      <button
-                        className="btn-action trips"
-                        onClick={() => {
-                          console.log("Navigating to trips for vehicle:", vehicle.vin);
-                          onNavigate('vehicle-trips', { 
+                              })}
+                              title="View Live Data"
+                              disabled={deletingVin === vehicle.vin}
+                            >
+                              📊 Live Data
+                            </button>
+                          </>
+                        ) : (
+                          <span className="no-device" style={{ color: '#999', fontSize: '0.85rem' }}>
+                            No device
+                          </span>
+                        )}
+                        
+                        <button
+                          className="btn-action trips"
+                          onClick={() => onNavigate('vehicle-trips', { 
                             vin: vehicle.vin,
                             vehicleInfo: {
                               vin: vehicle.vin,
@@ -357,50 +364,42 @@ function VehicleTelemetryComparison({ onNavigate }) {
                               model: vehicle.model,
                               year: vehicle.year
                             }
-                          });
-                        }}
-                        style={{
-                          padding: '0.5rem 0.8rem',
-                          fontSize: '0.85rem',
-                          whiteSpace: 'nowrap',
-                          backgroundColor: '#9c27b0',
-                          color: 'white'
-                        }}
-                      >
-                        🗺️ Trips
-                      </button>
-                      {/* DELETE BUTTON - vždy viditeľný */}
-                      <button
-                        className="btn-action delete"
-                        onClick={() => handleDeleteVehicle(vehicle.vin)}
-                        disabled={deletingVin === vehicle.vin}
-                        style={{
-                          padding: '0.5rem 0.8rem',
-                          fontSize: '0.85rem',
-                          whiteSpace: 'nowrap',
-                          backgroundColor: '#dc3545',
-                          color: 'white',
-                          opacity: deletingVin === vehicle.vin ? 0.7 : 1
-                        }}
-                      >
-                        {deletingVin === vehicle.vin ? '🗑️ Deleting...' : '🗑️ Delete'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                          })}
+                          title="View Trips"
+                          disabled={deletingVin === vehicle.vin}
+                          style={{
+                            backgroundColor: '#9c27b0',
+                            color: 'white'
+                          }}
+                        >
+                          🗺️ Trips
+                        </button>
+                        
+                        <button
+                          className="btn-action delete"
+                          onClick={() => handleDeleteVehicle(vehicle.vin)}
+                          title="Delete Vehicle"
+                          disabled={deletingVin === vehicle.vin}
+                        >
+                          {deletingVin === vehicle.vin ? '⌛' : '🗑️ Delete'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {/* Legend */}
       <div className="legend">
         <div className="legend-item">
-          <span className="legend-dot online"></span> Online
+          <span className="legend-dot" style={{ background: '#4caf50' }}></span> Online
         </div>
         <div className="legend-item">
-          <span className="legend-dot offline"></span> Offline
+          <span className="legend-dot" style={{ background: '#f44336' }}></span> Offline
         </div>
         <div className="legend-item">
           <span className="legend-icon">📊</span> Historical averages
