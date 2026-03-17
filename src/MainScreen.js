@@ -90,17 +90,6 @@ function MainScreen({ onNavigate, user }) {
         <div className="header-left">
           <h1 className="dashboard-title">Car Diagnostics Dashboard</h1>
         </div>
-        <div className="header-right">
-          <div className="user-info">
-            <span className="user-avatar">
-              {user?.email?.charAt(0).toUpperCase() || "U"}
-            </span>
-            <div className="user-details">
-              <span className="user-name">{user?.email || "User"}</span>
-              <span className="user-role">{user?.role || "User"}</span>
-            </div>
-          </div>
-        </div>
       </header>
 
       {/* Error Message */}
