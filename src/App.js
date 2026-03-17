@@ -82,6 +82,7 @@ function App() {
       const token = localStorage.getItem("token");
       const savedEmail = localStorage.getItem("email");
       const savedRole = localStorage.getItem("role");
+      const savedUsername = localStorage.getItem("username");
 
       if (!token) {
         setIsCheckingAuth(false);
@@ -97,11 +98,13 @@ function App() {
           setUser({
             email: savedEmail,
             role: savedRole,
+            username: savedUsername || "",
           });
         } else {
           setUser({
             email: "User",
             role: "user",
+            username: "",
           });
         }
 
@@ -113,6 +116,7 @@ function App() {
           localStorage.removeItem("token");
           localStorage.removeItem("email");
           localStorage.removeItem("role");
+          localStorage.removeItem("username");
           delete api.defaults.headers.common["Authorization"];
         } else {
           console.error("API health check failed:", error);
@@ -128,17 +132,19 @@ function App() {
   const handleLogin = async (email, password) => {
     try {
       const response = await api.post("/api/login", { email, password });
-      const { access_token, role } = response.data;
+      const { access_token, role, username } = response.data;
 
       localStorage.setItem("token", access_token);
       localStorage.setItem("email", email);
       localStorage.setItem("role", role);
+      localStorage.setItem("username", username || "");
 
       api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
 
       const userObj = {
         email: email,
         role: role,
+        username: username || "",
       };
 
       setUser(userObj);
@@ -165,9 +171,10 @@ function App() {
     }
   };
 
-  const handleRegister = async (email, password) => {
+  const handleRegister = async (username, email, password) => {
     try {
       await api.post("/api/register", {
+        username,
         email,
         password,
       });
@@ -179,17 +186,17 @@ function App() {
       let errorMessage = "Registration failed. Please try again.";
 
       if (error.response?.status === 409) {
-        errorMessage = "User with this email already exists";
+        const raw = String(error.response?.data?.error || "").toLowerCase();
+
+        if (raw.includes("username")) {
+          errorMessage = "Username already exists";
+        } else {
+          errorMessage = "User with this email already exists";
+        }
       } else if (error.response?.status >= 500) {
         errorMessage = "Server error during registration. Please try again later.";
       } else if (error.response?.data?.error) {
-        const raw = String(error.response.data.error).toLowerCase();
-
-        if (raw.includes("email already exists")) {
-          errorMessage = "User with this email already exists";
-        } else {
-          errorMessage = "Registration failed. Please check your data and try again.";
-        }
+        errorMessage = error.response.data.error;
       }
 
       return {
@@ -203,6 +210,7 @@ function App() {
     localStorage.removeItem("token");
     localStorage.removeItem("email");
     localStorage.removeItem("role");
+    localStorage.removeItem("username");
 
     delete api.defaults.headers.common["Authorization"];
 
@@ -298,7 +306,7 @@ function App() {
             >
               🔄
             </button>
-            <span className="user-email">{user?.email || "User"}</span>
+            <span className="user-email">{user?.username || user?.email || "User"}</span>
             <button className="btn-logout" onClick={handleLogout}>
               Logout
             </button>
