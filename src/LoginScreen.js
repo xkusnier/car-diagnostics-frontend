@@ -4,26 +4,36 @@ import "./styles/global.css";
 function LoginScreen({ onLogin, onNavigateToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // ✅ PREPÍNANIE ZOBRAZENIA HESLA
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setError("Please enter both email and password");
       return;
     }
-    
+
     setError("");
     setLoading(true);
-    
+
     try {
       const result = await onLogin(email, password);
-      
+
       if (!result.success) {
         setError(result.message || "Invalid email or password");
+
+        const msg = String(result.message || "").toLowerCase();
+        if (
+          msg.includes("invalid") ||
+          msg.includes("password") ||
+          msg.includes("credentials") ||
+          msg.includes("401")
+        ) {
+          setPassword("");
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -39,7 +49,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
         <div className="auth-shape shape-2"></div>
         <div className="auth-shape shape-3"></div>
       </div>
-      
+
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
@@ -57,7 +67,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="form-group">
             <label htmlFor="email" className="form-label">
               Email Address
@@ -70,6 +80,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
               className="form-input"
               placeholder="Enter your email"
               disabled={loading}
+              autoComplete="email"
             />
           </div>
 
@@ -86,6 +97,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
                 className="form-input password-input"
                 placeholder="Enter your password"
                 disabled={loading}
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -100,7 +112,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
 
           <button
             type="submit"
-            className={`auth-button ${loading ? 'loading' : ''}`}
+            className={`auth-button ${loading ? "loading" : ""}`}
             disabled={loading}
           >
             {loading ? (
@@ -109,7 +121,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
                 Signing in...
               </>
             ) : (
-              'Sign In'
+              "Sign In"
             )}
           </button>
         </form>
@@ -117,10 +129,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
         <div className="auth-footer">
           <p>
             Don't have an account?{" "}
-            <button
-              onClick={onNavigateToRegister}
-              className="auth-link"
-            >
+            <button onClick={onNavigateToRegister} className="auth-link" type="button">
               Sign up now
             </button>
           </p>
