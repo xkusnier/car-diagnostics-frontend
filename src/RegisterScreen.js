@@ -168,7 +168,15 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
         <div className="auth-footer">
           <p>
             Already have an account?{" "}
-            <button onClick={onNavigateToLogin} className="auth-link" type="button">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigateToLogin();
+              }}
+              className="auth-link"
+              disabled={loading}
+            >
               Sign in here
             </button>
           </p>
