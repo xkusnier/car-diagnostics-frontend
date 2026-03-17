@@ -78,6 +78,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
           </div>
           <h2 className="auth-title">Create Account</h2>
           <p className="auth-subtitle">Join our diagnostics platform today</p>
+          <p style={{ color: "red", fontWeight: "bold" }}>NEW BUILD TEST</p>
         </div>
 
         {error && (
