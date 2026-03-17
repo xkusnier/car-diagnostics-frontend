@@ -46,10 +46,6 @@ function MainScreen({ onNavigate, user }) {
         vehicles = [];
       }
 
-      // približný počet aktívnych DTC z vozidiel cez diagnostics by bol drahší,
-      // takže zatiaľ nechávame 0 alebo neskôr doplníš endpoint
-      activeDTCs = 0;
-
       setStats({
         totalDevices: devices.length,
         onlineDevices: devices.filter((d) => d.status === "Online").length,
@@ -93,21 +89,6 @@ function MainScreen({ onNavigate, user }) {
     },
   ];
 
-  const quickActions = [
-    {
-      label: "Add Device",
-      action: () => onNavigate("add-device"),
-    },
-    {
-      label: "Open My Devices",
-      action: () => onNavigate("my-devices"),
-    },
-    {
-      label: "Open My Vehicles",
-      action: () => onNavigate("my-vehicles"),
-    },
-  ];
-
   if (loading) {
     return (
       <div className="main-screen">
@@ -136,41 +117,6 @@ function MainScreen({ onNavigate, user }) {
           <p>{error}</p>
         </div>
       )}
-
-      <section
-        className="hero-card"
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "20px",
-          padding: "1.5rem",
-          marginBottom: "2rem",
-        }}
-      >
-        <h2 style={{ marginBottom: "0.75rem" }}>Overview</h2>
-        <p style={{ marginBottom: "1rem", opacity: 0.9 }}>
-          Tu nájdeš rýchly prehľad a hlavné vstupy do aplikácie. Vyber si sekciu,
-          s ktorou chceš pracovať.
-        </p>
-
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-          {quickActions.map((item) => (
-            <button
-              key={item.label}
-              onClick={item.action}
-              style={{
-                padding: "0.85rem 1.1rem",
-                borderRadius: "12px",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </section>
 
       <div className="stats-grid">
         <div
