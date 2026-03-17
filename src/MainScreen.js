@@ -89,7 +89,6 @@ function MainScreen({ onNavigate, user }) {
       <header className="dashboard-header">
         <div className="header-left">
           <h1 className="dashboard-title">Car Diagnostics Dashboard</h1>
-          <p className="dashboard-subtitle">Welcome back, {user?.email || "User"}!</p>
         </div>
         <div className="header-right">
           <div className="user-info">
