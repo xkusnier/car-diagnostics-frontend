@@ -5,38 +5,47 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // ✅ PREPÍNANIE ZOBRAZENIA HESLA
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ✅ PREPÍNANIE ZOBRAZENIA POTVRDENIA
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!email || !password || !confirmPassword) {
       setError("Please fill in all fields");
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      setConfirmPassword("");
       return;
     }
-    
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters long");
       return;
     }
-    
+
     setError("");
     setLoading(true);
-    
+
     try {
       const result = await onRegister(email, password);
-      
+
       if (!result.success) {
         setError(result.message || "Registration failed");
+
+        const msg = String(result.message || "").toLowerCase();
+
+        if (msg.includes("already exists") || msg.includes("email")) {
+          setPassword("");
+          setConfirmPassword("");
+        } else if (msg.includes("server error")) {
+          // nechaj všetko vyplnené
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -52,7 +61,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
         <div className="auth-shape shape-2"></div>
         <div className="auth-shape shape-3"></div>
       </div>
-      
+
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
@@ -70,7 +79,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="form-group">
             <label htmlFor="email" className="form-label">
               Email Address
@@ -83,6 +92,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
               className="form-input"
               placeholder="Enter your email"
               disabled={loading}
+              autoComplete="email"
             />
           </div>
 
@@ -99,6 +109,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
                 className="form-input password-input"
                 placeholder="Create a password"
                 disabled={loading}
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -125,6 +136,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
                 className="form-input password-input"
                 placeholder="Confirm your password"
                 disabled={loading}
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -139,7 +151,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
 
           <button
             type="submit"
-            className={`auth-button ${loading ? 'loading' : ''}`}
+            className={`auth-button ${loading ? "loading" : ""}`}
             disabled={loading}
           >
             {loading ? (
@@ -148,7 +160,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
                 Creating account...
               </>
             ) : (
-              'Create Account'
+              "Create Account"
             )}
           </button>
         </form>
@@ -156,10 +168,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
         <div className="auth-footer">
           <p>
             Already have an account?{" "}
-            <button
-              onClick={onNavigateToLogin}
-              className="auth-link"
-            >
+            <button onClick={onNavigateToLogin} className="auth-link" type="button">
               Sign in here
             </button>
           </p>
