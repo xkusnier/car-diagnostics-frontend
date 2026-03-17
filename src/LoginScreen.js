@@ -1,18 +1,37 @@
 import React, { useState } from "react";
 import "./styles/global.css";
 
-function LoginScreen({ onLogin, onNavigateToRegister }) {
+function RegisterScreen({ onRegister, onNavigateToLogin }) {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      setError("Please enter both email and password");
+    if (!username || !email || !password || !confirmPassword) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    if (username.trim().length < 3) {
+      setError("Username must be at least 3 characters long");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setConfirmPassword("");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
       return;
     }
 
@@ -20,19 +39,20 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
     setLoading(true);
 
     try {
-      const result = await onLogin(email, password);
+      const result = await onRegister(username.trim(), email, password);
 
       if (!result.success) {
-        setError(result.message || "Invalid email or password");
+        setError(result.message || "Registration failed");
 
         const msg = String(result.message || "").toLowerCase();
+
         if (
-          msg.includes("invalid") ||
-          msg.includes("password") ||
-          msg.includes("credentials") ||
-          msg.includes("401")
+          msg.includes("already exists") ||
+          msg.includes("email") ||
+          msg.includes("username")
         ) {
           setPassword("");
+          setConfirmPassword("");
         }
       }
     } catch (err) {
@@ -56,8 +76,8 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
             <span className="logo-icon">🚗</span>
             <h1 className="logo-text">Car Diagnostics</h1>
           </div>
-          <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to your account to continue</p>
+          <h2 className="auth-title">Create Account</h2>
+          <p className="auth-subtitle">Join our diagnostics platform today</p>
         </div>
 
         {error && (
@@ -68,6 +88,22 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
         )}
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
+          <div className="form-group">
+            <label htmlFor="username" className="form-label">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="form-input"
+              placeholder="Enter your username"
+              disabled={loading}
+              autoComplete="username"
+            />
+          </div>
+
           <div className="form-group">
             <label htmlFor="email" className="form-label">
               Email Address
@@ -95,9 +131,9 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-input password-input"
-                placeholder="Enter your password"
+                placeholder="Create a password"
                 disabled={loading}
-                autoComplete="current-password"
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -106,6 +142,33 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
                 tabIndex="-1"
               >
                 {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
+            <small className="input-hint">At least 6 characters</small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword" className="form-label">
+              Confirm Password
+            </label>
+            <div className="password-input-wrapper">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="form-input password-input"
+                placeholder="Confirm your password"
+                disabled={loading}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                tabIndex="-1"
+              >
+                {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
               </button>
             </div>
           </div>
@@ -118,19 +181,19 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
             {loading ? (
               <>
                 <span className="spinner-small"></span>
-                Signing in...
+                Creating account...
               </>
             ) : (
-              "Sign In"
+              "Create Account"
             )}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
-            Don't have an account?{" "}
-            <button onClick={onNavigateToRegister} className="auth-link" type="button">
-              Sign up now
+            Already have an account?{" "}
+            <button onClick={onNavigateToLogin} className="auth-link" type="button">
+              Sign in here
             </button>
           </p>
         </div>
@@ -139,4 +202,4 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
   );
 }
 
-export default LoginScreen;
+export default RegisterScreen;
