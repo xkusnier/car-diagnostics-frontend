@@ -61,29 +61,24 @@ function MainScreen({ onNavigate, user }) {
   const mainSections = [
     {
       icon: "🚗",
-      title: "My Vehicles",
+      title: "My Vehicles, Live Data & Status",
       description:
-        "View your vehicles, their assigned devices, status, live data, and available vehicle actions.",
+        "View your vehicles, assigned devices, current status, and available vehicle actions.",
       action: () => onNavigate("telemetry-comparison"),
     },
     {
       icon: "📟",
-      title: "My Devices",
+      title: "My Devices, Diagnostics & Fault Codes",
       description:
-        "Manage devices and open diagnostics, live data, fault codes, and linked vehicle information.",
+        "Manage devices and open diagnostics, linked vehicle details, and active fault codes.",
       action: () => onNavigate("my-devices"),
     },
     {
       icon: "📋",
-      title: "DTC History",
-      description: "Browse stored fault code history by VIN.",
+      title: "DTC History & Fault Code Records",
+      description:
+        "Browse stored fault code history and previously detected issues by VIN.",
       action: () => onNavigate("dtc-history"),
-    },
-    {
-      icon: "➕",
-      title: "Add Device",
-      description: "Register a new device and connect it to your vehicle workflow.",
-      action: () => onNavigate("add-device"),
     },
   ];
 
@@ -147,7 +142,7 @@ function MainScreen({ onNavigate, user }) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
             gap: "1rem",
           }}
         >
