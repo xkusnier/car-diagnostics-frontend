@@ -1255,15 +1255,6 @@ body {
   font-size: 0.875rem;
 }
 
-.auth-link {
-  background: none;
-  border: none;
-  color: var(--primary-blue);
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-}
 
 .auth-link:hover {
   text-decoration: none;
