@@ -162,19 +162,6 @@ function MainScreen({ onNavigate, user }) {
           onClick={() => onNavigate("my-devices")}
           style={{ cursor: "pointer" }}
         >
-          <div
-            className="stat-icon"
-            style={{
-              background: "linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)",
-            }}
-          >
-            ✅
-          </div>
-          <div className="stat-content">
-            <h3 className="stat-value">{stats.onlineDevices}</h3>
-            <p className="stat-label">Online Devices</p>
-          </div>
-        </div>
 
         <div
           className="stat-card"
