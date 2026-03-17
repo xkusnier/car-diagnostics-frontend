@@ -240,13 +240,7 @@ function MainScreen({ onNavigate, user }) {
                           </button>
                         ) : null}
 
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => onNavigate("dtc-history")}
-                          style={{ padding: "0.55rem 0.85rem", fontSize: "0.9rem" }}
-                        >
-                          View DTC History
-                        </button>
+
                       </div>
                     </td>
                   </tr>
