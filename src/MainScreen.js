@@ -62,19 +62,15 @@ function MainScreen({ onNavigate, user }) {
     {
       icon: "🚗",
       title: "My Vehicles",
-      description: "View your registered vehicles and their current status.",
+      description:
+        "View your vehicles, their assigned devices, status, live data, and available vehicle actions.",
       action: () => onNavigate("telemetry-comparison"),
     },
     {
       icon: "📟",
       title: "My Devices",
-      description: "Manage devices and view linked vehicle information.",
-      action: () => onNavigate("my-devices"),
-    },
-    {
-      icon: "🩺",
-      title: "Diagnostics",
-      description: "Open diagnostics for a linked device and view active DTCs.",
+      description:
+        "Manage devices and open diagnostics, live data, fault codes, and linked vehicle information.",
       action: () => onNavigate("my-devices"),
     },
     {
@@ -82,6 +78,12 @@ function MainScreen({ onNavigate, user }) {
       title: "DTC History",
       description: "Browse stored fault code history by VIN.",
       action: () => onNavigate("dtc-history"),
+    },
+    {
+      icon: "➕",
+      title: "Add Device",
+      description: "Register a new device and connect it to your vehicle workflow.",
+      action: () => onNavigate("add-device"),
     },
   ];
 
@@ -107,7 +109,8 @@ function MainScreen({ onNavigate, user }) {
         <div className="header-content">
           <h1>Home</h1>
           <p style={{ marginTop: "0.35rem", color: "var(--text-secondary)" }}>
-            Welcome back, <strong style={{ color: "var(--text-primary)" }}>{displayName}</strong>
+            Welcome back,{" "}
+            <strong style={{ color: "var(--text-primary)" }}>{displayName}</strong>
           </p>
         </div>
       </div>
