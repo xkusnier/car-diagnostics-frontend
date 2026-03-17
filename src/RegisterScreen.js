@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./styles/global.css";
 
 function RegisterScreen({ onRegister, onNavigateToLogin }) {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -13,8 +14,13 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword) {
       setError("Please fill in all fields");
+      return;
+    }
+
+    if (username.trim().length < 3) {
+      setError("Username must be at least 3 characters long");
       return;
     }
 
@@ -33,18 +39,20 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
     setLoading(true);
 
     try {
-      const result = await onRegister(email, password);
+      const result = await onRegister(username.trim(), email, password);
 
       if (!result.success) {
         setError(result.message || "Registration failed");
 
         const msg = String(result.message || "").toLowerCase();
 
-        if (msg.includes("already exists") || msg.includes("email")) {
+        if (
+          msg.includes("already exists") ||
+          msg.includes("email") ||
+          msg.includes("username")
+        ) {
           setPassword("");
           setConfirmPassword("");
-        } else if (msg.includes("server error")) {
-          // nechaj všetko vyplnené
         }
       }
     } catch (err) {
@@ -80,6 +88,22 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
         )}
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
+          <div className="form-group">
+            <label htmlFor="username" className="form-label">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="form-input"
+              placeholder="Enter your username"
+              disabled={loading}
+              autoComplete="username"
+            />
+          </div>
+
           <div className="form-group">
             <label htmlFor="email" className="form-label">
               Email Address
@@ -164,21 +188,42 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
             )}
           </button>
         </form>
-        
-        <div className="auth-footer">
-          <p>
-            Already have an account?{" "}
-            <button
-              type="button"
-              className="auth-link"
-              onClick={() => {
-                console.log("go to login");
-                onNavigateToLogin();
-              }}
-            >
-              Sign in here
-            </button>
-          </p>
+
+        <div
+          className="auth-footer"
+          style={{
+            position: "relative",
+            zIndex: 50,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "0.25rem",
+            marginTop: "1rem",
+          }}
+        >
+          <span style={{ color: "var(--text-secondary)" }}>
+            Already have an account?
+          </span>
+
+          <button
+            type="button"
+            onClick={() => onNavigateToLogin()}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#60a5fa",
+              textDecoration: "underline",
+              cursor: "pointer",
+              font: "inherit",
+              padding: 0,
+              margin: 0,
+              pointerEvents: "auto",
+              position: "relative",
+              zIndex: 60,
+            }}
+          >
+            Sign in here
+          </button>
         </div>
       </div>
     </div>
