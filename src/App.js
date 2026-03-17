@@ -63,13 +63,6 @@ function App() {
 
   useEffect(() => {
     wakeUpBackend();
-
-    const handleRegisterEvent = () => setCurrentScreen("register");
-    window.addEventListener("open-register", handleRegisterEvent);
-
-    return () => {
-      window.removeEventListener("open-register", handleRegisterEvent);
-    };
   }, []);
 
   const handleRefresh = () => {
