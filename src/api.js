@@ -21,7 +21,6 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
-      // ensure header not stale
       delete config.headers.Authorization;
     }
     return config;
@@ -34,32 +33,33 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Server responded with error status
       console.error("API Error:", error.response.status, error.response.data);
 
-      // Check for JWT errors
       const errorMsg = error.response.data?.msg || error.response.data?.error || "";
 
-      // Common JWT errors
+      // Pokazený / neplatný JWT token
       if (error.response.status === 422 && errorMsg.includes("Not enough segments")) {
         localStorage.removeItem("token");
         localStorage.removeItem("email");
         localStorage.removeItem("role");
-        window.location.reload();
+        delete api.defaults.headers.common["Authorization"];
       }
 
-      // Auto logout on 401 Unauthorized
-      if (error.response.status === 401 && !window.location.pathname.includes("/login")) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("email");
-        localStorage.removeItem("role");
-        window.location.reload();
+      // 401 nech NEROBÍ reload pri zlom logine
+      // Token maž len ak už existoval a request bol autorizovaný
+      if (error.response.status === 401) {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("email");
+          localStorage.removeItem("role");
+          delete api.defaults.headers.common["Authorization"];
+        }
       }
     } else if (error.request) {
-      // Request made but no response
       console.error("Network Error:", error.request);
     } else {
-      // Something else happened
       console.error("Error:", error.message);
     }
 
