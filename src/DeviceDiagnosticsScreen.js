@@ -2,6 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 import { io } from "socket.io-client";
+import {
+  ExclamationTriangleIcon,
+  CommandLineIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  InformationCircleIcon,
+  MagnifyingGlassIcon,
+  CpuChipIcon,
+} from "@heroicons/react/24/outline";
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [data, setData] = useState(null);
@@ -15,53 +25,46 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
 
-  // ✅ Socket ref
   const socketRef = useRef(null);
   const pollingIntervalRef = useRef(null);
 
-  // -------------------- INIT --------------------
   useEffect(() => {
     fetchDiagnostics();
-    
-    // ✅ Vytvorenie socket pripojenia
-    const socketUrl = process.env.REACT_APP_API_URL || "https://car-diagnostics.onrender.com";
+
+    const socketUrl =
+      process.env.REACT_APP_API_URL || "https://car-diagnostics.onrender.com";
+
     socketRef.current = io(socketUrl, {
-      transports: ['websocket'],
-      reconnection: true
+      transports: ["websocket"],
+      reconnection: true,
     });
-    
-    // ✅ Počúvanie na clear confirmation
+
     socketRef.current.on("clear_confirmation", (data) => {
       console.log("Clear confirmation received:", data);
       if (data.device_id === deviceId && data.status === "success") {
-        // Zastavíme polling ak beží
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
-        
+
         setPolling(false);
         setClearing(false);
-        setClearStatus("DTC successfully cleared ✔");
-        
-        // ✅ OKAMŽITE načítame nové dáta
+        setClearStatus("DTC successfully cleared");
         fetchDiagnostics();
-        
-        // Po 3 sekundách skryjeme status
+
         setTimeout(() => {
           setClearStatus("");
         }, 3000);
       }
     });
 
-    // ✅ PRIDANÉ: Počúvanie na dtc_update (keď RPi pošle nový DTC kód)
     socketRef.current.on("dtc_update", (data) => {
       console.log("DTC update received:", data);
       if (data.device_id === deviceId) {
         setReading(false);
-        setReadStatus("DTC read completed ✔");
+        setReadStatus("DTC read completed");
         fetchDiagnostics();
-        
+
         setTimeout(() => {
           setReadStatus("");
         }, 3000);
@@ -78,7 +81,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     if (data?.vin) checkDtcPatterns(data.vin);
   }, [data?.vin]);
 
-  // -------------------- REST --------------------
   const fetchDiagnostics = async () => {
     try {
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
@@ -111,9 +113,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     try {
       await api.post(`/api/device/${deviceId}/read-dtcs`);
       setReadStatus("Command sent. Waiting for DTCs...");
-      
-      // ✅ UŽ ŽIADNY POLLING - len čakáme na WebSocket
-      
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send read DTC command.");
       setReading(false);
@@ -130,43 +129,61 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     try {
       await api.post(`/api/device/${deviceId}/clear-dtcs`);
       setClearStatus("Command sent. Waiting for RPi...");
-      
-      // ✅ Čakáme na WebSocket clear_confirmation
-      
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send clear command.");
       setClearing(false);
     }
   };
 
-  // -------------------- UI helpers --------------------
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
-      case "critical": return "#d32f2f";
-      case "high": return "#f57c00";
-      case "medium": return "#ffb300";
-      case "low": return "#388e3c";
-      default: return "#5f6368";
+      case "critical":
+        return "#d32f2f";
+      case "high":
+        return "#f57c00";
+      case "medium":
+        return "#ffb300";
+      case "low":
+        return "#388e3c";
+      default:
+        return "#5f6368";
     }
   };
 
   const getSeverityBadgeClass = (severity) => {
     switch (severity?.toLowerCase()) {
-      case "critical": return "badge-critical";
-      case "high": return "badge-high";
-      case "medium": return "badge-medium";
-      case "low": return "badge-low";
-      default: return "badge-info";
+      case "critical":
+        return "badge-critical";
+      case "high":
+        return "badge-high";
+      case "medium":
+        return "badge-medium";
+      case "low":
+        return "badge-low";
+      default:
+        return "badge-info";
     }
   };
 
   const getSeverityIcon = (severity) => {
+    const iconStyle = {
+      width: "0.95rem",
+      height: "0.95rem",
+      marginRight: "0.35rem",
+      verticalAlign: "text-bottom",
+    };
+
     switch (severity?.toLowerCase()) {
-      case "critical": return "🔥";
-      case "high": return "⚠️";
-      case "medium": return "🔶";
-      case "low": return "ℹ️";
-      default: return "❓";
+      case "critical":
+        return <ExclamationTriangleIcon style={iconStyle} />;
+      case "high":
+        return <ExclamationTriangleIcon style={iconStyle} />;
+      case "medium":
+        return <ExclamationTriangleIcon style={iconStyle} />;
+      case "low":
+        return <InformationCircleIcon style={iconStyle} />;
+      default:
+        return <InformationCircleIcon style={iconStyle} />;
     }
   };
 
@@ -176,7 +193,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     return "#f57c00";
   };
 
-  // -------------------- UI --------------------
   if (loading) {
     return (
       <div className="devices-container">
@@ -192,7 +208,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     return (
       <div className="devices-container">
         <div className="error-card">
-          <div className="error-icon">⚠️</div>
+          <div className="error-icon">
+            <ExclamationTriangleIcon style={{ width: "2rem", height: "2rem" }} />
+          </div>
           <div className="error-content">
             <h3>Error Loading Diagnostics</h3>
             <p>{error}</p>
@@ -204,9 +222,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
   return (
     <div className="devices-container">
-      {/* Header */}
       <div className="devices-header">
-
         <div className="header-content">
           <h1>Device Diagnostics</h1>
           <p className="subtitle">Diagnostics for device #{deviceId}</p>
@@ -218,7 +234,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         </div>
       </div>
 
-      {/* Device Info Cards */}
       <div className="stats-bar">
         <div className="stat-item">
           <span className="stat-number">#{data.device_id}</span>
@@ -241,7 +256,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         </div>
       </div>
 
-      {/* Control Panel */}
       <div className="control-panel" style={{ marginBottom: "2rem" }}>
         <div className="button-group">
           <button
@@ -257,7 +271,15 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
               </>
             ) : (
               <>
-                <span className="icon">📡</span>
+                <CommandLineIcon
+                  style={{
+                    width: "1rem",
+                    height: "1rem",
+                    marginRight: "0.45rem",
+                    display: "inline-block",
+                    verticalAlign: "middle",
+                  }}
+                />
                 Read DTC
               </>
             )}
@@ -276,30 +298,48 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
               </>
             ) : (
               <>
-                <span className="icon">🗑️</span>
+                <TrashIcon
+                  style={{
+                    width: "1rem",
+                    height: "1rem",
+                    marginRight: "0.45rem",
+                    display: "inline-block",
+                    verticalAlign: "middle",
+                  }}
+                />
                 Clear DTC
               </>
             )}
           </button>
         </div>
 
-        {/* Status Messages */}
         {readStatus && (
-          <div className={`status-message ${readStatus.includes("✔") ? "success" : "info"}`}>
-            <span className="icon">{readStatus.includes("✔") ? "✅" : "⏳"}</span>
+          <div className={`status-message ${readStatus.toLowerCase().includes("completed") ? "success" : "info"}`}>
+            <span className="icon" style={{ display: "inline-flex", alignItems: "center" }}>
+              {readStatus.toLowerCase().includes("completed") ? (
+                <CheckCircleIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+              ) : (
+                <ClockIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+              )}
+            </span>
             {readStatus}
           </div>
         )}
 
         {clearStatus && (
-          <div className={`status-message ${clearStatus.includes("✔") ? "success" : "warning"}`}>
-            <span className="icon">{clearStatus.includes("✔") ? "✅" : "⏳"}</span>
+          <div className={`status-message ${clearStatus.toLowerCase().includes("cleared") ? "success" : "warning"}`}>
+            <span className="icon" style={{ display: "inline-flex", alignItems: "center" }}>
+              {clearStatus.toLowerCase().includes("cleared") ? (
+                <CheckCircleIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+              ) : (
+                <ClockIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+              )}
+            </span>
             {clearStatus}
           </div>
         )}
       </div>
 
-      {/* DTC Codes Section */}
       <div className="dtc-section">
         <div className="section-header">
           <h2>Active DTC Codes</h2>
@@ -315,7 +355,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
         {!data.dtc_codes || data.dtc_codes.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">✅</div>
+            <div className="empty-icon">
+              <CheckCircleIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
+            </div>
             <h3>No Active DTC Codes</h3>
             <p>No diagnostic trouble codes found for this device.</p>
           </div>
@@ -334,7 +376,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                 {data.dtc_codes.map((item, i) => {
                   const severityColor = getSeverityColor(item.severity);
                   const severityBadgeClass = getSeverityBadgeClass(item.severity);
-                  const severityIcon = getSeverityIcon(item.severity);
 
                   return (
                     <tr key={i} className={i % 2 === 0 ? "even" : "odd"}>
@@ -358,9 +399,15 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                         <div className="severity-display">
                           <span
                             className={`severity-badge ${severityBadgeClass}`}
-                            style={{ background: severityColor, color: "white" }}
+                            style={{
+                              background: severityColor,
+                              color: "white",
+                              display: "inline-flex",
+                              alignItems: "center",
+                            }}
                           >
-                            {severityIcon} {item.severity?.toUpperCase() || "MEDIUM"}
+                            {getSeverityIcon(item.severity)}
+                            {item.severity?.toUpperCase() || "MEDIUM"}
                           </span>
                           <div className="severity-info">
                             <small>
@@ -396,13 +443,19 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         )}
       </div>
 
-      {/* DTC Pattern Detection Section */}
       {data.vin && data.dtc_codes && data.dtc_codes.length > 0 && (
         <div className="pattern-section" style={{ marginBottom: "2rem" }}>
           <div className="section-header">
-            <h2>🔍 DTC Pattern Detection</h2>
+            <h2 style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+              <MagnifyingGlassIcon style={{ width: "1.25rem", height: "1.25rem" }} />
+              DTC Pattern Detection
+            </h2>
             <div className="pattern-count">
-              {loadingPatterns ? <div className="spinner-tiny"></div> : `${patterns.length} pattern(s) detected`}
+              {loadingPatterns ? (
+                <div className="spinner-tiny"></div>
+              ) : (
+                `${patterns.length} pattern(s) detected`
+              )}
             </div>
           </div>
 
@@ -413,7 +466,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
             </div>
           ) : patterns.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">🔍</div>
+              <div className="empty-icon">
+                <MagnifyingGlassIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
+              </div>
               <h3>No Patterns Detected</h3>
               <p>No known diagnostic patterns match the current DTC combination.</p>
             </div>
@@ -422,8 +477,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
               {patterns.map((pattern, index) => (
                 <div key={index} className="pattern-card">
                   <div className="pattern-header">
-                    <div className="pattern-title">
-                      <span className="pattern-icon">🎯</span>
+                    <div className="pattern-title" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <CpuChipIcon style={{ width: "1.5rem", height: "1.5rem" }} />
                       <h3>{pattern.pattern_name}</h3>
                     </div>
                     <div
@@ -455,7 +510,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
                     <div className="pattern-match">
                       <strong>Match Status:</strong>
-                      <span className="match-badge success">✅ All required codes present</span>
+                      <span
+                        className="match-badge success"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                      >
+                        <CheckCircleIcon style={{ width: "1rem", height: "1rem" }} />
+                        All required codes present
+                      </span>
                     </div>
                   </div>
                 </div>
