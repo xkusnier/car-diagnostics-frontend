@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import "./styles/global.css";
+import {
+  TruckIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from "@heroicons/react/24/outline";
 
 function LoginScreen({ onLogin, onNavigateToRegister }) {
   const [identifier, setIdentifier] = useState(""); // email alebo username
@@ -53,7 +59,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
-            <span className="logo-icon">🚗</span>
+            <TruckIcon style={{ width: "2.5rem", height: "2.5rem" }} />
             <h1 className="logo-text">Car Diagnostics</h1>
           </div>
           <h2 className="auth-title">Welcome Back</h2>
@@ -62,7 +68,7 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
 
         {error && (
           <div className="auth-error">
-            <span className="error-icon">⚠️</span>
+            <ExclamationTriangleIcon style={{ width: "1.25rem", height: "1.25rem" }} />
             <span>{error}</span>
           </div>
         )}
@@ -105,7 +111,11 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex="-1"
               >
-                {showPassword ? "👁️" : "👁️‍🗨️"}
+                {showPassword ? (
+                  <EyeIcon style={{ width: "1.2rem", height: "1.2rem" }} />
+                ) : (
+                  <EyeSlashIcon style={{ width: "1.2rem", height: "1.2rem" }} />
+                )}
               </button>
             </div>
           </div>
