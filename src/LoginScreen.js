@@ -1,37 +1,18 @@
 import React, { useState } from "react";
 import "./styles/global.css";
 
-function RegisterScreen({ onRegister, onNavigateToLogin }) {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+function LoginScreen({ onLogin, onNavigateToRegister }) {
+  const [identifier, setIdentifier] = useState(""); // email alebo username
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!username || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    if (username.trim().length < 3) {
-      setError("Username must be at least 3 characters long");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      setConfirmPassword("");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    if (!identifier || !password) {
+      setError("Please enter your email/username and password");
       return;
     }
 
@@ -39,20 +20,19 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
     setLoading(true);
 
     try {
-      const result = await onRegister(username.trim(), email, password);
+      const result = await onLogin(identifier, password);
 
       if (!result.success) {
-        setError(result.message || "Registration failed");
+        setError(result.message || "Invalid email/username or password");
 
         const msg = String(result.message || "").toLowerCase();
-
         if (
-          msg.includes("already exists") ||
-          msg.includes("email") ||
-          msg.includes("username")
+          msg.includes("invalid") ||
+          msg.includes("password") ||
+          msg.includes("credentials") ||
+          msg.includes("401")
         ) {
           setPassword("");
-          setConfirmPassword("");
         }
       }
     } catch (err) {
@@ -76,8 +56,8 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
             <span className="logo-icon">🚗</span>
             <h1 className="logo-text">Car Diagnostics</h1>
           </div>
-          <h2 className="auth-title">Create Account</h2>
-          <p className="auth-subtitle">Join our diagnostics platform today</p>
+          <h2 className="auth-title">Welcome Back</h2>
+          <p className="auth-subtitle">Sign in to your account to continue</p>
         </div>
 
         {error && (
@@ -89,34 +69,18 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="form-group">
-            <label htmlFor="username" className="form-label">
-              Username
+            <label htmlFor="identifier" className="form-label">
+              Email or Username
             </label>
             <input
               type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="identifier"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="form-input"
-              placeholder="Enter your username"
+              placeholder="Enter your email or username"
               disabled={loading}
               autoComplete="username"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-              placeholder="Enter your email"
-              disabled={loading}
-              autoComplete="email"
             />
           </div>
 
@@ -131,9 +95,9 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-input password-input"
-                placeholder="Create a password"
+                placeholder="Enter your password"
                 disabled={loading}
-                autoComplete="new-password"
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -142,33 +106,6 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
                 tabIndex="-1"
               >
                 {showPassword ? "👁️" : "👁️‍🗨️"}
-              </button>
-            </div>
-            <small className="input-hint">At least 6 characters</small>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">
-              Confirm Password
-            </label>
-            <div className="password-input-wrapper">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="form-input password-input"
-                placeholder="Confirm your password"
-                disabled={loading}
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                tabIndex="-1"
-              >
-                {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
               </button>
             </div>
           </div>
@@ -181,19 +118,23 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
             {loading ? (
               <>
                 <span className="spinner-small"></span>
-                Creating account...
+                Signing in...
               </>
             ) : (
-              "Create Account"
+              "Sign In"
             )}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
-            Already have an account?{" "}
-            <button onClick={onNavigateToLogin} className="auth-link" type="button">
-              Sign in here
+            Don&apos;t have an account?{" "}
+            <button
+              onClick={onNavigateToRegister}
+              className="auth-link"
+              type="button"
+            >
+              Sign up now
             </button>
           </p>
         </div>
@@ -202,4 +143,4 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
   );
 }
 
-export default RegisterScreen;
+export default LoginScreen;
