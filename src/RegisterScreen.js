@@ -77,7 +77,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
             <h1 className="logo-text">Car Diagnostics</h1>
           </div>
           <h2 className="auth-title">Create Account</h2>
-          <p className="auth-subtitle">Join our diagnostics platform today</p>
+          <p className="auth-subtitle">Join our diagnostics platform todayy</p>
           <p style={{ color: "red", fontWeight: "bold" }}>NEW BUILD TEST</p>
         </div>
 
