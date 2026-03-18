@@ -16,6 +16,7 @@ import { api } from "./api";
 import VehicleTelemetryComparison from "./VehicleTelemetryComparison";
 import LiveDataScreen from "./LiveDataScreen";
 import VehicleTripsScreen from "./VehicleTripsScreen";
+import VehicleEventsScreen from "./VehicleEventsScreen";
 
 import LoadingScreen from "./LoadingScreen";
 
@@ -27,6 +28,8 @@ function App() {
   const [selectedDeviceInfo, setSelectedDeviceInfo] = useState(null);
   const [selectedVin, setSelectedVin] = useState(null);
   const [selectedVehicleInfo, setSelectedVehicleInfo] = useState(null);
+  const [selectedEventsVin, setSelectedEventsVin] = useState(null);
+  const [selectedEventsVehicleInfo, setSelectedEventsVehicleInfo] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -213,6 +216,13 @@ function App() {
 
     setUser(null);
     setCurrentScreen("login");
+    setSelectedDeviceId(null);
+    setSelectedDeviceForLive(null);
+    setSelectedDeviceInfo(null);
+    setSelectedVin(null);
+    setSelectedVehicleInfo(null);
+    setSelectedEventsVin(null);
+    setSelectedEventsVehicleInfo(null);
   };
 
   const navigateTo = (screen, params = {}) => {
@@ -239,6 +249,11 @@ function App() {
     if (screen === "vehicle-trips") {
       if (params.vin) setSelectedVin(params.vin);
       if (params.vehicleInfo) setSelectedVehicleInfo(params.vehicleInfo);
+    }
+
+    if (screen === "vehicle-events") {
+      if (params.vin) setSelectedEventsVin(params.vin);
+      if (params.vehicleInfo) setSelectedEventsVehicleInfo(params.vehicleInfo);
     }
 
     setCurrentScreen(screen);
@@ -282,7 +297,13 @@ function App() {
               My Devices
             </button>
             <button
-              className={`nav-link ${currentScreen === "telemetry-comparison" ? "active" : ""}`}
+              className={`nav-link ${
+                currentScreen === "telemetry-comparison" ||
+                currentScreen === "vehicle-trips" ||
+                currentScreen === "vehicle-events"
+                  ? "active"
+                  : ""
+              }`}
               onClick={() => navigateTo("telemetry-comparison")}
             >
               My Vehicles
@@ -384,6 +405,15 @@ function App() {
             key={`trips-${refreshKey}`}
             vin={selectedVin}
             vehicleInfo={selectedVehicleInfo}
+            onBack={() => navigateTo("telemetry-comparison")}
+          />
+        )}
+
+        {currentScreen === "vehicle-events" && user && (
+          <VehicleEventsScreen
+            key={`vehicle-events-${refreshKey}`}
+            vin={selectedEventsVin}
+            vehicleInfo={selectedEventsVehicleInfo}
             onBack={() => navigateTo("telemetry-comparison")}
           />
         )}
