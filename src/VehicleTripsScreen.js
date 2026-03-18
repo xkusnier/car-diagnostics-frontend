@@ -6,7 +6,7 @@ import {
   ArrowsRightLeftIcon,
   ClockIcon,
   ChartBarIcon,
-  FuelIcon,
+  FireIcon,
   ExclamationTriangleIcon,
   BeakerIcon,
 } from "@heroicons/react/24/outline";
@@ -26,7 +26,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
 
   useEffect(() => {
     fetchTrips();
-  }, [vin]);
+  }, [vin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchTrips = async () => {
     try {
@@ -48,18 +48,28 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           ...response.data.vehicle,
         });
 
-        const totalDistance = response.data.trips.reduce((sum, t) => sum + (t.distance_km || 0), 0);
-        const totalDuration = response.data.trips.reduce((sum, t) => sum + (t.duration_seconds || 0), 0);
-        const speeds = response.data.trips.filter((t) => t.avg_speed).map((t) => t.avg_speed);
+        const totalDistance = response.data.trips.reduce(
+          (sum, t) => sum + (t.distance_km || 0),
+          0
+        );
+        const totalDuration = response.data.trips.reduce(
+          (sum, t) => sum + (t.duration_seconds || 0),
+          0
+        );
+        const speeds = response.data.trips
+          .filter((t) => t.avg_speed)
+          .map((t) => t.avg_speed);
         const consumptions = response.data.trips
           .filter((t) => t.avg_consumption_l100km)
           .map((t) => t.avg_consumption_l100km);
 
         setSummary({
           totalTrips: response.data.total_trips,
-          totalDistance: totalDistance,
-          totalDuration: totalDuration,
-          avgSpeed: speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0,
+          totalDistance,
+          totalDuration,
+          avgSpeed: speeds.length
+            ? speeds.reduce((a, b) => a + b, 0) / speeds.length
+            : 0,
           avgConsumption: consumptions.length
             ? consumptions.reduce((a, b) => a + b, 0) / consumptions.length
             : 0,
@@ -121,7 +131,10 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
         </div>
       </div>
 
-      <div className="summary-cards" style={{ marginTop: "1rem", marginBottom: "2rem" }}>
+      <div
+        className="summary-cards"
+        style={{ marginTop: "1rem", marginBottom: "2rem" }}
+      >
         <div className="summary-card">
           <div className="summary-icon">
             <MapIcon style={{ width: "2.5rem", height: "2.5rem" }} />
@@ -139,7 +152,9 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           <div className="summary-content">
             <span className="summary-label">Total Distance</span>
             <span className="summary-value">
-              {summary.totalDistance ? `${summary.totalDistance.toFixed(1)} km` : "—"}
+              {summary.totalDistance
+                ? `${summary.totalDistance.toFixed(1)} km`
+                : "—"}
             </span>
           </div>
         </div>
@@ -170,12 +185,14 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
 
         <div className="summary-card">
           <div className="summary-icon">
-            <FuelIcon style={{ width: "2.5rem", height: "2.5rem" }} />
+            <FireIcon style={{ width: "2.5rem", height: "2.5rem" }} />
           </div>
           <div className="summary-content">
             <span className="summary-label">Avg Consumption</span>
             <span className="summary-value">
-              {summary.avgConsumption ? `${summary.avgConsumption.toFixed(1)} L/100km` : "—"}
+              {summary.avgConsumption
+                ? `${summary.avgConsumption.toFixed(1)} L/100km`
+                : "—"}
             </span>
           </div>
         </div>
@@ -234,13 +251,25 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
                     <td>{trip.max_speed ? `${trip.max_speed} km/h` : "—"}</td>
                     <td>{trip.avg_rpm ? `${trip.avg_rpm} rpm` : "—"}</td>
                     <td>{trip.max_rpm ? `${trip.max_rpm} rpm` : "—"}</td>
-                    <td>{trip.avg_consumption_l100km ? `${trip.avg_consumption_l100km} L/100km` : "—"}</td>
-                    <td>{trip.total_fuel_used_l ? `${trip.total_fuel_used_l.toFixed(2)} L` : "—"}</td>
+                    <td>
+                      {trip.avg_consumption_l100km
+                        ? `${trip.avg_consumption_l100km} L/100km`
+                        : "—"}
+                    </td>
+                    <td>
+                      {trip.total_fuel_used_l
+                        ? `${trip.total_fuel_used_l.toFixed(2)} L`
+                        : "—"}
+                    </td>
                     <td>
                       {trip.avg_coolant_temp ? (
                         <div>
                           <span
-                            style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.35rem",
+                            }}
                           >
                             <BeakerIcon style={{ width: "1rem", height: "1rem" }} />
                             {trip.avg_coolant_temp}°C
@@ -265,8 +294,11 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
 
       <div className="legend" style={{ marginTop: "2rem" }}>
         <div className="legend-item">
-          <MapIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> Trip
-          statistics based on engine on/off cycles
+          <MapIcon
+            className="legend-icon"
+            style={{ width: "1rem", height: "1rem" }}
+          />{" "}
+          Trip statistics based on engine on/off cycles
         </div>
       </div>
     </div>
