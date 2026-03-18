@@ -2,6 +2,20 @@ import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 import { io } from "socket.io-client";
+import {
+  ExclamationTriangleIcon,
+  ChartBarIcon,
+  TruckIcon,
+  Battery100Icon,
+  Cog6ToothIcon,
+  PresentationChartLineIcon,
+  ThermometerIcon,
+  BeakerIcon,
+  WindIcon,
+  FuelIcon,
+  ArrowTrendingDownIcon,
+  BoltIcon,
+} from "@heroicons/react/24/outline";
 
 function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
   const [live, setLive] = useState({
@@ -9,7 +23,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     updatedAt: null,
     error: null,
   });
-  
+
   const [wsStatus, setWsStatus] = useState({
     connected: false,
     error: null,
@@ -38,7 +52,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
   const fetchLiveData = async () => {
     try {
       const response = await api.get(`/api/device/${deviceId}/live`);
-      
+
       if (response.data.status === "success") {
         setLive({
           data: response.data,
@@ -100,13 +114,13 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
       console.log("Telemetry payload:", payload); // Pre debug
 
-      setLive(prev => {
+      setLive((prev) => {
         const newData = { ...(prev.data || {}) };
-        
+
         // Aktualizuj len hodnoty ktoré prišli v payload
         if (payload.odometer !== undefined) newData.odometer = payload.odometer;
         if (payload.speed !== undefined) newData.speed = payload.speed;
-        
+
         // Špeciálne spracovanie pre battery - premenuj battery_voltage na voltage
         if (payload.battery) {
           newData.battery = {
@@ -114,11 +128,11 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
             health: payload.battery.health
           };
         }
-        
+
         if (payload.engine) newData.engine = payload.engine;
         if (payload.fuel) newData.fuel = payload.fuel;
         newData.timestamp = payload.timestamp || new Date().toISOString();
-        
+
         return {
           data: newData,
           updatedAt: payload.timestamp || new Date().toISOString(),
@@ -145,27 +159,27 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
   }, [deviceId]);
 
   const formatNumber = (num, decimals = 1) => {
-    if (num === null || num === undefined) return '—';
+    if (num === null || num === undefined) return "—";
     return num.toFixed(decimals);
   };
 
   const getBatteryColor = (voltage) => {
-    if (!voltage) return '#999';
-    if (voltage < 11.8) return '#f44336';
-    if (voltage < 12.2) return '#ff9800';
-    return '#4caf50';
+    if (!voltage) return "#999";
+    if (voltage < 11.8) return "#f44336";
+    if (voltage < 12.2) return "#ff9800";
+    return "#4caf50";
   };
 
   const getEngineStatusIcon = (running) => {
-    if (running === null || running === undefined) return '⚫';
-    return running ? '🟢' : '🔴';
+    if (running === null || running === undefined) return "⚫";
+    return running ? "🟢" : "🔴";
   };
 
   if (!deviceId) {
     return (
       <div className="devices-container">
         <div className="error-card">
-          <div className="error-icon">⚠️</div>
+          <ExclamationTriangleIcon className="error-icon" style={{ width: "2rem", height: "2rem" }} />
           <div className="error-content">
             <h3>No Device Selected</h3>
             <p>Please select a device to view live data.</p>
@@ -181,12 +195,11 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     <div className="devices-container">
       {/* Header */}
       <div className="devices-header">
-
         <div className="header-content">
           <h1>Live Data Stream</h1>
           <p className="subtitle">
             Real-time telemetry for device #{deviceId}
-            {deviceDetails?.vin && ` • ${deviceDetails.brand || ''} ${deviceDetails.model || ''} • ${deviceDetails.vin}`}
+            {deviceDetails?.vin && ` • ${deviceDetails.brand || ""} ${deviceDetails.model || ""} • ${deviceDetails.vin}`}
           </p>
         </div>
 
@@ -199,13 +212,15 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
       {/* Connection Status */}
       {wsStatus.error && (
         <div className="error-message" style={{ marginBottom: "2rem" }}>
-          ⚠️ WebSocket Error: {wsStatus.error}
+          <ExclamationTriangleIcon style={{ width: "1.25rem", height: "1.25rem", marginRight: "0.5rem", display: "inline-block", verticalAlign: "middle" }} />
+          WebSocket Error: {wsStatus.error}
         </div>
       )}
 
       {live.error && !data && (
         <div className="error-message" style={{ marginBottom: "2rem" }}>
-          ⚠️ {live.error}
+          <ExclamationTriangleIcon style={{ width: "1.25rem", height: "1.25rem", marginRight: "0.5rem", display: "inline-block", verticalAlign: "middle" }} />
+          {live.error}
         </div>
       )}
 
@@ -215,7 +230,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Odometer */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">📊</span>
+              <ChartBarIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Odometer</h3>
             </div>
             <div className="live-data-value">
@@ -233,7 +248,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Speed */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">🚗</span>
+              <TruckIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Speed</h3>
             </div>
             <div className="live-data-value">
@@ -251,14 +266,14 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Battery */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">🔋</span>
+              <Battery100Icon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Battery</h3>
             </div>
             <div className="live-data-value">
               {data.battery?.voltage != null ? (
                 <>
-                  <span 
-                    className="value" 
+                  <span
+                    className="value"
                     style={{ color: getBatteryColor(data.battery.voltage) }}
                   >
                     {formatNumber(data.battery.voltage, 2)}
@@ -270,15 +285,15 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
               )}
             </div>
             {data.battery?.health && (
-              <div className="live-data-badge" style={{ 
-                background: data.battery.health === 'good' ? '#4caf50' : '#ff9800',
-                color: 'white',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '20px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                marginTop: '0.5rem'
+              <div className="live-data-badge" style={{
+                background: data.battery.health === "good" ? "#4caf50" : "#ff9800",
+                color: "white",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "20px",
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                marginTop: "0.5rem"
               }}>
                 {data.battery.health}
               </div>
@@ -288,7 +303,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Engine RPM */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">⚙️</span>
+              <Cog6ToothIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Engine RPM</h3>
             </div>
             <div className="live-data-value">
@@ -301,17 +316,17 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
                 <span className="value no-data">No data</span>
               )}
             </div>
-            <div className="engine-status" style={{ marginTop: '0.5rem' }}>
-              {getEngineStatusIcon(data.engine?.running)} 
-              {data.engine?.running === true ? ' Engine On' : 
-               data.engine?.running === false ? ' Engine Off' : ''}
+            <div className="engine-status" style={{ marginTop: "0.5rem" }}>
+              {getEngineStatusIcon(data.engine?.running)}
+              {data.engine?.running === true ? " Engine On" :
+               data.engine?.running === false ? " Engine Off" : ""}
             </div>
           </div>
 
           {/* Engine Load */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">📈</span>
+              <PresentationChartLineIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Engine Load</h3>
             </div>
             <div className="live-data-value">
@@ -329,7 +344,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Coolant Temp */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">🌡️</span>
+              <ThermometerIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Coolant Temp</h3>
             </div>
             <div className="live-data-value">
@@ -347,7 +362,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Oil Temp */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">🛢️</span>
+              <BeakerIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Oil Temp</h3>
             </div>
             <div className="live-data-value">
@@ -365,7 +380,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Intake Air Temp */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">💨</span>
+              <WindIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Intake Air</h3>
             </div>
             <div className="live-data-value">
@@ -383,7 +398,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Fuel Consumption (L/h) */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">⛽</span>
+              <FuelIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Fuel (L/h)</h3>
             </div>
             <div className="live-data-value">
@@ -401,7 +416,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Fuel Consumption (L/100km) */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">📉</span>
+              <ArrowTrendingDownIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Fuel (L/100km)</h3>
             </div>
             <div className="live-data-value">
@@ -419,7 +434,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* MAF */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">🌪️</span>
+              <WindIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>MAF</h3>
             </div>
             <div className="live-data-value">
@@ -437,12 +452,12 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
           {/* Fuel Type */}
           <div className="live-data-card">
             <div className="live-data-header">
-              <span className="live-data-icon">🔋</span>
+              <BoltIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
               <h3>Fuel Type</h3>
             </div>
             <div className="live-data-value">
               {data.fuel?.type ? (
-                <span className="value" style={{ fontSize: '1.2rem' }}>{data.fuel.type}</span>
+                <span className="value" style={{ fontSize: "1.2rem" }}>{data.fuel.type}</span>
               ) : (
                 <span className="value no-data">No data</span>
               )}
@@ -453,7 +468,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
       {/* Last Updated */}
       {live.updatedAt && (
-        <div className="last-updated" style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <div className="last-updated" style={{ textAlign: "center", marginTop: "2rem" }}>
           <small>Last updated: {new Date(live.updatedAt).toLocaleString()}</small>
         </div>
       )}
