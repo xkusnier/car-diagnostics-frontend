@@ -10,8 +10,8 @@ import {
   Cog6ToothIcon,
   PresentationChartLineIcon,
   BeakerIcon,
-  WindIcon,
-  FuelIcon,
+  ArrowsUpDownIcon,
+  FireIcon,
   ArrowTrendingDownIcon,
   BoltIcon,
 } from "@heroicons/react/24/outline";
@@ -31,12 +31,11 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
   const [deviceDetails, setDeviceDetails] = useState(deviceInfo || null);
   const socketRef = useRef(null);
 
-  // Fetch device info if not provided
   useEffect(() => {
     if (!deviceDetails && deviceId) {
       fetchDeviceInfo();
     }
-  }, [deviceId]);
+  }, [deviceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchDeviceInfo = async () => {
     try {
@@ -47,7 +46,6 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     }
   };
 
-  // Fetch initial live data (JEDEN ENDPOINT)
   const fetchLiveData = async () => {
     try {
       const response = await api.get(`/api/device/${deviceId}/live`);
@@ -67,7 +65,6 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     }
   };
 
-  // WebSocket connection
   useEffect(() => {
     fetchLiveData();
 
@@ -82,7 +79,8 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
       process.env.REACT_APP_API_URL ||
       "https://car-diagnostics.onrender.com";
 
-    const token = localStorage.getItem("token") || localStorage.getItem("access_token");
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("access_token");
 
     const socket = io(wsUrl, {
       transports: ["websocket"],
@@ -105,7 +103,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     };
 
     const onConnectError = (err) => {
-      setWsStatus({ connected: false, error: err?.message || "WebSocket connection error" });
+      setWsStatus({
+        connected: false,
+        error: err?.message || "WebSocket connection error",
+      });
     };
 
     const onTelemetry = (payload) => {
@@ -145,7 +146,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     socket.on("server_ready", () => {});
     socket.on("subscribed", () => {});
     socket.on("error", (e) => {
-      setWsStatus({ connected: false, error: e?.error || "WebSocket error" });
+      setWsStatus({
+        connected: false,
+        error: e?.error || "WebSocket error",
+      });
     });
 
     return () => {
@@ -157,7 +161,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
   const formatNumber = (num, decimals = 1) => {
     if (num === null || num === undefined) return "—";
-    return num.toFixed(decimals);
+    return Number(num).toFixed(decimals);
   };
 
   const getBatteryColor = (voltage) => {
@@ -176,7 +180,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     return (
       <div className="devices-container">
         <div className="error-card">
-          <ExclamationTriangleIcon className="error-icon" style={{ width: "2rem", height: "2rem" }} />
+          <ExclamationTriangleIcon
+            className="error-icon"
+            style={{ width: "2rem", height: "2rem" }}
+          />
           <div className="error-content">
             <h3>No Device Selected</h3>
             <p>Please select a device to view live data.</p>
@@ -201,7 +208,11 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
         </div>
 
         <div className="device-status">
-          <span className={`status-indicator ${wsStatus.connected ? "online" : "offline"}`}></span>
+          <span
+            className={`status-indicator ${
+              wsStatus.connected ? "online" : "offline"
+            }`}
+          ></span>
           {wsStatus.connected ? "Live Stream Active" : "Disconnected"}
         </div>
       </div>
@@ -240,7 +251,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
         <div className="live-data-grid" style={{ marginBottom: "2rem" }}>
           <div className="live-data-card">
             <div className="live-data-header">
-              <ChartBarIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <ChartBarIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Odometer</h3>
             </div>
             <div className="live-data-value">
@@ -257,7 +271,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <TruckIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <TruckIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Speed</h3>
             </div>
             <div className="live-data-value">
@@ -274,7 +291,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <Battery100Icon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <Battery100Icon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Battery</h3>
             </div>
             <div className="live-data-value">
@@ -296,7 +316,8 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
               <div
                 className="live-data-badge"
                 style={{
-                  background: data.battery.health === "good" ? "#4caf50" : "#ff9800",
+                  background:
+                    data.battery.health === "good" ? "#4caf50" : "#ff9800",
                   color: "white",
                   padding: "0.25rem 0.75rem",
                   borderRadius: "20px",
@@ -313,7 +334,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <Cog6ToothIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <Cog6ToothIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Engine RPM</h3>
             </div>
             <div className="live-data-value">
@@ -338,13 +362,18 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <PresentationChartLineIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <PresentationChartLineIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Engine Load</h3>
             </div>
             <div className="live-data-value">
               {data.engine?.load != null ? (
                 <>
-                  <span className="value">{formatNumber(data.engine.load)}</span>
+                  <span className="value">
+                    {formatNumber(data.engine.load)}
+                  </span>
                   <span className="unit">%</span>
                 </>
               ) : (
@@ -355,7 +384,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <BeakerIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <BeakerIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Coolant Temp</h3>
             </div>
             <div className="live-data-value">
@@ -372,7 +404,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <BeakerIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <BeakerIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Oil Temp</h3>
             </div>
             <div className="live-data-value">
@@ -389,7 +424,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <WindIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <ArrowsUpDownIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Intake Air</h3>
             </div>
             <div className="live-data-value">
@@ -406,13 +444,18 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <FuelIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <FireIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Fuel (L/h)</h3>
             </div>
             <div className="live-data-value">
               {data.fuel?.consumption_lh != null ? (
                 <>
-                  <span className="value">{formatNumber(data.fuel.consumption_lh)}</span>
+                  <span className="value">
+                    {formatNumber(data.fuel.consumption_lh)}
+                  </span>
                   <span className="unit">L/h</span>
                 </>
               ) : (
@@ -423,13 +466,18 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <ArrowTrendingDownIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <ArrowTrendingDownIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Fuel (L/100km)</h3>
             </div>
             <div className="live-data-value">
               {data.fuel?.consumption_l100km != null ? (
                 <>
-                  <span className="value">{formatNumber(data.fuel.consumption_l100km)}</span>
+                  <span className="value">
+                    {formatNumber(data.fuel.consumption_l100km)}
+                  </span>
                   <span className="unit">L/100km</span>
                 </>
               ) : (
@@ -440,7 +488,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <WindIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <ArrowsUpDownIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>MAF</h3>
             </div>
             <div className="live-data-value">
@@ -457,7 +508,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
           <div className="live-data-card">
             <div className="live-data-header">
-              <BoltIcon className="live-data-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+              <BoltIcon
+                className="live-data-icon"
+                style={{ width: "1.5rem", height: "1.5rem" }}
+              />
               <h3>Fuel Type</h3>
             </div>
             <div className="live-data-value">
@@ -474,7 +528,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
       )}
 
       {live.updatedAt && (
-        <div className="last-updated" style={{ textAlign: "center", marginTop: "2rem" }}>
+        <div
+          className="last-updated"
+          style={{ textAlign: "center", marginTop: "2rem" }}
+        >
           <small>Last updated: {new Date(live.updatedAt).toLocaleString()}</small>
         </div>
       )}
