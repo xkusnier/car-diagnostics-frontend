@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "./styles/global.css";
 import { api } from "./api";
+import {
+  TruckIcon,
+  CpuChipIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/solid";
 
 function MainScreen({ onNavigate, user }) {
   const [stats, setStats] = useState({
@@ -60,21 +67,21 @@ function MainScreen({ onNavigate, user }) {
 
   const mainSections = [
     {
-      icon: "🚗",
+      icon: TruckIcon,
       title: "My Vehicles, Live Data & Status",
       description:
         "View your vehicles, assigned devices, current status, and available vehicle actions.",
       action: () => onNavigate("telemetry-comparison"),
     },
     {
-      icon: "📟",
+      icon: CpuChipIcon,
       title: "My Devices, Diagnostics & Fault Codes",
       description:
         "Manage devices and open diagnostics, linked vehicle details, and active fault codes.",
       action: () => onNavigate("my-devices"),
     },
     {
-      icon: "📋",
+      icon: DocumentTextIcon,
       title: "DTC History & Fault Code Records",
       description:
         "Browse stored fault code history and previously detected issues by VIN.",
@@ -112,7 +119,12 @@ function MainScreen({ onNavigate, user }) {
 
       {error && (
         <div className="error-message card">
-          <span className="error-icon">⚠️</span>
+          <span
+            className="error-icon"
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <ExclamationTriangleIcon style={{ width: "1.5rem", height: "1.5rem" }} />
+          </span>
           <p>{error}</p>
         </div>
       )}
@@ -146,25 +158,29 @@ function MainScreen({ onNavigate, user }) {
             gap: "1rem",
           }}
         >
-          {mainSections.map((section) => (
-            <div
-              key={section.title}
-              onClick={section.action}
-              className="card"
-              style={{
-                cursor: "pointer",
-                transition: "0.2s ease",
-              }}
-            >
-              <div style={{ fontSize: "1.8rem", marginBottom: "0.75rem" }}>
-                {section.icon}
+          {mainSections.map((section) => {
+            const Icon = section.icon;
+
+            return (
+              <div
+                key={section.title}
+                onClick={section.action}
+                className="card"
+                style={{
+                  cursor: "pointer",
+                  transition: "0.2s ease",
+                }}
+              >
+                <div style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center" }}>
+                  <Icon style={{ width: "1.8rem", height: "1.8rem" }} />
+                </div>
+                <h3 style={{ marginBottom: "0.5rem" }}>{section.title}</h3>
+                <p style={{ opacity: 0.85, lineHeight: 1.5 }}>
+                  {section.description}
+                </p>
               </div>
-              <h3 style={{ marginBottom: "0.5rem" }}>{section.title}</h3>
-              <p style={{ opacity: 0.85, lineHeight: 1.5 }}>
-                {section.description}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -178,7 +194,12 @@ function MainScreen({ onNavigate, user }) {
 
         {vehiclesWithIssuesList.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">✅</div>
+            <div
+              className="empty-icon"
+              style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+            >
+              <CheckCircleIcon style={{ width: "3rem", height: "3rem" }} />
+            </div>
             <h3>No Active Issues</h3>
             <p>No vehicles with active DTC codes were found</p>
           </div>
@@ -239,8 +260,6 @@ function MainScreen({ onNavigate, user }) {
                             Open Diagnostics
                           </button>
                         ) : null}
-
-
                       </div>
                     </td>
                   </tr>
