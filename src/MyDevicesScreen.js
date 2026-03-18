@@ -1,341 +1,464 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import "./styles/global.css";
+import { io } from "socket.io-client";
 
-function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
-  const [devices, setDevices] = useState([]);
-  const [filteredDevices, setFilteredDevices] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [newDeviceId, setNewDeviceId] = useState("");
-  const [assignUserId, setAssignUserId] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
+  const [live, setLive] = useState({
+    data: null,
+    updatedAt: null,
+    error: null,
+  });
+  
+  const [wsStatus, setWsStatus] = useState({
+    connected: false,
+    error: null,
+  });
 
+  const [deviceDetails, setDeviceDetails] = useState(deviceInfo || null);
+  const socketRef = useRef(null);
+
+  // Fetch device info if not provided
   useEffect(() => {
-    fetchDevices();
-    
-    // Kontrola každých 5 sekúnd či pribudlo VIN
-    const interval = setInterval(() => {
-      fetchDevices();
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    if (!deviceDetails && deviceId) {
+      fetchDeviceInfo();
+    }
+  }, [deviceId]);
 
+  const fetchDeviceInfo = async () => {
+    try {
+      const res = await api.get(`/api/device/${deviceId}/diagnostics`);
+      setDeviceDetails(res.data);
+    } catch (err) {
+      console.error("Error fetching device info:", err);
+    }
+  };
+
+  // Fetch initial live data (JEDEN ENDPOINT)
+  const fetchLiveData = async () => {
+    try {
+      const response = await api.get(`/api/device/${deviceId}/live`);
+      
+      if (response.data.status === "success") {
+        setLive({
+          data: response.data,
+          updatedAt: response.data.timestamp,
+          error: null
+        });
+      }
+    } catch (e) {
+      setLive((prev) => ({
+        ...prev,
+        error: e.response?.data?.error || "Error fetching live data",
+      }));
+    }
+  };
+
+  // WebSocket connection
   useEffect(() => {
-    // Jednoduché filtrovanie - zobrazujeme všetky zariadenia
-    setFilteredDevices(devices);
-  }, [devices]);
+    fetchLiveData();
 
-  const fetchDevices = async () => {
-    try {
-      const res = await api.get("/api/my-devices");
-      setDevices(res.data.devices || []);
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to load devices");
-    } finally {
-      setLoading(false);
+    if (socketRef.current) {
+      socketRef.current.removeAllListeners();
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
+
+    const wsUrl =
+      process.env.REACT_APP_WS_URL ||
+      process.env.REACT_APP_API_URL ||
+      "https://car-diagnostics.onrender.com";
+
+    const token = localStorage.getItem("token") || localStorage.getItem("access_token");
+
+    const socket = io(wsUrl, {
+      transports: ["websocket"],
+      auth: token ? { token } : undefined,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+    });
+
+    socketRef.current = socket;
+
+    const onConnect = () => {
+      setWsStatus({ connected: true, error: null });
+      socket.emit("subscribe_device", { device_id: deviceId });
+      fetchLiveData();
+    };
+
+    const onDisconnect = () => {
+      setWsStatus((prev) => ({ ...prev, connected: false }));
+    };
+
+    const onConnectError = (err) => {
+      setWsStatus({ connected: false, error: err?.message || "WebSocket connection error" });
+    };
+
+    const onTelemetry = (payload) => {
+      if (!payload || Number(payload.device_id) !== Number(deviceId)) return;
+
+      console.log("Telemetry payload:", payload); // Pre debug
+
+      setLive(prev => {
+        const newData = { ...(prev.data || {}) };
+        
+        // Aktualizuj len hodnoty ktoré prišli v payload
+        if (payload.odometer !== undefined) newData.odometer = payload.odometer;
+        if (payload.speed !== undefined) newData.speed = payload.speed;
+        
+        // Špeciálne spracovanie pre battery - premenuj battery_voltage na voltage
+        if (payload.battery) {
+          newData.battery = {
+            voltage: payload.battery.battery_voltage,
+            health: payload.battery.health
+          };
+        }
+        
+        if (payload.engine) newData.engine = payload.engine;
+        if (payload.fuel) newData.fuel = payload.fuel;
+        newData.timestamp = payload.timestamp || new Date().toISOString();
+        
+        return {
+          data: newData,
+          updatedAt: payload.timestamp || new Date().toISOString(),
+          error: null,
+        };
+      });
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
+    socket.on("telemetry_update", onTelemetry);
+    socket.on("server_ready", () => {});
+    socket.on("subscribed", () => {});
+    socket.on("error", (e) => {
+      setWsStatus({ connected: false, error: e?.error || "WebSocket error" });
+    });
+
+    return () => {
+      socket.removeAllListeners();
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [deviceId]);
+
+  const formatNumber = (num, decimals = 1) => {
+    if (num === null || num === undefined) return '—';
+    return num.toFixed(decimals);
   };
 
-  const handleAddDevice = async () => {
-    if (!newDeviceId) {
-      alert("Please enter a Device ID");
-      return;
-    }
-
-    const payload = role === "admin"
-      ? { device_id: newDeviceId, user_id: assignUserId || null }
-      : { device_id: newDeviceId };
-
-    try {
-      const res = await api.post("/api/add-device", payload);
-      
-      alert("Device added successfully!");
-      setNewDeviceId("");
-      setAssignUserId("");
-      setShowAddForm(false);
-      
-      await fetchDevices();
-    } catch (err) {
-      alert(err.response?.data?.error || "Failed to add device");
-    }
+  const getBatteryColor = (voltage) => {
+    if (!voltage) return '#999';
+    if (voltage < 11.8) return '#f44336';
+    if (voltage < 12.2) return '#ff9800';
+    return '#4caf50';
   };
 
-  const handleDeleteDevice = async (deviceId) => {
-    setDeletingId(deviceId);
-    try {
-      await api.delete(`/api/device/${deviceId}`);
-      alert("Device deleted successfully!");
-      await fetchDevices();
-    } catch (err) {
-      alert(err.response?.data?.error || "Failed to delete device");
-    } finally {
-      setDeletingId(null);
-      setShowDeleteConfirm(null);
-    }
+  const getEngineStatusIcon = (running) => {
+    if (running === null || running === undefined) return '⚫';
+    return running ? '🟢' : '🔴';
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'online': return 'success';
-      case 'offline': return 'danger';
-      case 'error': return 'warning';
-      default: return 'secondary';
-    }
-  };
-
-  // Potvrdzovací dialóg
-  const DeleteConfirmDialog = ({ deviceId, onConfirm, onCancel }) => (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Delete Device</h3>
-        <p>Are you sure you want to delete device <strong>#{deviceId}</strong>?</p>
-        <p className="warning-text">This action cannot be undone. All device data including telemetry and DTC history will be permanently removed.</p>
-        <div className="modal-actions">
-          <button 
-            className="btn btn-secondary" 
-            onClick={onCancel}
-            disabled={deletingId === deviceId}
-          >
-            Cancel
-          </button>
-          <button 
-            className="btn btn-danger" 
-            onClick={() => onConfirm(deviceId)}
-            disabled={deletingId === deviceId}
-          >
-            {deletingId === deviceId ? 'Deleting...' : 'Delete Permanently'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (loading) {
+  if (!deviceId) {
     return (
       <div className="devices-container">
-        <div className="loading-center">
-          <div className="spinner-large"></div>
-          <p>Loading devices...</p>
+        <div className="error-card">
+          <div className="error-icon">⚠️</div>
+          <div className="error-content">
+            <h3>No Device Selected</h3>
+            <p>Please select a device to view live data.</p>
+          </div>
         </div>
       </div>
     );
   }
 
+  const data = live.data;
+
   return (
     <div className="devices-container">
-      {/* Header - bez refresh buttonu */}
+      {/* Header */}
       <div className="devices-header">
+
         <div className="header-content">
-          <h1>{role === "admin" ? "Device Management" : "My Devices"}</h1>
+          <h1>Live Data Stream</h1>
+          <p className="subtitle">
+            Real-time telemetry for device #{deviceId}
+            {deviceDetails?.vin && ` • ${deviceDetails.brand || ''} ${deviceDetails.model || ''} • ${deviceDetails.vin}`}
+          </p>
         </div>
-        {/* Refresh button removed */}
-      </div>
 
-      {/* Stats Bar */}
-      <div className="stats-bar">
-        <div className="stat-item">
-          <span className="stat-number">{devices.length}</span>
-          <span className="stat-label">Total Devices</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-number">
-            {devices.filter(d => d.status === "Online").length}
-          </span>
-          <span className="stat-label">Online</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-number">
-            {devices.filter(d => d.status === "Offline").length}
-          </span>
-          <span className="stat-label">Offline</span>
+        <div className="device-status">
+          <span className={`status-indicator ${wsStatus.connected ? "online" : "offline"}`}></span>
+          {wsStatus.connected ? "Live Stream Active" : "Disconnected"}
         </div>
       </div>
 
-      {/* Control Bar - bez search a filtra, len Add Device button */}
-      <div className="control-bar" style={{ justifyContent: 'flex-end' }}>
-        <div className="filters">
-          <button
-            className={`btn ${showAddForm ? 'btn-secondary' : 'btn-success'}`}
-            onClick={() => setShowAddForm(!showAddForm)}
-          >
-            {showAddForm ? 'Cancel' : '➕ Add Device'}
-          </button>
+      {/* Connection Status */}
+      {wsStatus.error && (
+        <div className="error-message" style={{ marginBottom: "2rem" }}>
+          ⚠️ WebSocket Error: {wsStatus.error}
         </div>
-      </div>
+      )}
 
-      {/* Add Device Form */}
-      {showAddForm && (
-        <div className="add-device-form card">
-          <h3>Add New Device</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Device ID *</label>
-              <input
-                type="number"
-                placeholder="Enter device ID"
-                value={newDeviceId}
-                onChange={(e) => setNewDeviceId(e.target.value)}
-                className="input"
-              />
+      {live.error && !data && (
+        <div className="error-message" style={{ marginBottom: "2rem" }}>
+          ⚠️ {live.error}
+        </div>
+      )}
+
+      {/* Live Data Grid */}
+      {data && (
+        <div className="live-data-grid" style={{ marginBottom: "2rem" }}>
+          {/* Odometer */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">📊</span>
+              <h3>Odometer</h3>
             </div>
+            <div className="live-data-value">
+              {data.odometer != null ? (
+                <>
+                  <span className="value">{data.odometer.toLocaleString()}</span>
+                  <span className="unit">km</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
 
-            {role === "admin" && (
-              <div className="form-group">
-                <label>Assign to User ID (optional)</label>
-                <input
-                  type="number"
-                  placeholder="Enter user ID"
-                  value={assignUserId}
-                  onChange={(e) => setAssignUserId(e.target.value)}
-                  className="input"
-                />
+          {/* Speed */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">🚗</span>
+              <h3>Speed</h3>
+            </div>
+            <div className="live-data-value">
+              {data.speed != null ? (
+                <>
+                  <span className="value">{data.speed}</span>
+                  <span className="unit">km/h</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* Battery */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">🔋</span>
+              <h3>Battery</h3>
+            </div>
+            <div className="live-data-value">
+              {data.battery?.voltage != null ? (
+                <>
+                  <span 
+                    className="value" 
+                    style={{ color: getBatteryColor(data.battery.voltage) }}
+                  >
+                    {formatNumber(data.battery.voltage, 2)}
+                  </span>
+                  <span className="unit">V</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+            {data.battery?.health && (
+              <div className="live-data-badge" style={{ 
+                background: data.battery.health === 'good' ? '#4caf50' : '#ff9800',
+                color: 'white',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                marginTop: '0.5rem'
+              }}>
+                {data.battery.health}
               </div>
             )}
+          </div>
 
-            <div className="form-group">
-              <button
-                className="btn btn-primary"
-                onClick={handleAddDevice}
-                disabled={!newDeviceId}
-              >
-                Add Device
-              </button>
+          {/* Engine RPM */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">⚙️</span>
+              <h3>Engine RPM</h3>
+            </div>
+            <div className="live-data-value">
+              {data.engine?.rpm != null ? (
+                <>
+                  <span className="value">{data.engine.rpm}</span>
+                  <span className="unit">rpm</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+            <div className="engine-status" style={{ marginTop: '0.5rem' }}>
+              {getEngineStatusIcon(data.engine?.running)} 
+              {data.engine?.running === true ? ' Engine On' : 
+               data.engine?.running === false ? ' Engine Off' : ''}
+            </div>
+          </div>
+
+          {/* Engine Load */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">📈</span>
+              <h3>Engine Load</h3>
+            </div>
+            <div className="live-data-value">
+              {data.engine?.load != null ? (
+                <>
+                  <span className="value">{formatNumber(data.engine.load)}</span>
+                  <span className="unit">%</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* Coolant Temp */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">🌡️</span>
+              <h3>Coolant Temp</h3>
+            </div>
+            <div className="live-data-value">
+              {data.engine?.coolant_temp != null ? (
+                <>
+                  <span className="value">{data.engine.coolant_temp}</span>
+                  <span className="unit">°C</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* Oil Temp */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">🛢️</span>
+              <h3>Oil Temp</h3>
+            </div>
+            <div className="live-data-value">
+              {data.engine?.oil_temp != null ? (
+                <>
+                  <span className="value">{data.engine.oil_temp}</span>
+                  <span className="unit">°C</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* Intake Air Temp */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">💨</span>
+              <h3>Intake Air</h3>
+            </div>
+            <div className="live-data-value">
+              {data.engine?.intake_air_temp != null ? (
+                <>
+                  <span className="value">{data.engine.intake_air_temp}</span>
+                  <span className="unit">°C</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* Fuel Consumption (L/h) */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">⛽</span>
+              <h3>Fuel (L/h)</h3>
+            </div>
+            <div className="live-data-value">
+              {data.fuel?.consumption_lh != null ? (
+                <>
+                  <span className="value">{formatNumber(data.fuel.consumption_lh)}</span>
+                  <span className="unit">L/h</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* Fuel Consumption (L/100km) */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">📉</span>
+              <h3>Fuel (L/100km)</h3>
+            </div>
+            <div className="live-data-value">
+              {data.fuel?.consumption_l100km != null ? (
+                <>
+                  <span className="value">{formatNumber(data.fuel.consumption_l100km)}</span>
+                  <span className="unit">L/100km</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* MAF */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">🌪️</span>
+              <h3>MAF</h3>
+            </div>
+            <div className="live-data-value">
+              {data.fuel?.maf != null ? (
+                <>
+                  <span className="value">{formatNumber(data.fuel.maf)}</span>
+                  <span className="unit">g/s</span>
+                </>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
+            </div>
+          </div>
+
+          {/* Fuel Type */}
+          <div className="live-data-card">
+            <div className="live-data-header">
+              <span className="live-data-icon">🔋</span>
+              <h3>Fuel Type</h3>
+            </div>
+            <div className="live-data-value">
+              {data.fuel?.type ? (
+                <span className="value" style={{ fontSize: '1.2rem' }}>{data.fuel.type}</span>
+              ) : (
+                <span className="value no-data">No data</span>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Error Message */}
-      {error && (
-        <div className="error-message card">
-          <span className="error-icon">⚠️</span>
-          <p>{error}</p>
+      {/* Last Updated */}
+      {live.updatedAt && (
+        <div className="last-updated" style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <small>Last updated: {new Date(live.updatedAt).toLocaleString()}</small>
         </div>
-      )}
-
-      {/* Devices Table */}
-      <div className="devices-table-container card">
-        <div className="table-header">
-          <h3>Devices ({filteredDevices.length})</h3>
-          <span className="table-info">
-            Showing {filteredDevices.length} of {devices.length} devices
-          </span>
-        </div>
-
-        {filteredDevices.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📱</div>
-            <h3>No Devices Found</h3>
-            <p>No devices are currently registered to your account</p>
-          </div>
-        ) : (
-          <div className="table-responsive">
-            <table className="devices-table">
-              <thead>
-                <tr>
-                  <th>Device ID</th>
-                  {role === "admin" && <th>User ID</th>}
-                  <th>VIN</th>
-                  <th>Status</th>
-                  <th>Last Seen</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDevices.map((device, index) => (
-                  <tr key={index} className="device-row">
-                    <td>
-                      <div className="device-id-cell">
-                        <span className="device-icon">📱</span>
-                        <span className="device-id">#{device.device_id}</span>
-                      </div>
-                    </td>
-                    
-                    {role === "admin" && (
-                      <td>
-                        {device.user_id ? (
-                          <span className="user-id-badge">{device.user_id}</span>
-                        ) : (
-                          <span className="unassigned">Unassigned</span>
-                        )}
-                      </td>
-                    )}
-                    
-                    <td>
-                      {device.vin ? (
-                        <code className="vin-code">{device.vin}</code>
-                      ) : (
-                        <span className="no-vin">Not linked</span>
-                      )}
-                    </td>
-                    
-                    <td>
-                      <span className={`status-badge ${getStatusColor(device.status)}`}>
-                        <span className="status-dot"></span>
-                        {device.status}
-                      </span>
-                    </td>
-                    
-                    <td>
-                      <div className="last-seen">
-                        {device.last_seen 
-                          ? new Date(device.last_seen).toLocaleDateString()
-                          : 'Never'}
-                      </div>
-                    </td>
-                    
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-action diagnostics"
-                          onClick={() => onDiagnostics(device.device_id)}
-                          title="View Diagnostics"
-                          disabled={deletingId === device.device_id}
-                        >
-                          🔧 Diagnostics
-                        </button>
-
-                        <button
-                          className="btn-action live-data"
-                          onClick={() => onLiveData(device.device_id, device)}
-                          title="View Live Data"
-                          disabled={deletingId === device.device_id}
-                        >
-                          📊 Live Data
-                        </button>
-                        
-                        <button
-                          className="btn-action delete"
-                          onClick={() => setShowDeleteConfirm(device.device_id)}
-                          title="Delete Device"
-                          disabled={deletingId === device.device_id}
-                        >
-                          🗑️ Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <DeleteConfirmDialog
-          deviceId={showDeleteConfirm}
-          onConfirm={handleDeleteDevice}
-          onCancel={() => setShowDeleteConfirm(null)}
-        />
       )}
     </div>
   );
 }
 
-export default MyDevicesScreen;
+export default LiveDataScreen;
