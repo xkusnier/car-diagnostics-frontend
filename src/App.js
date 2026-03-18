@@ -122,21 +122,21 @@ function App() {
     }
   };
 
-  const handleLogin = async (email, password) => {
+  const handleLogin = async (identifier, password) => {
     try {
-      const response = await api.post("/api/login", { email, password });
-      const { access_token, role, username } = response.data;
+      const response = await api.post("/api/login", { identifier, password });
+      const { access_token, role, username, email } = response.data;
 
       localStorage.setItem("token", access_token);
-      localStorage.setItem("email", email);
+      localStorage.setItem("email", email || "");
       localStorage.setItem("role", role);
       localStorage.setItem("username", username || "");
 
       api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
 
       const userObj = {
-        email: email,
-        role: role,
+        email: email || "",
+        role,
         username: username || "",
       };
 
@@ -150,7 +150,7 @@ function App() {
       let errorMessage = "Login failed. Please try again.";
 
       if (error.response?.status === 401) {
-        errorMessage = "Invalid email or password";
+        errorMessage = "Invalid email/username or password";
       } else if (error.response?.status >= 500) {
         errorMessage = "Server error during login. Please try again later.";
       } else if (error.response?.data?.error) {
