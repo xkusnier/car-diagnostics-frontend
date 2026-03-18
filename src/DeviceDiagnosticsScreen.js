@@ -478,7 +478,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                 <div key={index} className="pattern-card">
                   <div className="pattern-header">
                     <div className="pattern-title" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                      <CpuChipIcon style={{ width: "1.5rem", height: "1.5rem" }} />
                       <h3>{pattern.pattern_name}</h3>
                     </div>
                     <div
