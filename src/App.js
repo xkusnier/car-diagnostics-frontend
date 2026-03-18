@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./styles/global.css";
+import {
+  TruckIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
 
 // Import screens
 import LoginScreen from "./LoginScreen";
@@ -260,7 +264,7 @@ function App() {
             style={{ cursor: "pointer" }}
             title="Go to Home"
           >
-            <span className="nav-logo">🚗</span>
+            <TruckIcon style={{ width: "1.5rem", height: "1.5rem" }} />
             <span className="nav-title">Car Diagnostics</span>
           </div>
 
@@ -297,7 +301,7 @@ function App() {
               onClick={handleRefresh}
               title="Refresh current screen"
             >
-              🔄
+              <ArrowPathIcon style={{ width: "1.2rem", height: "1.2rem" }} />
             </button>
             <span className="user-email">{user?.username || user?.email || "User"}</span>
             <button className="btn-logout" onClick={handleLogout}>
