@@ -11,6 +11,7 @@ import {
   ChartBarIcon,
   MapIcon,
   TrashIcon,
+  ShieldExclamationIcon,
 } from "@heroicons/react/24/outline";
 
 function VehicleTelemetryComparison({ onNavigate }) {
@@ -169,7 +170,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
         <div className="header-content">
           <h1>My Vehicles</h1>
         </div>
-        {/* Refresh button removed as requested */}
       </div>
 
       <div className="stats-bar">
@@ -186,8 +186,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
           <span className="stat-label">Total Samples</span>
         </div>
       </div>
-
-      {/* Filter section completely removed as requested */}
 
       {error && (
         <div className="error-message card">
@@ -224,7 +222,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
                 <col style={{ width: "10%" }} />
                 <col style={{ width: "8%" }} />
                 <col style={{ width: "7%" }} />
-                <col style={{ width: "22%" }} />
+                <col style={{ width: "26%" }} />
               </colgroup>
               <thead>
                 <tr>
@@ -324,6 +322,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
                               <WrenchScrewdriverIcon style={{ width: "0.95rem", height: "0.95rem" }} />
                               Diag
                             </button>
+
                             <button
                               className="btn-action live-data"
                               onClick={() => onNavigate("live-data", {
@@ -367,6 +366,25 @@ function VehicleTelemetryComparison({ onNavigate }) {
                         >
                           <MapIcon style={{ width: "0.95rem", height: "0.95rem" }} />
                           Trips
+                        </button>
+
+                        <button
+                          className="btn-action events"
+                          onClick={() => onNavigate("vehicle-events", {
+                            vin: vehicle.vin,
+                            vehicleInfo: {
+                              vin: vehicle.vin,
+                              brand: vehicle.brand,
+                              model: vehicle.model,
+                              year: vehicle.year
+                            }
+                          })}
+                          title="View Events"
+                          disabled={deletingVin === vehicle.vin}
+                          style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#ef6c00" }}
+                        >
+                          <ShieldExclamationIcon style={{ width: "0.95rem", height: "0.95rem" }} />
+                          Events
                         </button>
 
                         <button
