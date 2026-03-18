@@ -1,6 +1,9 @@
-// LoadingScreen.jsx
 import React, { useState, useEffect } from 'react';
 import './styles/global.css';
+import {
+  TruckIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
 
 function LoadingScreen({ message, attempt }) {
   const [dots, setDots] = useState('');
@@ -24,7 +27,7 @@ function LoadingScreen({ message, attempt }) {
       <div className="auth-card" style={{ textAlign: 'center', padding: '3rem' }}>
         <div className="auth-header">
           <div className="auth-logo">
-            <span className="logo-icon" style={{ fontSize: '4rem' }}>🚗</span>
+            <TruckIcon style={{ width: '4rem', height: '4rem' }} />
             <h1 className="logo-text" style={{ fontSize: '2rem', margin: '1rem 0' }}>
               Car Diagnostics
             </h1>
@@ -50,10 +53,14 @@ function LoadingScreen({ message, attempt }) {
                   color: 'white',
                   border: 'none',
                   borderRadius: '5px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
                 }}
               >
-                🔄 Refresh Page
+                <ArrowPathIcon style={{ width: '1.1rem', height: '1.1rem' }} />
+                Refresh Page
               </button>
             )}
           </div>
