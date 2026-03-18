@@ -7,9 +7,7 @@ import {
   BoltIcon,
   ArrowPathRoundedSquareIcon,
   ShieldExclamationIcon,
-  FunnelIcon,
   ClockIcon,
-  ArrowsRightLeftIcon,
 } from "@heroicons/react/24/outline";
 
 function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
@@ -17,7 +15,6 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   const [vehicle, setVehicle] = useState(vehicleInfo || { vin });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filterType, setFilterType] = useState("ALL");
 
   useEffect(() => {
     fetchVehicleEvents();
@@ -54,11 +51,6 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
       setLoading(false);
     }
   };
-
-  const filteredEvents = useMemo(() => {
-    if (filterType === "ALL") return events;
-    return events.filter((event) => event.event_type === filterType);
-  }, [events, filterType]);
 
   const summary = useMemo(() => {
     return {
@@ -188,37 +180,12 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
         </div>
       )}
 
-      <div className="control-bar" style={{ justifyContent: "space-between" }}>
-        <div className="filters" style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
-            <FunnelIcon style={{ width: "1rem", height: "1rem" }} />
-            <span style={{ fontWeight: 600 }}>Filter:</span>
-          </div>
-
-          <select
-            className="input"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            style={{ maxWidth: "220px" }}
-          >
-            <option value="ALL">All Events</option>
-            <option value="HARD_BRAKE">Hard Brake</option>
-            <option value="SHARP_ACCELERATION">Sharp Acceleration</option>
-            <option value="HARD_TURN">Hard Turn</option>
-            <option value="CRASH">Crash</option>
-          </select>
-        </div>
-      </div>
-
       <div className="devices-table-container card">
         <div className="table-header">
-          <h3>Events ({filteredEvents.length})</h3>
-          <span className="table-info">
-            Showing {filteredEvents.length} of {events.length} events
-          </span>
+          <h3>Events ({events.length})</h3>
         </div>
 
-        {filteredEvents.length === 0 ? (
+        {events.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
               <ShieldExclamationIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
@@ -240,7 +207,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
                 </tr>
               </thead>
               <tbody>
-                {filteredEvents.map((event) => (
+                {events.map((event) => (
                   <tr key={event.id} className="device-row">
                     <td>
                       <span
@@ -288,24 +255,6 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
             </table>
           </div>
         )}
-      </div>
-
-      <div className="legend" style={{ marginTop: "2rem" }}>
-        <div className="legend-item">
-          <TruckIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> Hard Brake
-        </div>
-        <div className="legend-item">
-          <BoltIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> Sharp Acceleration
-        </div>
-        <div className="legend-item">
-          <ArrowPathRoundedSquareIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> Hard Turn
-        </div>
-        <div className="legend-item">
-          <ShieldExclamationIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> Crash
-        </div>
-        <div className="legend-item">
-          <ArrowsRightLeftIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> IMU sensor event history
-        </div>
       </div>
     </div>
   );
