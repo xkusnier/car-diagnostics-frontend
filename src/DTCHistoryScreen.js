@@ -1,334 +1,410 @@
 import React, { useState, useEffect } from "react";
 import { api } from "./api";
 import "./styles/global.css";
+import {
+  ExclamationTriangleIcon,
+  TruckIcon,
+  ArrowsUpDownIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  WrenchScrewdriverIcon,
+  ChartBarIcon,
+  MapIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 
-function DTCHistoryScreen({ onBack }) {
-  const [vin, setVin] = useState("");
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [activeDtcs, setActiveDtcs] = useState([]);
-  const [loadingActive, setLoadingActive] = useState(false);
-  const [filters, setFilters] = useState({
-    dateFrom: "",
-    dateTo: "",
-    severity: "all"
+function VehicleTelemetryComparison({ onNavigate }) {
+  const [vehicles, setVehicles] = useState([]);
+  const [summary, setSummary] = useState({
+    totalVehicles: 0,
+    onlineVehicles: 0,
+    totalSamples: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: "online", direction: "desc" });
+  const [deletingVin, setDeletingVin] = useState(null);
 
-  // Funkcia na získanie aktívnych DTC pre dané VIN
-  const fetchActiveDtcs = async (vinCode) => {
-    setLoadingActive(true);
+  useEffect(() => {
+    fetchTelemetryComparison();
+    const interval = setInterval(fetchTelemetryComparison, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchTelemetryComparison = async () => {
     try {
-      // Skúsime nájsť zariadenie s týmto VIN
-      const devicesRes = await api.get("/api/my-devices");
-      const devices = devicesRes.data.devices || [];
-      
-      // Nájsť zariadenie s týmto VIN
-      const deviceWithVin = devices.find(d => d.vin === vinCode);
-      
-      if (deviceWithVin) {
-        // Získať diagnostiku pre toto zariadenie (obsahuje aktívne DTC)
-        const diagRes = await api.get(`/api/device/${deviceWithVin.device_id}/diagnostics`);
-        const activeCodes = diagRes.data.dtc_codes || [];
-        setActiveDtcs(activeCodes.map(d => d.dtc_code));
-      } else {
-        // Ak nenájdeme zariadenie, skúsime priamo endpoint pre aktívne DTC
-        try {
-          const activeRes = await api.get(`/api/vehicle/${vinCode}/active-dtcs`);
-          setActiveDtcs(activeRes.data.active_dtcs || []);
-        } catch {
-          // Ak ani to nefunguje, predpokladáme že nie sú žiadne aktívne DTC
-          setActiveDtcs([]);
-        }
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Please login first");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      console.error("Error fetching active DTCs:", err);
-      setActiveDtcs([]);
-    } finally {
-      setLoadingActive(false);
-    }
-  };
 
-  // Funkcia na kontrolu či je DTC aktívne
-  const isDtcActive = (dtcCode) => {
-    return activeDtcs.includes(dtcCode);
-  };
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setData(null);
-    
-    try {
-      const payload = { vin: vin.toUpperCase() };
-      if (filters.dateFrom) payload.date_from = filters.dateFrom;
-      if (filters.dateTo) payload.date_to = filters.dateTo;
-      if (filters.severity !== "all") payload.severity = filters.severity;
-      
-      const res = await api.post("/api/dtc-history-full", payload);
-      setData(res.data.history);
-      
-      // Po získaní histórie, získame aj aktívne DTC pre toto VIN
-      await fetchActiveDtcs(vin.toUpperCase());
-      
-    } catch (err) {
-      setError(err.response?.data?.error || "Error fetching DTC history");
+      const response = await api.get("/api/vehicles/telemetry-comparison");
+
+      if (response.data.status === "success") {
+        setVehicles(response.data.vehicles);
+        setSummary({
+          totalVehicles: response.data.summary.total_vehicles,
+          onlineVehicles: response.data.summary.online_vehicles,
+          totalSamples: response.data.summary.total_samples || 0
+        });
+      }
+
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching telemetry comparison:", error);
+      setError("Failed to load vehicle telemetry. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const getSeverityColor = (dtcCode) => {
-    // Simple severity detection based on DTC code patterns
-    if (dtcCode?.startsWith('P0') || dtcCode?.startsWith('P1')) return 'medium';
-    if (dtcCode?.startsWith('P2')) return 'high';
-    if (dtcCode?.startsWith('C') || dtcCode?.startsWith('U')) return 'critical';
-    return 'low';
-  };
+  const handleDeleteVehicle = async (vin) => {
+    if (!window.confirm(`Are you sure you want to delete vehicle ${vin}?`)) return;
 
-  const getSeverityBadgeClass = (severity) => {
-    switch (severity?.toLowerCase()) {
-      case "critical": return "badge-critical";
-      case "high": return "badge-high";
-      case "medium": return "badge-medium";
-      case "low": return "badge-low";
-      default: return "badge-info";
+    setDeletingVin(vin);
+    try {
+      const token = localStorage.getItem("token");
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      await api.delete(`/api/user-vehicle/${vin}`);
+      await fetchTelemetryComparison();
+      alert("Vehicle deleted successfully");
+    } catch (err) {
+      console.error("Error deleting vehicle:", err);
+      alert(err.response?.data?.error || "Failed to delete vehicle");
+    } finally {
+      setDeletingVin(null);
     }
   };
 
-  const getSeverityIcon = (severity) => {
-    switch (severity?.toLowerCase()) {
-      case "critical": return "🔥";
-      case "high": return "⚠️";
-      case "medium": return "🔶";
-      case "low": return "ℹ️";
-      default: return "❓";
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
+    setSortConfig({ key, direction });
   };
 
-  const getStatusBadge = (dtcCode) => {
-    const active = isDtcActive(dtcCode);
-    return {
-      class: active ? 'active' : 'resolved',
-      text: active ? 'ACTIVE' : 'RESOLVED'
-    };
-  };
+  const getSortedVehicles = () => {
+    return [...vehicles].sort((a, b) => {
+      let aVal, bVal;
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      switch (sortConfig.key) {
+        case "online":
+          aVal = a.online ? 1 : 0;
+          bVal = b.online ? 1 : 0;
+          break;
+        case "vin":
+          aVal = a.vin || "ZZZ";
+          bVal = b.vin || "ZZZ";
+          break;
+        case "brand":
+          aVal = a.brand || "ZZZ";
+          bVal = b.brand || "ZZZ";
+          break;
+        case "avg_speed":
+          aVal = a.statistics?.avg_speed || -1;
+          bVal = b.statistics?.avg_speed || -1;
+          break;
+        case "avg_rpm":
+          aVal = a.statistics?.avg_rpm || -1;
+          bVal = b.statistics?.avg_rpm || -1;
+          break;
+        case "avg_consumption":
+          aVal = a.statistics?.avg_consumption || 999;
+          bVal = b.statistics?.avg_consumption || 999;
+          break;
+        case "samples":
+          aVal = a.statistics?.samples || 0;
+          bVal = b.statistics?.samples || 0;
+          break;
+        default:
+          aVal = a[sortConfig.key];
+          bVal = b[sortConfig.key];
+      }
+
+      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
     });
   };
 
+  const formatNumber = (num, decimals = 1) => {
+    if (num === null || num === undefined) return "—";
+    return num.toFixed(decimals);
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <ArrowsUpDownIcon style={{ width: "1rem", height: "1rem" }} />;
+    }
+    return sortConfig.direction === "asc"
+      ? <ArrowUpIcon style={{ width: "1rem", height: "1rem" }} />
+      : <ArrowDownIcon style={{ width: "1rem", height: "1rem" }} />;
+  };
+
+  const getStatusColor = (status) => {
+    return status ? "success" : "danger";
+  };
+
+  if (loading) {
+    return (
+      <div className="devices-container">
+        <div className="loading-center">
+          <div className="spinner-large"></div>
+          <p>Loading vehicle statistics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const sortedVehicles = getSortedVehicles();
+
   return (
-    <div className="dtc-history-container">
-      {/* Header */}
+    <div className="devices-container">
       <div className="devices-header">
-
         <div className="header-content">
-          <h1>DTC History</h1>
-          <p className="subtitle">Search diagnostic trouble codes by VIN</p>
+          <h1>My Vehicles</h1>
+        </div>
+        {/* Refresh button removed as requested */}
+      </div>
+
+      <div className="stats-bar">
+        <div className="stat-item">
+          <span className="stat-number">{summary.totalVehicles}</span>
+          <span className="stat-label">Total Vehicles</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-number">{summary.onlineVehicles}</span>
+          <span className="stat-label">Online</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-number">{summary.totalSamples.toLocaleString()}</span>
+          <span className="stat-label">Total Samples</span>
         </div>
       </div>
 
-      {/* Search Card */}
-      <div className="search-card card">
-        <div className="search-header">
-          <h2>Search Parameters</h2>
-          <span className="search-icon">🔍</span>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="search-form">
-          <div className="form-group">
-            <label htmlFor="vin">Vehicle Identification Number (VIN)</label>
-            <input
-              type="text"
-              id="vin"
-              value={vin}
-              onChange={(e) => setVin(e.target.value.toUpperCase())}
-              placeholder="Enter 17-character VIN"
-              className="input"
-              maxLength="17"
-              required
-            />
-            <small className="input-hint">Enter the complete 17-character VIN</small>
-          </div>
+      {/* Filter section completely removed as requested */}
 
-          <button
-            type="submit"
-            disabled={loading || !vin.trim()}
-            className={`btn btn-primary ${loading ? 'loading' : ''}`}
-          >
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Searching...
-              </>
-            ) : (
-              'Search DTC History'
-            )}
-          </button>
-        </form>
-      </div>
-
-      {/* Error Display */}
       {error && (
-        <div className="error-card card">
-          <div className="error-icon">❌</div>
-          <div className="error-content">
-            <h3>Search Failed</h3>
-            <p>{error}</p>
-          </div>
+        <div className="error-message card">
+          <ExclamationTriangleIcon className="error-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+          <p>{error}</p>
         </div>
       )}
 
-      {/* Results Section */}
-      {data && (
-        <div className="results-section card">
-          <div className="results-header">
-            <div>
-              <h2>Search Results</h2>
-              <p className="results-summary">
-                Found <strong>{data.length}</strong> DTC records for VIN: <code>{vin}</code>
-                {loadingActive && <span className="spinner-tiny" style={{ marginLeft: '1rem' }}></span>}
-              </p>
+      <div className="devices-table-container card">
+        <div className="table-header">
+          <h3>Vehicles ({sortedVehicles.length})</h3>
+          <span className="table-info">
+            Showing {sortedVehicles.length} of {vehicles.length} vehicles
+          </span>
+        </div>
+
+        {sortedVehicles.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <TruckIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
             </div>
+            <h3>No Vehicles Found</h3>
+            <p>No vehicles are currently registered to your account</p>
           </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="devices-table" style={{ tableLayout: "fixed", width: "100%" }}>
+              <colgroup>
+                <col style={{ width: "7%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "9%" }} />
+                <col style={{ width: "9%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "7%" }} />
+                <col style={{ width: "22%" }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th onClick={() => handleSort("online")}>
+                    Status {getSortIcon("online")}
+                  </th>
+                  <th onClick={() => handleSort("vin")}>
+                    Vehicle {getSortIcon("vin")}
+                  </th>
+                  <th onClick={() => handleSort("avg_speed")}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      Avg Speed {getSortIcon("avg_speed")}
+                    </span>
+                  </th>
+                  <th onClick={() => handleSort("avg_rpm")}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      Avg RPM {getSortIcon("avg_rpm")}
+                    </span>
+                  </th>
+                  <th onClick={() => handleSort("avg_consumption")}>
+                    Avg Cons. {getSortIcon("avg_consumption")}
+                  </th>
+                  <th>Range (RPM)</th>
+                  <th>Odometer</th>
+                  <th onClick={() => handleSort("samples")}>
+                    Samples {getSortIcon("samples")}
+                  </th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedVehicles.map((vehicle) => (
+                  <tr key={vehicle.vin} className="device-row">
+                    <td>
+                      <span className={`status-badge ${getStatusColor(vehicle.online)}`}>
+                        <span className="status-dot"></span>
+                        {vehicle.online ? "Online" : "Offline"}
+                      </span>
+                    </td>
 
-          {data.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>No DTC Records Found</h3>
-              <p>No diagnostic trouble codes found for the specified VIN and filters.</p>
-            </div>
-          ) : (
-            <>
-              {/* Summary Cards */}
-              <div className="summary-cards">
-                <div className="summary-card">
-                  <span className="summary-value">{data.length}</span>
-                  <span className="summary-label">Total Records</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-value">
-                    {[...new Set(data.map(d => d.dtc_code))].length}
-                  </span>
-                  <span className="summary-label">Unique DTCs</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-value">
-                    {data.filter(d => getSeverityColor(d.dtc_code) === 'critical').length}
-                  </span>
-                  <span className="summary-label">Critical Issues</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-value">
-                    {data.filter(d => isDtcActive(d.dtc_code)).length}
-                  </span>
-                  <span className="summary-label">Currently Active</span>
-                </div>
-              </div>
+                    <td className="vehicle-info" style={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+                      <div className="vehicle-name" style={{ fontSize: "0.9rem" }}>
+                        {vehicle.brand || "Unknown"} {vehicle.model || ""}
+                      </div>
+                      <div className="vehicle-vin" style={{ fontSize: "0.8rem" }}>
+                        <code className="vin-code" style={{ fontSize: "0.8rem" }}>{vehicle.vin || "No VIN"}</code>
+                      </div>
+                    </td>
 
-              {/* DTC Table */}
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>DTC Code</th>
-                      <th>Description</th>
-                      <th>Severity</th>
-                      <th>Date Detected</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((item, i) => {
-                      const severity = getSeverityColor(item.dtc_code);
-                      const severityBadgeClass = getSeverityBadgeClass(severity);
-                      const severityIcon = getSeverityIcon(severity);
-                      const active = isDtcActive(item.dtc_code);
-                      const status = getStatusBadge(item.dtc_code);
-                      
-                      return (
-                        <tr key={i} className={!active ? 'resolved-row' : ''}>
-                          <td>
-                            <span
-                              className="dtc-code-badge"
-                              style={{
-                                borderLeft: `4px solid ${active ? '#d32f2f' : '#9e9e9e'}`,
-                                background: active ? '#ffebee' : '#f5f5f5',
-                                opacity: active ? 1 : 0.8
-                              }}
+                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                      {vehicle.statistics?.avg_speed ? (
+                        <span>{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
+                      ) : "—"}
+                    </td>
+
+                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                      {vehicle.statistics?.avg_rpm ? (
+                        <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
+                      ) : "—"}
+                    </td>
+
+                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                      {vehicle.statistics?.avg_consumption ? (
+                        <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
+                      ) : "—"}
+                    </td>
+
+                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                      {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
+                        <span>{vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm}</span>
+                      ) : "—"}
+                    </td>
+
+                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                      {vehicle.statistics?.total_odometer ? (
+                        <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
+                      ) : "—"}
+                    </td>
+
+                    <td style={{ fontSize: "0.9rem", textAlign: "center" }}>
+                      {vehicle.statistics?.samples ? (
+                        <span className="samples-badge">{vehicle.statistics.samples}</span>
+                      ) : "0"}
+                    </td>
+
+                    <td>
+                      <div className="action-buttons" style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
+                        {vehicle.device_id ? (
+                          <>
+                            <button
+                              className="btn-action diagnostics"
+                              onClick={() => onNavigate("device-diagnostics", { deviceId: vehicle.device_id })}
+                              title="View Diagnostics"
+                              disabled={deletingVin === vehicle.vin}
+                              style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem" }}
                             >
-                              {item.dtc_code}
-                            </span>
-                          </td>
-                          <td className="description-cell">
-                            <div className="description-content">
-                              <strong>{item.description || "No description available"}</strong>
-                              {item.additional_info && (
-                                <small className="additional-info">{item.additional_info}</small>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <span className={`severity-badge ${severityBadgeClass}`}>
-                              {severityIcon} {severity.toUpperCase()}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="date-cell">
-                              <div className="date">{formatDate(item.created_at)}</div>
-                              <div className="time-ago">
-                                {Math.floor((new Date() - new Date(item.created_at)) / (1000 * 60 * 60 * 24))} days ago
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span className={`status-badge ${status.class}`}>
-                              {status.text}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              <WrenchScrewdriverIcon style={{ width: "0.95rem", height: "0.95rem" }} />
+                              Diag
+                            </button>
+                            <button
+                              className="btn-action live-data"
+                              onClick={() => onNavigate("live-data", {
+                                type: "live",
+                                deviceId: vehicle.device_id,
+                                deviceInfo: {
+                                  device_id: vehicle.device_id,
+                                  vin: vehicle.vin,
+                                  brand: vehicle.brand,
+                                  model: vehicle.model
+                                }
+                              })}
+                              title="View Live Data"
+                              disabled={deletingVin === vehicle.vin}
+                              style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#4caf50" }}
+                            >
+                              <ChartBarIcon style={{ width: "0.95rem", height: "0.95rem" }} />
+                              Live
+                            </button>
+                          </>
+                        ) : (
+                          <span className="no-device" style={{ color: "#999", fontSize: "0.8rem" }}>
+                            No device
+                          </span>
+                        )}
 
-              {/* Legend */}
-              <div className="legend" style={{ marginTop: '2rem' }}>
-                <div className="legend-item">
-                  <span className="status-badge active" style={{ padding: '0.25rem 0.75rem' }}>ACTIVE</span>
-                  <span>Currently active DTC code</span>
-                </div>
-                <div className="legend-item">
-                  <span className="status-badge resolved" style={{ padding: '0.25rem 0.75rem' }}>RESOLVED</span>
-                  <span>Previously occurred, now resolved</span>
-                </div>
-              </div>
+                        <button
+                          className="btn-action trips"
+                          onClick={() => onNavigate("vehicle-trips", {
+                            vin: vehicle.vin,
+                            vehicleInfo: {
+                              vin: vehicle.vin,
+                              brand: vehicle.brand,
+                              model: vehicle.model,
+                              year: vehicle.year
+                            }
+                          })}
+                          title="View Trips"
+                          disabled={deletingVin === vehicle.vin}
+                          style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#9c27b0" }}
+                        >
+                          <MapIcon style={{ width: "0.95rem", height: "0.95rem" }} />
+                          Trips
+                        </button>
 
-              {/* Pagination (if needed) */}
-              {data.length > 10 && (
-                <div className="pagination">
-                  <button className="btn btn-secondary">← Previous</button>
-                  <span className="page-info">Page 1 of {Math.ceil(data.length / 10)}</span>
-                  <button className="btn btn-secondary">Next →</button>
-                </div>
-              )}
-            </>
-          )}
+                        <button
+                          className="btn-action delete"
+                          onClick={() => handleDeleteVehicle(vehicle.vin)}
+                          title="Delete Vehicle"
+                          disabled={deletingVin === vehicle.vin}
+                          style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem" }}
+                        >
+                          {deletingVin === vehicle.vin ? (
+                            <div className="spinner-small"></div>
+                          ) : (
+                            <TrashIcon style={{ width: "0.95rem", height: "0.95rem" }} />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="legend">
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: "#4caf50" }}></span> Online
         </div>
-      )}
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: "#f44336" }}></span> Offline
+        </div>
+        <div className="legend-item">
+          <ChartBarIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> Historical averages
+        </div>
+      </div>
     </div>
   );
 }
 
-export default DTCHistoryScreen;
+export default VehicleTelemetryComparison;
