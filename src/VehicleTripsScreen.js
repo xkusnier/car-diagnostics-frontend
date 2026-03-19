@@ -118,11 +118,13 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
 
   return (
     <div className="devices-container">
-      <div className="devices-header">
-        <button className="btn btn-secondary" onClick={onBack}>
+      <div className="screen-topbar">
+        <button className="back-button-unified" onClick={onBack} type="button">
           ← Back
         </button>
+      </div>
 
+      <div className="devices-header">
         <div className="header-content">
           <h1>Trip History</h1>
           <p className="subtitle">
