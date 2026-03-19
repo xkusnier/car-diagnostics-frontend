@@ -161,131 +161,10 @@ code {
    MY VEHICLES TABLE WIDTH + ACTIONS IN ONE ROW
    ========================= */
 
-/* =========================
-   MY VEHICLES – WIDER PAGE LAYOUT
-   ========================= */
 
-.app-content {
-  width: 100%;
-}
 
-.vehicle-telemetry-container,
-.telemetry-comparison-container,
-.vehicle-comparison-container {
-  width: min(96vw, 1700px);
-  max-width: 1700px;
-  margin: 0 auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  box-sizing: border-box;
-}
 
-.devices-table-container.card {
-  width: 100%;
-  max-width: 100%;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  overflow: visible;
-  box-sizing: border-box;
-}
 
-.table-responsive {
-  width: 100%;
-  overflow-x: visible;
-  overflow-y: visible;
-}
-
-.devices-table {
-  width: 100%;
-  min-width: 0;
-  table-layout: auto;
-}
-
-.devices-table th,
-.devices-table td {
-  vertical-align: middle;
-  padding-left: 0.9rem;
-  padding-right: 0.9rem;
-}
-
-.devices-table th {
-  white-space: nowrap;
-}
-
-.devices-table td:last-child,
-.devices-table th:last-child {
-  width: 1%;
-  white-space: nowrap;
-}
-
-.devices-table .action-buttons {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: center;
-  gap: 0.4rem;
-  white-space: nowrap;
-}
-
-.devices-table .action-buttons .btn-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  flex-shrink: 0;
-  padding: 0.55rem 0.8rem;
-}
-
-.devices-table .action-buttons .btn-action.delete {
-  min-width: 42px;
-  padding-left: 0.65rem;
-  padding-right: 0.65rem;
-}
-
-/* mierne užší stĺpec vehicle */
-.devices-table td:nth-child(2),
-.devices-table th:nth-child(2) {
-  min-width: 170px;
-}
-
-/* mierne kompaktnejšie numerické stĺpce */
-.devices-table td:nth-child(3),
-.devices-table td:nth-child(4),
-.devices-table td:nth-child(5),
-.devices-table td:nth-child(6),
-.devices-table td:nth-child(7),
-.devices-table td:nth-child(8),
-.devices-table th:nth-child(3),
-.devices-table th:nth-child(4),
-.devices-table th:nth-child(5),
-.devices-table th:nth-child(6),
-.devices-table th:nth-child(7),
-.devices-table th:nth-child(8) {
-  white-space: nowrap;
-}
-
-@media (max-width: 1500px) {
-  .vehicle-telemetry-container,
-  .telemetry-comparison-container,
-  .vehicle-comparison-container {
-    width: min(98vw, 1500px);
-    max-width: 1500px;
-  }
-
-  .devices-table th,
-  .devices-table td {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-
-  .devices-table .action-buttons {
-    gap: 0.3rem;
-  }
-
-  .devices-table .action-buttons .btn-action {
-    padding: 0.5rem 0.7rem;
-  }
-}
 
 .card,
 .search-card,
@@ -1747,4 +1626,57 @@ code {
     transform: translateX(50%);
     min-width: 260px;
   }
+}
+
+/* =========================
+   VEHICLE TELEMETRY / MY VEHICLES FIX
+   ========================= */
+
+:root {
+  --max-content-width: 1440px;
+}
+
+.container {
+  width: min(100%, 1440px);
+}
+
+.vehicles-table-container,
+.devices-table-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.vehicles-table-container .table-responsive,
+.devices-table-container .table-responsive {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.vehicles-table-container .devices-table {
+  min-width: 1180px;
+  table-layout: auto;
+}
+
+.vehicles-table-container .devices-table th,
+.vehicles-table-container .devices-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.vehicles-table-container .devices-table th:last-child,
+.vehicles-table-container .devices-table td:last-child {
+  width: 1%;
+}
+
+.vehicles-table-container .action-buttons {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.vehicles-table-container .action-buttons .btn-action {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
