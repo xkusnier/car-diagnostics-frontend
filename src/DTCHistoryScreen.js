@@ -79,11 +79,7 @@ function DTCHistoryScreen({ onBack }) {
       const res = await api.post("/api/dtc-history-full", payload);
       const history = res.data.history || [];
 
-      // Prázdna história != vozidlo neexistuje
       setData(history);
-
-      // aktívne DTC skúsime načítať len keď máme validné VIN,
-      // aj keď história je prázdna
       await fetchActiveDtcs(normalizedVin);
     } catch (err) {
       const backendError =
@@ -298,12 +294,7 @@ function DTCHistoryScreen({ onBack }) {
                         <tr key={i} className={!active ? "resolved-row" : ""}>
                           <td>
                             <span
-                              className="dtc-code-badge"
-                              style={{
-                                borderLeft: `4px solid ${active ? "#d32f2f" : "#9e9e9e"}`,
-                                background: active ? "#ffebee" : "#f5f5f5",
-                                opacity: active ? 1 : 0.8,
-                              }}
+                              className={`dtc-code-badge ${active ? "dtc-code-active" : "dtc-code-resolved"}`}
                             >
                               {item.dtc_code}
                             </span>
