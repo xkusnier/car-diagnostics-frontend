@@ -225,9 +225,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
       <div className="devices-table-container card vehicles-table-container">
         <div className="table-header">
           <h3>Vehicles ({sortedVehicles.length})</h3>
-          <span className="table-info">
-            Showing {sortedVehicles.length} of {vehicles.length} vehicles
-          </span>
         </div>
 
         {sortedVehicles.length === 0 ? (
