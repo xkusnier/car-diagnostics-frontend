@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./styles/global.css";
 import {
   TruckIcon,
@@ -37,6 +37,9 @@ function App() {
   const [loadingMessage, setLoadingMessage] = useState("Checking authentication...");
   const [loadingAttempt, setLoadingAttempt] = useState(0);
 
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+  const profileRef = useRef(null);
+
   const wakeUpBackend = async () => {
     setLoadingStage("backend");
     setLoadingMessage("Waking up the server...");
@@ -70,6 +73,19 @@ function App() {
 
   useEffect(() => {
     wakeUpBackend();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfilePopupOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const handleRefresh = () => {
@@ -223,6 +239,7 @@ function App() {
     setSelectedVehicleInfo(null);
     setSelectedEventsVin(null);
     setSelectedEventsVehicleInfo(null);
+    setIsProfilePopupOpen(false);
   };
 
   const navigateTo = (screen, params = {}) => {
@@ -257,6 +274,7 @@ function App() {
     }
 
     setCurrentScreen(screen);
+    setIsProfilePopupOpen(false);
   };
 
   const navigateToLiveData = (deviceId, deviceInfo) => {
@@ -322,9 +340,27 @@ function App() {
               onClick={handleRefresh}
               title="Refresh current screen"
             >
-              <ArrowPathIcon style={{ width: "1.2rem", height: "1.2rem" }} />
+              <ArrowPathIcon className="refresh-icon" style={{ width: "1.2rem", height: "1.2rem" }} />
             </button>
-            <span className="user-email">{user?.username || user?.email || "User"}</span>
+
+            <div className="profile-menu-wrapper" ref={profileRef}>
+              <button
+                className="profile-trigger"
+                onClick={() => setIsProfilePopupOpen((prev) => !prev)}
+                title="Show profile info"
+              >
+                <span className="profile-emoji">👤</span>
+                <span className="user-email">{user?.username || user?.email || "User"}</span>
+              </button>
+
+              {isProfilePopupOpen && (
+                <div className="profile-popup">
+                  <div className="profile-popup-label">Signed in as</div>
+                  <div className="profile-popup-email">{user?.email || "No email available"}</div>
+                </div>
+              )}
+            </div>
+
             <button className="btn-logout" onClick={handleLogout}>
               Logout
             </button>
