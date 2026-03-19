@@ -40,6 +40,121 @@ function App() {
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const profileRef = useRef(null);
 
+  const [historyStack, setHistoryStack] = useState([]);
+
+  const getCurrentRoute = () => {
+    switch (currentScreen) {
+      case "device-diagnostics":
+        return {
+          screen: currentScreen,
+          params: {
+            deviceId: selectedDeviceId,
+          },
+        };
+      case "live-data":
+        return {
+          screen: currentScreen,
+          params: {
+            deviceId: selectedDeviceForLive,
+            deviceInfo: selectedDeviceInfo,
+            type: "live",
+          },
+        };
+      case "vehicle-trips":
+        return {
+          screen: currentScreen,
+          params: {
+            vin: selectedVin,
+            vehicleInfo: selectedVehicleInfo,
+          },
+        };
+      case "vehicle-events":
+        return {
+          screen: currentScreen,
+          params: {
+            vin: selectedEventsVin,
+            vehicleInfo: selectedEventsVehicleInfo,
+          },
+        };
+      default:
+        return {
+          screen: currentScreen,
+          params: {},
+        };
+    }
+  };
+
+  const applyRoute = (screen, params = {}) => {
+    if (typeof params === "number") {
+      setSelectedDeviceId(params);
+      setCurrentScreen(screen);
+      return;
+    }
+
+    if (params.deviceId) {
+      setSelectedDeviceId(params.deviceId);
+    }
+
+    if (screen === "live-data") {
+      if (params.deviceId) {
+        setSelectedDeviceForLive(params.deviceId);
+      }
+      if (params.deviceInfo) {
+        setSelectedDeviceInfo(params.deviceInfo);
+      }
+    }
+
+    if (screen === "vehicle-trips") {
+      if (params.vin) setSelectedVin(params.vin);
+      if (params.vehicleInfo) setSelectedVehicleInfo(params.vehicleInfo);
+    }
+
+    if (screen === "vehicle-events") {
+      if (params.vin) setSelectedEventsVin(params.vin);
+      if (params.vehicleInfo) setSelectedEventsVehicleInfo(params.vehicleInfo);
+    }
+
+    setCurrentScreen(screen);
+    setIsProfilePopupOpen(false);
+  };
+
+  const topLevelScreens = ["main", "my-devices", "telemetry-comparison", "dtc-history"];
+
+  const navigateTo = (screen, params = {}, options = {}) => {
+    const { resetHistory = false } = options;
+
+    const isTopLevelTarget = topLevelScreens.includes(screen);
+
+    if (resetHistory || isTopLevelTarget) {
+      setHistoryStack([]);
+    } else if (currentScreen && currentScreen !== "login" && currentScreen !== "register") {
+      const currentRoute = getCurrentRoute();
+      setHistoryStack((prev) => [...prev, currentRoute]);
+    }
+
+    applyRoute(screen, params);
+  };
+
+  const goBack = () => {
+    setHistoryStack((prev) => {
+      if (prev.length === 0) {
+        applyRoute("main", {});
+        return [];
+      }
+
+      const newHistory = [...prev];
+      const previousRoute = newHistory.pop();
+
+      if (previousRoute) {
+        applyRoute(previousRoute.screen, previousRoute.params || {});
+      } else {
+        applyRoute("main", {});
+      }
+
+      return newHistory;
+    });
+  };
+
   const wakeUpBackend = async () => {
     setLoadingStage("backend");
     setLoadingMessage("Waking up the server...");
@@ -125,6 +240,7 @@ function App() {
         }
 
         setCurrentScreen("main");
+        setHistoryStack([]);
       } catch (error) {
         if (error.response?.status === 401) {
           console.log("Token invalid or expired, clearing auth data");
@@ -165,6 +281,7 @@ function App() {
 
       setUser(userObj);
       setCurrentScreen("main");
+      setHistoryStack([]);
 
       return { success: true };
     } catch (error) {
@@ -240,47 +357,7 @@ function App() {
     setSelectedEventsVin(null);
     setSelectedEventsVehicleInfo(null);
     setIsProfilePopupOpen(false);
-  };
-
-  const navigateTo = (screen, params = {}) => {
-    if (typeof params === "number") {
-      setSelectedDeviceId(params);
-      setCurrentScreen(screen);
-      return;
-    }
-
-    if (params.deviceId) {
-      setSelectedDeviceId(params.deviceId);
-    }
-
-    if (screen === "live-data") {
-      if (arguments.length === 3) {
-        setSelectedDeviceForLive(arguments[1]);
-        setSelectedDeviceInfo(arguments[2]);
-      } else if (params.type === "live" || (params.deviceId && params.deviceInfo)) {
-        setSelectedDeviceForLive(params.deviceId);
-        setSelectedDeviceInfo(params.deviceInfo);
-      }
-    }
-
-    if (screen === "vehicle-trips") {
-      if (params.vin) setSelectedVin(params.vin);
-      if (params.vehicleInfo) setSelectedVehicleInfo(params.vehicleInfo);
-    }
-
-    if (screen === "vehicle-events") {
-      if (params.vin) setSelectedEventsVin(params.vin);
-      if (params.vehicleInfo) setSelectedEventsVehicleInfo(params.vehicleInfo);
-    }
-
-    setCurrentScreen(screen);
-    setIsProfilePopupOpen(false);
-  };
-
-  const navigateToLiveData = (deviceId, deviceInfo) => {
-    setSelectedDeviceForLive(deviceId);
-    setSelectedDeviceInfo(deviceInfo);
-    setCurrentScreen("live-data");
+    setHistoryStack([]);
   };
 
   if (isCheckingAuth || loadingStage === "backend") {
@@ -293,7 +370,7 @@ function App() {
         <nav className="app-nav">
           <div
             className="nav-brand"
-            onClick={() => navigateTo("main")}
+            onClick={() => navigateTo("main", {}, { resetHistory: true })}
             style={{ cursor: "pointer" }}
             title="Go to Home"
           >
@@ -304,13 +381,13 @@ function App() {
           <div className="nav-links">
             <button
               className={`nav-link ${currentScreen === "main" ? "active" : ""}`}
-              onClick={() => navigateTo("main")}
+              onClick={() => navigateTo("main", {}, { resetHistory: true })}
             >
               Dashboard
             </button>
             <button
               className={`nav-link ${currentScreen === "my-devices" ? "active" : ""}`}
-              onClick={() => navigateTo("my-devices")}
+              onClick={() => navigateTo("my-devices", {}, { resetHistory: true })}
             >
               My Devices
             </button>
@@ -322,13 +399,13 @@ function App() {
                   ? "active"
                   : ""
               }`}
-              onClick={() => navigateTo("telemetry-comparison")}
+              onClick={() => navigateTo("telemetry-comparison", {}, { resetHistory: true })}
             >
               My Vehicles
             </button>
             <button
               className={`nav-link ${currentScreen === "dtc-history" ? "active" : ""}`}
-              onClick={() => navigateTo("dtc-history")}
+              onClick={() => navigateTo("dtc-history", {}, { resetHistory: true })}
             >
               DTC History
             </button>
@@ -405,12 +482,17 @@ function App() {
         {currentScreen === "my-devices" && user && (
           <MyDevicesScreen
             key={`my-devices-${refreshKey}`}
-            onBack={() => navigateTo("main")}
+            onBack={() => navigateTo("main", {}, { resetHistory: true })}
             onDiagnostics={(deviceId) => {
-              setSelectedDeviceId(deviceId);
-              navigateTo("device-diagnostics");
+              navigateTo("device-diagnostics", { deviceId });
             }}
-            onLiveData={(deviceId, deviceInfo) => navigateToLiveData(deviceId, deviceInfo)}
+            onLiveData={(deviceId, deviceInfo) =>
+              navigateTo("live-data", {
+                type: "live",
+                deviceId,
+                deviceInfo,
+              })
+            }
             role={user?.role}
           />
         )}
@@ -419,7 +501,7 @@ function App() {
           <DeviceDiagnosticsScreen
             key={`device-diagnostics-${refreshKey}`}
             deviceId={selectedDeviceId}
-            onBack={() => navigateTo("my-devices")}
+            onBack={goBack}
           />
         )}
 
@@ -428,14 +510,14 @@ function App() {
             key={`live-data-${refreshKey}`}
             deviceId={selectedDeviceForLive}
             deviceInfo={selectedDeviceInfo}
-            onBack={() => navigateTo("my-devices")}
+            onBack={goBack}
           />
         )}
 
         {currentScreen === "dtc-history" && user && (
           <DTCHistoryScreen
             key={`dtc-history-${refreshKey}`}
-            onBack={() => navigateTo("main")}
+            onBack={() => navigateTo("main", {}, { resetHistory: true })}
           />
         )}
 
@@ -452,7 +534,7 @@ function App() {
             key={`trips-${refreshKey}`}
             vin={selectedVin}
             vehicleInfo={selectedVehicleInfo}
-            onBack={() => navigateTo("telemetry-comparison")}
+            onBack={goBack}
           />
         )}
 
@@ -461,7 +543,7 @@ function App() {
             key={`vehicle-events-${refreshKey}`}
             vin={selectedEventsVin}
             vehicleInfo={selectedEventsVehicleInfo}
-            onBack={() => navigateTo("telemetry-comparison")}
+            onBack={goBack}
           />
         )}
       </main>
