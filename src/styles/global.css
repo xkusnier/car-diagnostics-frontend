@@ -57,7 +57,7 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
 
-  --max-content-width: 1600px;
+  --max-content-width: 1280px;
 }
 
 * {
@@ -1627,113 +1627,169 @@ code {
     min-width: 260px;
   }
 }
+
 /* =========================
-   VEHICLE TELEMETRY / MY VEHICLES FIX
+   MY VEHICLES – ACTIONS UNDER VEHICLE
    ========================= */
 
-:root {
-  --max-content-width: 1600px;
-}
-
-.container {
-  width: min(100%, 1600px);
-}
-
-.vehicles-table-container,
-.devices-table-container {
-  width: 100%;
-  max-width: 100%;
-}
-
-.vehicles-table-container .table-responsive,
-.devices-table-container .table-responsive {
+.vehicles-table-container .table-responsive {
   overflow-x: auto;
   overflow-y: visible;
 }
 
-.vehicles-table-container .devices-table {
+.vehicles-telemetry-table {
   width: 100%;
-  min-width: 1450px;
+  min-width: 1100px;
   table-layout: auto;
 }
 
-.vehicles-table-container .devices-table th,
-.vehicles-table-container .devices-table td {
+.vehicles-telemetry-table th,
+.vehicles-telemetry-table td {
+  vertical-align: top;
+}
+
+.sortable-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   white-space: nowrap;
-  vertical-align: middle;
 }
 
-.vehicles-table-container .devices-table th {
-  font-size: 0.92rem;
+.vehicle-cell {
+  min-width: 320px;
+  width: 320px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(1),
-.vehicles-table-container .devices-table td:nth-child(1) {
+.vehicle-info-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.vehicle-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.vehicle-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.vehicle-vin {
+  display: flex;
+  align-items: center;
+}
+
+.vehicle-actions-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.vehicle-actions-inline .btn-action {
+  min-height: 34px;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.82rem;
+  box-shadow: none;
+}
+
+.vehicle-actions-inline .btn-action:hover:not(:disabled) {
+  box-shadow: var(--shadow-sm);
+}
+
+.vehicle-actions-inline .btn-action.delete {
+  min-width: 38px;
+  padding-left: 0.62rem;
+  padding-right: 0.62rem;
+}
+
+.metric-cell {
+  white-space: nowrap;
+  vertical-align: middle !important;
+  font-size: 0.9rem;
+}
+
+.samples-cell {
+  text-align: center;
+  vertical-align: middle !important;
+  white-space: nowrap;
+}
+
+.vehicles-telemetry-table th:nth-child(1),
+.vehicles-telemetry-table td:nth-child(1) {
   min-width: 110px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(2),
-.vehicles-table-container .devices-table td:nth-child(2) {
-  min-width: 230px;
+.vehicles-telemetry-table th:nth-child(2),
+.vehicles-telemetry-table td:nth-child(2) {
+  min-width: 320px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(3),
-.vehicles-table-container .devices-table td:nth-child(3) {
-  min-width: 110px;
+.vehicles-telemetry-table th:nth-child(3),
+.vehicles-telemetry-table td:nth-child(3) {
+  min-width: 105px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(4),
-.vehicles-table-container .devices-table td:nth-child(4) {
-  min-width: 110px;
+.vehicles-telemetry-table th:nth-child(4),
+.vehicles-telemetry-table td:nth-child(4) {
+  min-width: 105px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(5),
-.vehicles-table-container .devices-table td:nth-child(5) {
+.vehicles-telemetry-table th:nth-child(5),
+.vehicles-telemetry-table td:nth-child(5) {
   min-width: 125px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(6),
-.vehicles-table-container .devices-table td:nth-child(6) {
+.vehicles-telemetry-table th:nth-child(6),
+.vehicles-telemetry-table td:nth-child(6) {
   min-width: 130px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(7),
-.vehicles-table-container .devices-table td:nth-child(7) {
+.vehicles-telemetry-table th:nth-child(7),
+.vehicles-telemetry-table td:nth-child(7) {
   min-width: 120px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(8),
-.vehicles-table-container .devices-table td:nth-child(8) {
-  min-width: 95px;
-  text-align: center;
+.vehicles-telemetry-table th:nth-child(8),
+.vehicles-telemetry-table td:nth-child(8) {
+  min-width: 90px;
 }
 
-.vehicles-table-container .devices-table th:nth-child(9),
-.vehicles-table-container .devices-table td:nth-child(9) {
-  min-width: 360px;
+@media (max-width: 1200px) {
+  .vehicles-telemetry-table {
+    min-width: 980px;
+  }
+
+  .vehicle-cell {
+    min-width: 280px;
+    width: 280px;
+  }
+
+  .vehicles-telemetry-table th:nth-child(2),
+  .vehicles-telemetry-table td:nth-child(2) {
+    min-width: 280px;
+  }
+
+  .vehicle-actions-inline .btn-action {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.65rem;
+  }
 }
 
-.vehicles-table-container .devices-table th:last-child,
-.vehicles-table-container .devices-table td:last-child {
-  width: 1%;
+@media (max-width: 900px) {
+  .vehicle-actions-inline {
+    gap: 0.35rem;
+  }
+
+  .vehicle-actions-inline .btn-action {
+    min-height: 32px;
+    font-size: 0.76rem;
+    padding: 0.36rem 0.58rem;
+  }
 }
 
-.vehicles-table-container .action-buttons {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: center;
-  gap: 0.45rem;
-  white-space: nowrap;
-}
 
-.vehicles-table-container .action-buttons .btn-action {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-.vehicles-table-container .action-buttons .btn-action.delete {
-  min-width: 42px;
-  padding-left: 0.65rem;
-  padding-right: 0.65rem;
-}
