@@ -213,7 +213,36 @@ body {
   background: #01579b;
   color: #e3f2fd;
 }
+.dtc-code-badge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 94px;
+  justify-content: center;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  background: #2a2d33;
+  color: #b9d7ff;
+  border-left: 4px solid #ef4444;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
 
+.dtc-code-active {
+  background: #2a2d33;
+  color: #b9d7ff;
+  border-left-color: #ef4444;
+  opacity: 1;
+}
+
+.dtc-code-resolved {
+  background: #2a2d33;
+  color: #b9d7ff;
+  border-left-color: #8b8f97;
+  opacity: 0.82;
+}
 /* ========== LOADING SPINNER ========== */
 .spinner {
   width: 24px;
