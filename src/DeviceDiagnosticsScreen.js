@@ -389,7 +389,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           </div>
         ) : (
           <div className="table-container">
-            <table className="dtc-table">
+            <table className="table dtc-table">
               <thead>
                 <tr>
                   <th>DTC Code</th>
@@ -404,7 +404,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                   const severityBadgeClass = getSeverityBadgeClass(item.severity);
 
                   return (
-                    <tr key={i} className={i % 2 === 0 ? "even" : "odd"}>
+                    <tr key={i}>
                       <td>
                         <span className="dtc-code-badge dtc-code-active">
                           {item.dtc_code}
