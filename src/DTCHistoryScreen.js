@@ -66,7 +66,6 @@ function DTCHistoryScreen({ onBack }) {
     try {
       const normalizedVin = vin.trim().toUpperCase();
 
-      // Iba FE validácia formátu VIN
       if (!isValidVinFormat(normalizedVin)) {
         setError("Nesprávny formát VIN.");
         return;
@@ -80,13 +79,11 @@ function DTCHistoryScreen({ onBack }) {
       const res = await api.post("/api/dtc-history-full", payload);
       const history = res.data.history || [];
 
-      // Ak endpoint vráti prázdne dáta, berieme to ako vozidlo nie je v databáze
-      if (!history || history.length === 0) {
-        setError("Vozidlo nie je v databáze.");
-        return;
-      }
-
+      // Prázdna história != vozidlo neexistuje
       setData(history);
+
+      // aktívne DTC skúsime načítať len keď máme validné VIN,
+      // aj keď história je prázdna
       await fetchActiveDtcs(normalizedVin);
     } catch (err) {
       const backendError =
@@ -95,17 +92,17 @@ function DTCHistoryScreen({ onBack }) {
         "";
 
       const status = err.response?.status;
+      const backendErrorLower = backendError.toLowerCase();
 
       if (
         status === 404 ||
-        backendError.toLowerCase().includes("not found") ||
-        backendError.toLowerCase().includes("vehicle not found") ||
-        backendError.toLowerCase().includes("vozidlo") ||
-        backendError.toLowerCase().includes("vin not found")
+        backendErrorLower.includes("not found") ||
+        backendErrorLower.includes("vehicle not found") ||
+        backendErrorLower.includes("vin not found")
       ) {
         setError("Vozidlo nie je v databáze.");
       } else {
-        setError("Error fetching DTC history");
+        setError(err.response?.data?.error || "Error fetching DTC history");
       }
     } finally {
       setLoading(false);
