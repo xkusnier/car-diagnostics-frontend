@@ -157,6 +157,65 @@ code {
   box-shadow: var(--shadow-sm);
   color: var(--text-primary);
 }
+/* =========================
+   MY VEHICLES TABLE WIDTH + ACTIONS IN ONE ROW
+   ========================= */
+
+.devices-table-container.card {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.devices-table {
+  width: 100%;
+  min-width: 1320px;
+  table-layout: auto;
+}
+
+.devices-table th,
+.devices-table td {
+  vertical-align: middle;
+}
+
+.devices-table th {
+  white-space: nowrap;
+}
+
+.devices-table td:last-child {
+  min-width: 300px;
+}
+
+.devices-table .action-buttons {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.devices-table .action-buttons .btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.devices-table .action-buttons .btn-action.delete {
+  min-width: 42px;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+}
+
 
 .card,
 .search-card,
