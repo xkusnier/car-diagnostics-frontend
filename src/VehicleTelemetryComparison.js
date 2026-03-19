@@ -19,7 +19,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
   const [summary, setSummary] = useState({
     totalVehicles: 0,
     onlineVehicles: 0,
-    totalSamples: 0
+    totalSamples: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +50,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
         setSummary({
           totalVehicles: response.data.summary.total_vehicles,
           onlineVehicles: response.data.summary.online_vehicles,
-          totalSamples: response.data.summary.total_samples || 0
+          totalSamples: response.data.summary.total_samples || 0,
         });
       }
 
@@ -91,7 +91,8 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   const getSortedVehicles = () => {
     return [...vehicles].sort((a, b) => {
-      let aVal, bVal;
+      let aVal;
+      let bVal;
 
       switch (sortConfig.key) {
         case "online":
@@ -142,9 +143,11 @@ function VehicleTelemetryComparison({ onNavigate }) {
     if (sortConfig.key !== key) {
       return <ArrowsUpDownIcon style={{ width: "1rem", height: "1rem" }} />;
     }
-    return sortConfig.direction === "asc"
-      ? <ArrowUpIcon style={{ width: "1rem", height: "1rem" }} />
-      : <ArrowDownIcon style={{ width: "1rem", height: "1rem" }} />;
+    return sortConfig.direction === "asc" ? (
+      <ArrowUpIcon style={{ width: "1rem", height: "1rem" }} />
+    ) : (
+      <ArrowDownIcon style={{ width: "1rem", height: "1rem" }} />
+    );
   };
 
   const getStatusColor = (status) => {
@@ -189,12 +192,15 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
       {error && (
         <div className="error-message card">
-          <ExclamationTriangleIcon className="error-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+          <ExclamationTriangleIcon
+            className="error-icon"
+            style={{ width: "1.5rem", height: "1.5rem" }}
+          />
           <p>{error}</p>
         </div>
       )}
 
-      <div className="devices-table-container card">
+      <div className="devices-table-container card vehicles-table-container">
         <div className="table-header">
           <h3>Vehicles ({sortedVehicles.length})</h3>
           <span className="table-info">
@@ -212,47 +218,50 @@ function VehicleTelemetryComparison({ onNavigate }) {
           </div>
         ) : (
           <div className="table-responsive">
-            <table className="devices-table" style={{ tableLayout: "fixed", width: "100%" }}>
-              <colgroup>
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "18%" }} />
-                <col style={{ width: "9%" }} />
-                <col style={{ width: "9%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "26%" }} />
-              </colgroup>
+            <table className="devices-table vehicles-telemetry-table">
               <thead>
                 <tr>
                   <th onClick={() => handleSort("online")}>
-                    Status {getSortIcon("online")}
+                    <span className="sortable-header">
+                      Status {getSortIcon("online")}
+                    </span>
                   </th>
+
                   <th onClick={() => handleSort("vin")}>
-                    Vehicle {getSortIcon("vin")}
+                    <span className="sortable-header">
+                      Vehicle {getSortIcon("vin")}
+                    </span>
                   </th>
+
                   <th onClick={() => handleSort("avg_speed")}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <span className="sortable-header">
                       Avg Speed {getSortIcon("avg_speed")}
                     </span>
                   </th>
+
                   <th onClick={() => handleSort("avg_rpm")}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <span className="sortable-header">
                       Avg RPM {getSortIcon("avg_rpm")}
                     </span>
                   </th>
+
                   <th onClick={() => handleSort("avg_consumption")}>
-                    Avg Cons. {getSortIcon("avg_consumption")}
+                    <span className="sortable-header">
+                      Avg Cons. {getSortIcon("avg_consumption")}
+                    </span>
                   </th>
+
                   <th>Range (RPM)</th>
                   <th>Odometer</th>
+
                   <th onClick={() => handleSort("samples")}>
-                    Samples {getSortIcon("samples")}
+                    <span className="sortable-header">
+                      Samples {getSortIcon("samples")}
+                    </span>
                   </th>
-                  <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {sortedVehicles.map((vehicle) => (
                   <tr key={vehicle.vin} className="device-row">
@@ -263,150 +272,174 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       </span>
                     </td>
 
-                    <td className="vehicle-info" style={{ whiteSpace: "normal", wordBreak: "break-word" }}>
-                      <div className="vehicle-name" style={{ fontSize: "0.9rem" }}>
-                        {vehicle.brand || "Unknown"} {vehicle.model || ""}
-                      </div>
-                      <div className="vehicle-vin" style={{ fontSize: "0.8rem" }}>
-                        <code className="vin-code" style={{ fontSize: "0.8rem" }}>{vehicle.vin || "No VIN"}</code>
+                    <td className="vehicle-cell">
+                      <div className="vehicle-info vehicle-info-expanded">
+                        <div className="vehicle-main">
+                          <div className="vehicle-name">
+                            {vehicle.brand || "Unknown"} {vehicle.model || ""}
+                          </div>
+                          <div className="vehicle-vin">
+                            <code className="vin-code">{vehicle.vin || "No VIN"}</code>
+                          </div>
+                        </div>
+
+                        <div className="vehicle-actions-inline">
+                          {vehicle.device_id ? (
+                            <>
+                              <button
+                                className="btn-action diagnostics"
+                                onClick={() =>
+                                  onNavigate("device-diagnostics", {
+                                    deviceId: vehicle.device_id,
+                                  })
+                                }
+                                title="View Diagnostics"
+                                disabled={deletingVin === vehicle.vin}
+                                type="button"
+                              >
+                                <WrenchScrewdriverIcon
+                                  style={{ width: "0.95rem", height: "0.95rem" }}
+                                />
+                                Diag
+                              </button>
+
+                              <button
+                                className="btn-action live-data"
+                                onClick={() =>
+                                  onNavigate("live-data", {
+                                    type: "live",
+                                    deviceId: vehicle.device_id,
+                                    deviceInfo: {
+                                      device_id: vehicle.device_id,
+                                      vin: vehicle.vin,
+                                      brand: vehicle.brand,
+                                      model: vehicle.model,
+                                    },
+                                  })
+                                }
+                                title="View Live Data"
+                                disabled={deletingVin === vehicle.vin}
+                                type="button"
+                              >
+                                <ChartBarIcon
+                                  style={{ width: "0.95rem", height: "0.95rem" }}
+                                />
+                                Live
+                              </button>
+                            </>
+                          ) : (
+                            <span className="no-device">No device</span>
+                          )}
+
+                          <button
+                            className="btn-action trips"
+                            onClick={() =>
+                              onNavigate("vehicle-trips", {
+                                vin: vehicle.vin,
+                                vehicleInfo: {
+                                  vin: vehicle.vin,
+                                  brand: vehicle.brand,
+                                  model: vehicle.model,
+                                  year: vehicle.year,
+                                },
+                              })
+                            }
+                            title="View Trips"
+                            disabled={deletingVin === vehicle.vin}
+                            type="button"
+                          >
+                            <MapIcon style={{ width: "0.95rem", height: "0.95rem" }} />
+                            Trips
+                          </button>
+
+                          <button
+                            className="btn-action events"
+                            onClick={() =>
+                              onNavigate("vehicle-events", {
+                                vin: vehicle.vin,
+                                vehicleInfo: {
+                                  vin: vehicle.vin,
+                                  brand: vehicle.brand,
+                                  model: vehicle.model,
+                                  year: vehicle.year,
+                                },
+                              })
+                            }
+                            title="View Events"
+                            disabled={deletingVin === vehicle.vin}
+                            type="button"
+                          >
+                            <ShieldExclamationIcon
+                              style={{ width: "0.95rem", height: "0.95rem" }}
+                            />
+                            Events
+                          </button>
+
+                          <button
+                            className="btn-action delete"
+                            onClick={() => handleDeleteVehicle(vehicle.vin)}
+                            title="Delete Vehicle"
+                            disabled={deletingVin === vehicle.vin}
+                            type="button"
+                          >
+                            {deletingVin === vehicle.vin ? (
+                              <div className="spinner-small"></div>
+                            ) : (
+                              <TrashIcon style={{ width: "0.95rem", height: "0.95rem" }} />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </td>
 
-                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                    <td className="metric-cell">
                       {vehicle.statistics?.avg_speed ? (
                         <span>{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </td>
 
-                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                    <td className="metric-cell">
                       {vehicle.statistics?.avg_rpm ? (
                         <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </td>
 
-                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                    <td className="metric-cell">
                       {vehicle.statistics?.avg_consumption ? (
                         <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </td>
 
-                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                    <td className="metric-cell">
                       {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
-                        <span>{vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm}</span>
-                      ) : "—"}
+                        <span>
+                          {vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
 
-                    <td style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                    <td className="metric-cell">
                       {vehicle.statistics?.total_odometer ? (
                         <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </td>
 
-                    <td style={{ fontSize: "0.9rem", textAlign: "center" }}>
+                    <td className="samples-cell">
                       {vehicle.statistics?.samples ? (
                         <span className="samples-badge">{vehicle.statistics.samples}</span>
-                      ) : "0"}
-                    </td>
-
-                    <td>
-                      <div className="action-buttons" style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                        {vehicle.device_id ? (
-                          <>
-                            <button
-                              className="btn-action diagnostics"
-                              onClick={() => onNavigate("device-diagnostics", { deviceId: vehicle.device_id })}
-                              title="View Diagnostics"
-                              disabled={deletingVin === vehicle.vin}
-                              style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem" }}
-                            >
-                              <WrenchScrewdriverIcon style={{ width: "0.95rem", height: "0.95rem" }} />
-                              Diag
-                            </button>
-
-                            <button
-                              className="btn-action live-data"
-                              onClick={() =>
-                                onNavigate("live-data", {
-                                  type: "live",
-                                  deviceId: vehicle.device_id,
-                                  deviceInfo: {
-                                    device_id: vehicle.device_id,
-                                    vin: vehicle.vin,
-                                    brand: vehicle.brand,
-                                    model: vehicle.model
-                                  }
-                                })
-                              }
-                              title="View Live Data"
-                              disabled={deletingVin === vehicle.vin}
-                              style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#4caf50" }}
-                            >
-                              <ChartBarIcon style={{ width: "0.95rem", height: "0.95rem" }} />
-                              Live
-                            </button>
-                          </>
-                        ) : (
-                          <span className="no-device" style={{ color: "#999", fontSize: "0.8rem" }}>
-                            No device
-                          </span>
-                        )}
-
-                        <button
-                          className="btn-action trips"
-                          onClick={() =>
-                            onNavigate("vehicle-trips", {
-                              vin: vehicle.vin,
-                              vehicleInfo: {
-                                vin: vehicle.vin,
-                                brand: vehicle.brand,
-                                model: vehicle.model,
-                                year: vehicle.year
-                              }
-                            })
-                          }
-                          title="View Trips"
-                          disabled={deletingVin === vehicle.vin}
-                          style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#9c27b0" }}
-                        >
-                          <MapIcon style={{ width: "0.95rem", height: "0.95rem" }} />
-                          Trips
-                        </button>
-
-                        <button
-                          className="btn-action events"
-                          onClick={() =>
-                            onNavigate("vehicle-events", {
-                              vin: vehicle.vin,
-                              vehicleInfo: {
-                                vin: vehicle.vin,
-                                brand: vehicle.brand,
-                                model: vehicle.model,
-                                year: vehicle.year
-                              }
-                            })
-                          }
-                          title="View Events"
-                          disabled={deletingVin === vehicle.vin}
-                          style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#ef6c00" }}
-                        >
-                          <ShieldExclamationIcon style={{ width: "0.95rem", height: "0.95rem" }} />
-                          Events
-                        </button>
-
-                        <button
-                          className="btn-action delete"
-                          onClick={() => handleDeleteVehicle(vehicle.vin)}
-                          title="Delete Vehicle"
-                          disabled={deletingVin === vehicle.vin}
-                          style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem" }}
-                        >
-                          {deletingVin === vehicle.vin ? (
-                            <div className="spinner-small"></div>
-                          ) : (
-                            <TrashIcon style={{ width: "0.95rem", height: "0.95rem" }} />
-                          )}
-                        </button>
-                      </div>
+                      ) : (
+                        "0"
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -418,13 +451,16 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
       <div className="legend">
         <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#4caf50" }}></span> Online
+          <span className="legend-dot" style={{ background: "#4caf50" }}></span>
+          Online
         </div>
         <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#f44336" }}></span> Offline
+          <span className="legend-dot" style={{ background: "#f44336" }}></span>
+          Offline
         </div>
         <div className="legend-item">
-          <ChartBarIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} /> Historical averages
+          <ChartBarIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} />
+          Historical averages
         </div>
       </div>
     </div>
