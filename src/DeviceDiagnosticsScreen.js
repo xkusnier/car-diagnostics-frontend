@@ -370,9 +370,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         <div className="results-header">
           <div>
             <h2>Active DTC Codes</h2>
-            <p className="results-summary">
-              Found <strong>{data.dtc_codes ? data.dtc_codes.length : 0}</strong> active DTC codes
-            </p>
           </div>
           <div className="dtc-count">
             {data.dtc_codes ? data.dtc_codes.length : 0} active codes
