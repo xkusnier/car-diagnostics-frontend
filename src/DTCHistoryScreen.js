@@ -272,7 +272,7 @@ function DTCHistoryScreen({ onBack }) {
               </div>
 
               <div className="table-container">
-                <table className="table">
+                <table className="table dtc-shared-table">
                   <thead>
                     <tr>
                       <th>DTC Code</th>
