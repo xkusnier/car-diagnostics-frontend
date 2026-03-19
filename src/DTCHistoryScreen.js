@@ -20,6 +20,10 @@ function DTCHistoryScreen({ onBack }) {
     severity: "all",
   });
 
+  const isValidVinFormat = (value) => {
+    return /^[A-HJ-NPR-Z0-9]{17}$/.test(value);
+  };
+
   const fetchActiveDtcs = async (vinCode) => {
     setLoadingActive(true);
     try {
@@ -62,17 +66,9 @@ function DTCHistoryScreen({ onBack }) {
     try {
       const normalizedVin = vin.trim().toUpperCase();
 
-      const validationRes = await api.post("/api/vin/validate", {
-        vin: normalizedVin,
-      });
-
-      if (validationRes.data.status === "invalid") {
-        setError(validationRes.data.message || "Takéto VIN nemôže existovať.");
-        return;
-      }
-
-      if (validationRes.data.status === "not_found") {
-        setError("Vozidlo nie je v našej databáze.");
+      // Iba FE validácia formátu VIN
+      if (!isValidVinFormat(normalizedVin)) {
+        setError("Nesprávny formát VIN.");
         return;
       }
 
@@ -82,11 +78,35 @@ function DTCHistoryScreen({ onBack }) {
       if (filters.severity !== "all") payload.severity = filters.severity;
 
       const res = await api.post("/api/dtc-history-full", payload);
-      setData(res.data.history || []);
+      const history = res.data.history || [];
 
+      // Ak endpoint vráti prázdne dáta, berieme to ako vozidlo nie je v databáze
+      if (!history || history.length === 0) {
+        setError("Vozidlo nie je v databáze.");
+        return;
+      }
+
+      setData(history);
       await fetchActiveDtcs(normalizedVin);
     } catch (err) {
-      setError(err.response?.data?.error || "Error fetching DTC history");
+      const backendError =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "";
+
+      const status = err.response?.status;
+
+      if (
+        status === 404 ||
+        backendError.toLowerCase().includes("not found") ||
+        backendError.toLowerCase().includes("vehicle not found") ||
+        backendError.toLowerCase().includes("vozidlo") ||
+        backendError.toLowerCase().includes("vin not found")
+      ) {
+        setError("Vozidlo nie je v databáze.");
+      } else {
+        setError("Error fetching DTC history");
+      }
     } finally {
       setLoading(false);
     }
@@ -180,7 +200,7 @@ function DTCHistoryScreen({ onBack }) {
               required
             />
             <small className="input-hint">
-              Enter the complete 17-character VIN. The VIN format and checksum will be verified before search.
+              Enter the complete 17-character VIN. Only VIN format is checked.
             </small>
           </div>
 
