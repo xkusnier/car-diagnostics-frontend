@@ -325,16 +325,18 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
                             <button
                               className="btn-action live-data"
-                              onClick={() => onNavigate("live-data", {
-                                type: "live",
-                                deviceId: vehicle.device_id,
-                                deviceInfo: {
-                                  device_id: vehicle.device_id,
-                                  vin: vehicle.vin,
-                                  brand: vehicle.brand,
-                                  model: vehicle.model
-                                }
-                              })}
+                              onClick={() =>
+                                onNavigate("live-data", {
+                                  type: "live",
+                                  deviceId: vehicle.device_id,
+                                  deviceInfo: {
+                                    device_id: vehicle.device_id,
+                                    vin: vehicle.vin,
+                                    brand: vehicle.brand,
+                                    model: vehicle.model
+                                  }
+                                })
+                              }
                               title="View Live Data"
                               disabled={deletingVin === vehicle.vin}
                               style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#4caf50" }}
@@ -351,15 +353,17 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
                         <button
                           className="btn-action trips"
-                          onClick={() => onNavigate("vehicle-trips", {
-                            vin: vehicle.vin,
-                            vehicleInfo: {
+                          onClick={() =>
+                            onNavigate("vehicle-trips", {
                               vin: vehicle.vin,
-                              brand: vehicle.brand,
-                              model: vehicle.model,
-                              year: vehicle.year
-                            }
-                          })}
+                              vehicleInfo: {
+                                vin: vehicle.vin,
+                                brand: vehicle.brand,
+                                model: vehicle.model,
+                                year: vehicle.year
+                              }
+                            })
+                          }
                           title="View Trips"
                           disabled={deletingVin === vehicle.vin}
                           style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#9c27b0" }}
@@ -370,15 +374,17 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
                         <button
                           className="btn-action events"
-                          onClick={() => onNavigate("vehicle-events", {
-                            vin: vehicle.vin,
-                            vehicleInfo: {
+                          onClick={() =>
+                            onNavigate("vehicle-events", {
                               vin: vehicle.vin,
-                              brand: vehicle.brand,
-                              model: vehicle.model,
-                              year: vehicle.year
-                            }
-                          })}
+                              vehicleInfo: {
+                                vin: vehicle.vin,
+                                brand: vehicle.brand,
+                                model: vehicle.model,
+                                year: vehicle.year
+                              }
+                            })
+                          }
                           title="View Events"
                           disabled={deletingVin === vehicle.vin}
                           style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#ef6c00" }}
