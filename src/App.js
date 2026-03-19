@@ -339,8 +339,9 @@ function App() {
               className="btn-refresh"
               onClick={handleRefresh}
               title="Refresh current screen"
+              type="button"
             >
-              <ArrowPathIcon className="refresh-icon" style={{ width: "1.2rem", height: "1.2rem" }} />
+              <ArrowPathIcon className="refresh-icon" />
             </button>
 
             <div className="profile-menu-wrapper" ref={profileRef}>
@@ -348,20 +349,30 @@ function App() {
                 className="profile-trigger"
                 onClick={() => setIsProfilePopupOpen((prev) => !prev)}
                 title="Show profile info"
+                type="button"
               >
                 <span className="profile-emoji">👤</span>
-                <span className="user-email">{user?.username || user?.email || "User"}</span>
+                <span className="profile-name">
+                  {user?.username || user?.email || "User"}
+                </span>
               </button>
 
               {isProfilePopupOpen && (
                 <div className="profile-popup">
-                  <div className="profile-popup-label">Signed in as</div>
-                  <div className="profile-popup-email">{user?.email || "No email available"}</div>
+                  <div className="profile-popup-row">
+                    <span className="profile-popup-icon">📧</span>
+                    <div className="profile-popup-content">
+                      <div className="profile-popup-label">Email</div>
+                      <div className="profile-popup-email">
+                        {user?.email || "No email available"}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            <button className="btn-logout" onClick={handleLogout}>
+            <button className="btn-logout" onClick={handleLogout} type="button">
               Logout
             </button>
           </div>
