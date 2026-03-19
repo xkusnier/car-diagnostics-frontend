@@ -57,7 +57,7 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
 
-  --max-content-width: 1280px;
+  --max-content-width: 1440px;
 }
 
 * {
@@ -141,7 +141,7 @@ code {
 .dtc-history-container {
   width: min(100%, var(--max-content-width));
   margin: 0 auto;
-  padding: 2rem 1.25rem 3rem;
+  padding: 2rem 0.9rem 3rem;
 }
 
 .card,
@@ -1639,7 +1639,7 @@ code {
 
 .vehicles-telemetry-table {
   width: 100%;
-  min-width: 1180px;
+  min-width: 1120px;
   table-layout: auto;
 }
 
