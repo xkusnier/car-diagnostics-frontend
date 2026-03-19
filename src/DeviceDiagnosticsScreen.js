@@ -406,13 +406,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                   return (
                     <tr key={i} className={i % 2 === 0 ? "even" : "odd"}>
                       <td>
-                        <span
-                          className="dtc-code-badge"
-                          style={{
-                            borderLeft: `4px solid ${severityColor}`,
-                            background: `${severityColor}15`,
-                          }}
-                        >
+                        <span className="dtc-code-badge dtc-code-active">
                           {item.dtc_code}
                         </span>
                       </td>
