@@ -3155,6 +3155,87 @@ body {
 }
 
 /* DTC Table Specific */
+.dtc-table-card {
+  background: #1f1f22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.dtc-shared-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1f1f22;
+}
+
+.dtc-shared-table thead th {
+  background: #050505;
+  color: #aeb6c2;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dtc-shared-table tbody tr {
+  background: #1f1f22;
+}
+
+.dtc-shared-table tbody td {
+  padding: 1.45rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  vertical-align: middle;
+}
+
+.dtc-shared-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dtc-code-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 118px;
+  padding: 0.8rem 1.1rem;
+  border-radius: 12px;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.dtc-code-active {
+  background: #3a3d42;
+  color: #b9d7ff;
+  border-left: 4px solid #ef4444;
+}
+
+.dtc-code-resolved {
+  background: #3a3d42;
+  color: #b9d7ff;
+  border-left: 4px solid #8b8f97;
+  opacity: 0.82;
+}
+
+.dtc-shared-table .description-cell {
+  width: 37%;
+}
+
+.dtc-shared-table .date-cell {
+  min-width: 170px;
+}
+
+.dtc-shared-table .description-content strong {
+  font-size: 1rem;
+  color: #ffffff;
+}
+
+.dtc-shared-table .time-ago {
+  margin-top: 0.35rem;
+  color: #9aa3af;
+}
 .dtc-table th:nth-child(3),
 .dtc-table td:nth-child(3) {
   width: 150px;
