@@ -10,7 +10,6 @@ import {
   ClockIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
-  CpuChipIcon,
 } from "@heroicons/react/24/outline";
 
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
@@ -39,9 +38,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       reconnection: true,
     });
 
-    socketRef.current.on("clear_confirmation", (data) => {
-      console.log("Clear confirmation received:", data);
-      if (data.device_id === deviceId && data.status === "success") {
+    socketRef.current.on("clear_confirmation", (socketData) => {
+      console.log("Clear confirmation received:", socketData);
+      if (socketData.device_id === deviceId && socketData.status === "success") {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -58,9 +57,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       }
     });
 
-    socketRef.current.on("dtc_update", (data) => {
-      console.log("DTC update received:", data);
-      if (data.device_id === deviceId) {
+    socketRef.current.on("dtc_update", (socketData) => {
+      console.log("DTC update received:", socketData);
+      if (socketData.device_id === deviceId) {
         setReading(false);
         setReadStatus("DTC read completed");
         fetchDiagnostics();
@@ -85,6 +84,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     try {
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
       setData(res.data);
+      setError(null);
     } catch (err) {
       setError(err.response?.data?.error || "Error fetching diagnostics");
     } finally {
@@ -94,6 +94,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
   const checkDtcPatterns = async (vin) => {
     if (!vin) return;
+
     setLoadingPatterns(true);
     try {
       const res = await api.get(`/api/dtc/pattern-check/${vin}`);
@@ -132,6 +133,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send clear command.");
       setClearing(false);
+      setClearStatus("");
     }
   };
 
@@ -221,12 +223,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   }
 
   return (
-    <div className="devices-container
+    <div className="devices-container">
       <div className="screen-topbar">
         <button className="back-button-unified" onClick={onBack} type="button">
           ← Back
         </button>
       </div>
+
       <div className="devices-header">
         <div className="header-content">
           <h1>Device Diagnostics</h1>
@@ -251,7 +254,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         </div>
 
         <div className="stat-item">
-          <span className="stat-number">{data.brand ? `${data.brand} ${data.model}` : "N/A"}</span>
+          <span className="stat-number">
+            {data.brand ? `${data.brand} ${data.model}` : "N/A"}
+          </span>
           <span className="stat-label">Vehicle</span>
         </div>
 
@@ -319,12 +324,20 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         </div>
 
         {readStatus && (
-          <div className={`status-message ${readStatus.toLowerCase().includes("completed") ? "success" : "info"}`}>
+          <div
+            className={`status-message ${
+              readStatus.toLowerCase().includes("completed") ? "success" : "info"
+            }`}
+          >
             <span className="icon" style={{ display: "inline-flex", alignItems: "center" }}>
               {readStatus.toLowerCase().includes("completed") ? (
-                <CheckCircleIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+                <CheckCircleIcon
+                  style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }}
+                />
               ) : (
-                <ClockIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+                <ClockIcon
+                  style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }}
+                />
               )}
             </span>
             {readStatus}
@@ -332,12 +345,20 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         )}
 
         {clearStatus && (
-          <div className={`status-message ${clearStatus.toLowerCase().includes("cleared") ? "success" : "warning"}`}>
+          <div
+            className={`status-message ${
+              clearStatus.toLowerCase().includes("cleared") ? "success" : "warning"
+            }`}
+          >
             <span className="icon" style={{ display: "inline-flex", alignItems: "center" }}>
               {clearStatus.toLowerCase().includes("cleared") ? (
-                <CheckCircleIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+                <CheckCircleIcon
+                  style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }}
+                />
               ) : (
-                <ClockIcon style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+                <ClockIcon
+                  style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }}
+                />
               )}
             </span>
             {clearStatus}
@@ -482,7 +503,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
               {patterns.map((pattern, index) => (
                 <div key={index} className="pattern-card">
                   <div className="pattern-header">
-                    <div className="pattern-title" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div
+                      className="pattern-title"
+                      style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+                    >
                       <h3>{pattern.pattern_name}</h3>
                     </div>
                     <div
