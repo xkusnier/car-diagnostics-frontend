@@ -236,9 +236,6 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
       <div className="devices-table-container card">
         <div className="table-header">
           <h3>Devices ({filteredDevices.length})</h3>
-          <span className="table-info">
-            Showing {filteredDevices.length} of {devices.length} devices
-          </span>
         </div>
 
         {filteredDevices.length === 0 ? (
