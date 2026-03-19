@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 import {
@@ -12,6 +12,7 @@ import {
   MapIcon,
   TrashIcon,
   ShieldExclamationIcon,
+  EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
 
 function VehicleTelemetryComparison({ onNavigate }) {
@@ -25,11 +26,27 @@ function VehicleTelemetryComparison({ onNavigate }) {
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: "online", direction: "desc" });
   const [deletingVin, setDeletingVin] = useState(null);
+  const [openActionMenuVin, setOpenActionMenuVin] = useState(null);
+
+  const actionMenuRef = useRef(null);
 
   useEffect(() => {
     fetchTelemetryComparison();
     const interval = setInterval(fetchTelemetryComparison, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+        setOpenActionMenuVin(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const fetchTelemetryComparison = async () => {
@@ -72,6 +89,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       await api.delete(`/api/user-vehicle/${vin}`);
       await fetchTelemetryComparison();
+      setOpenActionMenuVin(null);
       alert("Vehicle deleted successfully");
     } catch (err) {
       console.error("Error deleting vehicle:", err);
@@ -152,6 +170,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   const getStatusColor = (status) => {
     return status ? "success" : "danger";
+  };
+
+  const toggleActionMenu = (vin) => {
+    setOpenActionMenuVin((prev) => (prev === vin ? null : vin));
   };
 
   if (loading) {
@@ -259,6 +281,8 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       Samples {getSortIcon("samples")}
                     </span>
                   </th>
+
+                  <th>Actions</th>
                 </tr>
               </thead>
 
@@ -273,121 +297,12 @@ function VehicleTelemetryComparison({ onNavigate }) {
                     </td>
 
                     <td className="vehicle-cell">
-                      <div className="vehicle-info vehicle-info-expanded">
-                        <div className="vehicle-main">
-                          <div className="vehicle-name">
-                            {vehicle.brand || "Unknown"} {vehicle.model || ""}
-                          </div>
-                          <div className="vehicle-vin">
-                            <code className="vin-code">{vehicle.vin || "No VIN"}</code>
-                          </div>
+                      <div className="vehicle-info">
+                        <div className="vehicle-name">
+                          {vehicle.brand || "Unknown"} {vehicle.model || ""}
                         </div>
-
-                        <div className="vehicle-actions-inline">
-                          {vehicle.device_id ? (
-                            <>
-                              <button
-                                className="btn-action diagnostics"
-                                onClick={() =>
-                                  onNavigate("device-diagnostics", {
-                                    deviceId: vehicle.device_id,
-                                  })
-                                }
-                                title="View Diagnostics"
-                                disabled={deletingVin === vehicle.vin}
-                                type="button"
-                              >
-                                <WrenchScrewdriverIcon
-                                  style={{ width: "0.95rem", height: "0.95rem" }}
-                                />
-                                Diag
-                              </button>
-
-                              <button
-                                className="btn-action live-data"
-                                onClick={() =>
-                                  onNavigate("live-data", {
-                                    type: "live",
-                                    deviceId: vehicle.device_id,
-                                    deviceInfo: {
-                                      device_id: vehicle.device_id,
-                                      vin: vehicle.vin,
-                                      brand: vehicle.brand,
-                                      model: vehicle.model,
-                                    },
-                                  })
-                                }
-                                title="View Live Data"
-                                disabled={deletingVin === vehicle.vin}
-                                type="button"
-                              >
-                                <ChartBarIcon
-                                  style={{ width: "0.95rem", height: "0.95rem" }}
-                                />
-                                Live
-                              </button>
-                            </>
-                          ) : (
-                            <span className="no-device">No device</span>
-                          )}
-
-                          <button
-                            className="btn-action trips"
-                            onClick={() =>
-                              onNavigate("vehicle-trips", {
-                                vin: vehicle.vin,
-                                vehicleInfo: {
-                                  vin: vehicle.vin,
-                                  brand: vehicle.brand,
-                                  model: vehicle.model,
-                                  year: vehicle.year,
-                                },
-                              })
-                            }
-                            title="View Trips"
-                            disabled={deletingVin === vehicle.vin}
-                            type="button"
-                          >
-                            <MapIcon style={{ width: "0.95rem", height: "0.95rem" }} />
-                            Trips
-                          </button>
-
-                          <button
-                            className="btn-action events"
-                            onClick={() =>
-                              onNavigate("vehicle-events", {
-                                vin: vehicle.vin,
-                                vehicleInfo: {
-                                  vin: vehicle.vin,
-                                  brand: vehicle.brand,
-                                  model: vehicle.model,
-                                  year: vehicle.year,
-                                },
-                              })
-                            }
-                            title="View Events"
-                            disabled={deletingVin === vehicle.vin}
-                            type="button"
-                          >
-                            <ShieldExclamationIcon
-                              style={{ width: "0.95rem", height: "0.95rem" }}
-                            />
-                            Events
-                          </button>
-
-                          <button
-                            className="btn-action delete"
-                            onClick={() => handleDeleteVehicle(vehicle.vin)}
-                            title="Delete Vehicle"
-                            disabled={deletingVin === vehicle.vin}
-                            type="button"
-                          >
-                            {deletingVin === vehicle.vin ? (
-                              <div className="spinner-small"></div>
-                            ) : (
-                              <TrashIcon style={{ width: "0.95rem", height: "0.95rem" }} />
-                            )}
-                          </button>
+                        <div className="vehicle-vin">
+                          <code className="vin-code">{vehicle.vin || "No VIN"}</code>
                         </div>
                       </div>
                     </td>
@@ -440,6 +355,126 @@ function VehicleTelemetryComparison({ onNavigate }) {
                       ) : (
                         "0"
                       )}
+                    </td>
+
+                    <td className="actions-cell">
+                      <div
+                        className="actions-menu-wrapper"
+                        ref={openActionMenuVin === vehicle.vin ? actionMenuRef : null}
+                      >
+                        <button
+                          className="btn-action-trigger"
+                          type="button"
+                          onClick={() => toggleActionMenu(vehicle.vin)}
+                          disabled={deletingVin === vehicle.vin}
+                        >
+                          <EllipsisVerticalIcon style={{ width: "1rem", height: "1rem" }} />
+                          Click to action
+                        </button>
+
+                        {openActionMenuVin === vehicle.vin && (
+                          <div className="actions-popup">
+                            {vehicle.device_id ? (
+                              <>
+                                <button
+                                  className="actions-popup-item"
+                                  onClick={() => {
+                                    setOpenActionMenuVin(null);
+                                    onNavigate("device-diagnostics", {
+                                      deviceId: vehicle.device_id,
+                                    });
+                                  }}
+                                  type="button"
+                                >
+                                  <WrenchScrewdriverIcon
+                                    style={{ width: "1rem", height: "1rem" }}
+                                  />
+                                  Diagnostics
+                                </button>
+
+                                <button
+                                  className="actions-popup-item"
+                                  onClick={() => {
+                                    setOpenActionMenuVin(null);
+                                    onNavigate("live-data", {
+                                      type: "live",
+                                      deviceId: vehicle.device_id,
+                                      deviceInfo: {
+                                        device_id: vehicle.device_id,
+                                        vin: vehicle.vin,
+                                        brand: vehicle.brand,
+                                        model: vehicle.model,
+                                      },
+                                    });
+                                  }}
+                                  type="button"
+                                >
+                                  <ChartBarIcon style={{ width: "1rem", height: "1rem" }} />
+                                  Live Data
+                                </button>
+                              </>
+                            ) : (
+                              <div className="actions-popup-empty">No device available</div>
+                            )}
+
+                            <button
+                              className="actions-popup-item"
+                              onClick={() => {
+                                setOpenActionMenuVin(null);
+                                onNavigate("vehicle-trips", {
+                                  vin: vehicle.vin,
+                                  vehicleInfo: {
+                                    vin: vehicle.vin,
+                                    brand: vehicle.brand,
+                                    model: vehicle.model,
+                                    year: vehicle.year,
+                                  },
+                                });
+                              }}
+                              type="button"
+                            >
+                              <MapIcon style={{ width: "1rem", height: "1rem" }} />
+                              Trips
+                            </button>
+
+                            <button
+                              className="actions-popup-item"
+                              onClick={() => {
+                                setOpenActionMenuVin(null);
+                                onNavigate("vehicle-events", {
+                                  vin: vehicle.vin,
+                                  vehicleInfo: {
+                                    vin: vehicle.vin,
+                                    brand: vehicle.brand,
+                                    model: vehicle.model,
+                                    year: vehicle.year,
+                                  },
+                                });
+                              }}
+                              type="button"
+                            >
+                              <ShieldExclamationIcon
+                                style={{ width: "1rem", height: "1rem" }}
+                              />
+                              Events
+                            </button>
+
+                            <button
+                              className="actions-popup-item danger"
+                              onClick={() => handleDeleteVehicle(vehicle.vin)}
+                              disabled={deletingVin === vehicle.vin}
+                              type="button"
+                            >
+                              {deletingVin === vehicle.vin ? (
+                                <div className="spinner-small"></div>
+                              ) : (
+                                <TrashIcon style={{ width: "1rem", height: "1rem" }} />
+                              )}
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
