@@ -366,9 +366,14 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         )}
       </div>
 
-      <div className="dtc-section">
-        <div className="section-header">
-          <h2>Active DTC Codes</h2>
+      <div className="results-section card">
+        <div className="results-header">
+          <div>
+            <h2>Active DTC Codes</h2>
+            <p className="results-summary">
+              Found <strong>{data.dtc_codes ? data.dtc_codes.length : 0}</strong> active DTC codes
+            </p>
+          </div>
           <div className="dtc-count">
             {data.dtc_codes ? data.dtc_codes.length : 0} active codes
             {data.dtc_codes && data.dtc_codes.length > 0 && (
@@ -388,77 +393,79 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
             <p>No diagnostic trouble codes found for this device.</p>
           </div>
         ) : (
-          <div className="table-container">
-            <table className="table dtc-table">
-              <thead>
-                <tr>
-                  <th>DTC Code</th>
-                  <th>Description</th>
-                  <th>Severity</th>
-                  <th>Date Detected</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.dtc_codes.map((item, i) => {
-                  const severityColor = getSeverityColor(item.severity);
-                  const severityBadgeClass = getSeverityBadgeClass(item.severity);
+          <div className="dtc-table-card">
+            <div className="table-container">
+              <table className="table dtc-shared-table">
+                <thead>
+                  <tr>
+                    <th>DTC Code</th>
+                    <th>Description</th>
+                    <th>Severity</th>
+                    <th>Date Detected</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.dtc_codes.map((item, i) => {
+                    const severityColor = getSeverityColor(item.severity);
+                    const severityBadgeClass = getSeverityBadgeClass(item.severity);
 
-                  return (
-                    <tr key={i}>
-                      <td>
-                        <span className="dtc-code-badge dtc-code-active">
-                          {item.dtc_code}
-                        </span>
-                      </td>
-                      <td className="description-cell">
-                        <div className="description-content">
-                          <strong>{item.description || "No description available"}</strong>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="severity-display">
-                          <span
-                            className={`severity-badge ${severityBadgeClass}`}
-                            style={{
-                              background: severityColor,
-                              color: "white",
-                              display: "inline-flex",
-                              alignItems: "center",
-                            }}
-                          >
-                            {getSeverityIcon(item.severity)}
-                            {item.severity?.toUpperCase() || "MEDIUM"}
+                    return (
+                      <tr key={i}>
+                        <td>
+                          <span className="dtc-code-badge dtc-code-active">
+                            {item.dtc_code}
                           </span>
-                          <div className="severity-info">
-                            <small>
-                              {item.severity === "critical" && "Requires immediate attention"}
-                              {item.severity === "high" && "Needs attention soon"}
-                              {item.severity === "medium" && "Monitor condition"}
-                              {item.severity === "low" && "Informational only"}
-                            </small>
+                        </td>
+                        <td className="description-cell">
+                          <div className="description-content">
+                            <strong>{item.description || "No description available"}</strong>
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="date-cell">
-                          <div className="date">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleDateString("en-GB", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "—"}
+                        </td>
+                        <td>
+                          <div className="severity-display">
+                            <span
+                              className={`severity-badge ${severityBadgeClass}`}
+                              style={{
+                                background: severityColor,
+                                color: "white",
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              {getSeverityIcon(item.severity)}
+                              {item.severity?.toUpperCase() || "MEDIUM"}
+                            </span>
+                            <div className="severity-info">
+                              <small>
+                                {item.severity === "critical" && "Requires immediate attention"}
+                                {item.severity === "high" && "Needs attention soon"}
+                                {item.severity === "medium" && "Monitor condition"}
+                                {item.severity === "low" && "Informational only"}
+                              </small>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td>
+                          <div className="date-cell">
+                            <div className="date">
+                              {item.created_at
+                                ? new Date(item.created_at).toLocaleDateString("en-GB", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "—"}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
