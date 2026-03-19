@@ -221,7 +221,12 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   }
 
   return (
-    <div className="devices-container">
+    <div className="devices-container
+      <div className="screen-topbar">
+        <button className="back-button-unified" onClick={onBack} type="button">
+          ← Back
+        </button>
+      </div>
       <div className="devices-header">
         <div className="header-content">
           <h1>Device Diagnostics</h1>
