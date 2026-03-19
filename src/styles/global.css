@@ -1685,16 +1685,19 @@ code {
 
 .vehicle-actions-inline {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem 0.7rem;
-  margin-top: 0.85rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.7rem;
+  white-space: nowrap;
 }
 
 .vehicle-actions-inline .btn-action {
-  min-height: 34px;
-  padding: 0.42rem 0.72rem;
-  font-size: 0.82rem;
+  min-height: 36px;
+  padding: 0.46rem 0.78rem;
+  font-size: 0.81rem;
   box-shadow: none;
+  flex-shrink: 0;
 }
 
 .vehicle-actions-inline .btn-action:hover:not(:disabled) {
