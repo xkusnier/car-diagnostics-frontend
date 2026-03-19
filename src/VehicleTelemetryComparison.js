@@ -483,21 +483,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
           </div>
         )}
       </div>
-
-      <div className="legend">
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#4caf50" }}></span>
-          Online
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#f44336" }}></span>
-          Offline
-        </div>
-        <div className="legend-item">
-          <ChartBarIcon className="legend-icon" style={{ width: "1rem", height: "1rem" }} />
-          Historical averages
-        </div>
-      </div>
     </div>
   );
 }
