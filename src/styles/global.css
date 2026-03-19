@@ -57,7 +57,7 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
 
-  --max-content-width: 1280px;
+  --max-content-width: 1600px;
 }
 
 * {
@@ -1627,17 +1627,16 @@ code {
     min-width: 260px;
   }
 }
-
 /* =========================
    VEHICLE TELEMETRY / MY VEHICLES FIX
    ========================= */
 
 :root {
-  --max-content-width: 1440px;
+  --max-content-width: 1600px;
 }
 
 .container {
-  width: min(100%, 1440px);
+  width: min(100%, 1600px);
 }
 
 .vehicles-table-container,
@@ -1653,7 +1652,8 @@ code {
 }
 
 .vehicles-table-container .devices-table {
-  min-width: 1180px;
+  width: 100%;
+  min-width: 1450px;
   table-layout: auto;
 }
 
@@ -1663,6 +1663,56 @@ code {
   vertical-align: middle;
 }
 
+.vehicles-table-container .devices-table th {
+  font-size: 0.92rem;
+}
+
+.vehicles-table-container .devices-table th:nth-child(1),
+.vehicles-table-container .devices-table td:nth-child(1) {
+  min-width: 110px;
+}
+
+.vehicles-table-container .devices-table th:nth-child(2),
+.vehicles-table-container .devices-table td:nth-child(2) {
+  min-width: 230px;
+}
+
+.vehicles-table-container .devices-table th:nth-child(3),
+.vehicles-table-container .devices-table td:nth-child(3) {
+  min-width: 110px;
+}
+
+.vehicles-table-container .devices-table th:nth-child(4),
+.vehicles-table-container .devices-table td:nth-child(4) {
+  min-width: 110px;
+}
+
+.vehicles-table-container .devices-table th:nth-child(5),
+.vehicles-table-container .devices-table td:nth-child(5) {
+  min-width: 125px;
+}
+
+.vehicles-table-container .devices-table th:nth-child(6),
+.vehicles-table-container .devices-table td:nth-child(6) {
+  min-width: 130px;
+}
+
+.vehicles-table-container .devices-table th:nth-child(7),
+.vehicles-table-container .devices-table td:nth-child(7) {
+  min-width: 120px;
+}
+
+.vehicles-table-container .devices-table th:nth-child(8),
+.vehicles-table-container .devices-table td:nth-child(8) {
+  min-width: 95px;
+  text-align: center;
+}
+
+.vehicles-table-container .devices-table th:nth-child(9),
+.vehicles-table-container .devices-table td:nth-child(9) {
+  min-width: 360px;
+}
+
 .vehicles-table-container .devices-table th:last-child,
 .vehicles-table-container .devices-table td:last-child {
   width: 1%;
@@ -1670,6 +1720,7 @@ code {
 
 .vehicles-table-container .action-buttons {
   display: flex !important;
+  flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center;
   gap: 0.45rem;
@@ -1679,4 +1730,10 @@ code {
 .vehicles-table-container .action-buttons .btn-action {
   flex: 0 0 auto;
   white-space: nowrap;
+}
+
+.vehicles-table-container .action-buttons .btn-action.delete {
+  min-width: 42px;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
 }
