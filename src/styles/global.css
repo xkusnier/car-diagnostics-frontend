@@ -1629,7 +1629,7 @@ code {
 }
 
 /* =========================
-   MY VEHICLES – ACTIONS UNDER VEHICLE
+   MY VEHICLES – ACTIONS POPUP
    ========================= */
 
 .vehicles-table-container .table-responsive {
@@ -1639,13 +1639,13 @@ code {
 
 .vehicles-telemetry-table {
   width: 100%;
-  min-width: 1100px;
+  min-width: 1180px;
   table-layout: auto;
 }
 
 .vehicles-telemetry-table th,
 .vehicles-telemetry-table td {
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .sortable-header {
@@ -1656,70 +1656,112 @@ code {
 }
 
 .vehicle-cell {
-  min-width: 320px;
-  width: 320px;
-}
-
-.vehicle-info-expanded {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.vehicle-main {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.vehicle-name {
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.25;
-}
-
-.vehicle-vin {
-  display: flex;
-  align-items: center;
-}
-
-.vehicle-actions-inline {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.65rem;
-  margin-top: 0.7rem;
-  white-space: nowrap;
-}
-
-.vehicle-actions-inline .btn-action {
-  min-height: 36px;
-  padding: 0.46rem 0.78rem;
-  font-size: 0.81rem;
-  box-shadow: none;
-  flex-shrink: 0;
-}
-
-.vehicle-actions-inline .btn-action:hover:not(:disabled) {
-  box-shadow: var(--shadow-sm);
-}
-
-.vehicle-actions-inline .btn-action.delete {
-  min-width: 38px;
-  padding-left: 0.62rem;
-  padding-right: 0.62rem;
+  min-width: 220px;
 }
 
 .metric-cell {
   white-space: nowrap;
-  vertical-align: middle !important;
   font-size: 0.9rem;
 }
 
 .samples-cell {
   text-align: center;
-  vertical-align: middle !important;
   white-space: nowrap;
+}
+
+.actions-cell {
+  width: 1%;
+  white-space: nowrap;
+  position: relative;
+}
+
+.actions-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-action-trigger {
+  min-height: 38px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-action-trigger:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--primary-blue);
+  transform: translateY(-1px);
+}
+
+.btn-action-trigger:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.actions-popup {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 220px;
+  background: #1b2230;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.actions-popup-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 0.72rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-align: left;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.actions-popup-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.actions-popup-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actions-popup-item.danger {
+  color: #fca5a5;
+}
+
+.actions-popup-item.danger:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.14);
+  color: #fecaca;
+}
+
+.actions-popup-empty {
+  padding: 0.7rem 0.85rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
 }
 
 .vehicles-telemetry-table th:nth-child(1),
@@ -1729,17 +1771,17 @@ code {
 
 .vehicles-telemetry-table th:nth-child(2),
 .vehicles-telemetry-table td:nth-child(2) {
-  min-width: 320px;
+  min-width: 220px;
 }
 
 .vehicles-telemetry-table th:nth-child(3),
 .vehicles-telemetry-table td:nth-child(3) {
-  min-width: 105px;
+  min-width: 110px;
 }
 
 .vehicles-telemetry-table th:nth-child(4),
 .vehicles-telemetry-table td:nth-child(4) {
-  min-width: 105px;
+  min-width: 110px;
 }
 
 .vehicles-telemetry-table th:nth-child(5),
@@ -1749,12 +1791,12 @@ code {
 
 .vehicles-telemetry-table th:nth-child(6),
 .vehicles-telemetry-table td:nth-child(6) {
-  min-width: 130px;
+  min-width: 125px;
 }
 
 .vehicles-telemetry-table th:nth-child(7),
 .vehicles-telemetry-table td:nth-child(7) {
-  min-width: 120px;
+  min-width: 115px;
 }
 
 .vehicles-telemetry-table th:nth-child(8),
@@ -1762,37 +1804,9 @@ code {
   min-width: 90px;
 }
 
-@media (max-width: 1200px) {
-  .vehicles-telemetry-table {
-    min-width: 980px;
-  }
-
-  .vehicle-cell {
-    min-width: 280px;
-    width: 280px;
-  }
-
-  .vehicles-telemetry-table th:nth-child(2),
-  .vehicles-telemetry-table td:nth-child(2) {
-    min-width: 280px;
-  }
-
-  .vehicle-actions-inline .btn-action {
-    font-size: 0.78rem;
-    padding: 0.4rem 0.65rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .vehicle-actions-inline {
-    gap: 0.35rem;
-  }
-
-  .vehicle-actions-inline .btn-action {
-    min-height: 32px;
-    font-size: 0.76rem;
-    padding: 0.36rem 0.58rem;
-  }
+.vehicles-telemetry-table th:nth-child(9),
+.vehicles-telemetry-table td:nth-child(9) {
+  min-width: 150px;
 }
 
 
