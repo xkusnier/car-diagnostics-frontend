@@ -402,12 +402,14 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
           <div className="table-responsive">
             <table
               className={`devices-table vehicles-telemetry-table ${
-                isAdmin ? "vehicles-telemetry-table-admin" : "vehicles-telemetry-table-user"
+                isAdmin
+                  ? "vehicles-telemetry-table-admin"
+                  : "vehicles-telemetry-table-user"
               }`}
             >
               <thead>
                 <tr>
-                  <th onClick={() => handleSort("online")}>
+                  <th className="status-column" onClick={() => handleSort("online")}>
                     <span className="sortable-header">
                       Status {getSortIcon("online")}
                     </span>
@@ -451,20 +453,20 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                   <th>Range (RPM)</th>
                   <th>Odometer</th>
 
-                  <th onClick={() => handleSort("samples")}>
+                  <th className="samples-column" onClick={() => handleSort("samples")}>
                     <span className="sortable-header">
                       Samples {getSortIcon("samples")}
                     </span>
                   </th>
 
-                  <th>Actions</th>
+                  <th className="actions-column">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
                 {sortedVehicles.map((vehicle) => (
                   <tr key={vehicle.vin} className="device-row">
-                    <td>
+                    <td className="status-cell">
                       <span
                         className={`status-badge ${getStatusColor(vehicle.online)}`}
                       >
@@ -495,7 +497,8 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                     </td>
 
                     <td className="metric-cell">
-                      {vehicle.statistics?.avg_speed ? (
+                      {vehicle.statistics?.avg_speed !== null &&
+                      vehicle.statistics?.avg_speed !== undefined ? (
                         <span>{formatNumber(vehicle.statistics.avg_speed)} km/h</span>
                       ) : (
                         "—"
@@ -503,7 +506,8 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                     </td>
 
                     <td className="metric-cell">
-                      {vehicle.statistics?.avg_rpm ? (
+                      {vehicle.statistics?.avg_rpm !== null &&
+                      vehicle.statistics?.avg_rpm !== undefined ? (
                         <span>{formatNumber(vehicle.statistics.avg_rpm)} rpm</span>
                       ) : (
                         "—"
@@ -511,7 +515,8 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                     </td>
 
                     <td className="metric-cell">
-                      {vehicle.statistics?.avg_consumption ? (
+                      {vehicle.statistics?.avg_consumption !== null &&
+                      vehicle.statistics?.avg_consumption !== undefined ? (
                         <span>
                           {formatNumber(vehicle.statistics.avg_consumption)} L/100km
                         </span>
@@ -521,8 +526,10 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                     </td>
 
                     <td className="metric-cell">
-                      {vehicle.statistics?.min_rpm &&
-                      vehicle.statistics?.max_rpm ? (
+                      {vehicle.statistics?.min_rpm !== null &&
+                      vehicle.statistics?.min_rpm !== undefined &&
+                      vehicle.statistics?.max_rpm !== null &&
+                      vehicle.statistics?.max_rpm !== undefined ? (
                         <span>
                           {vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm}
                         </span>
@@ -532,7 +539,8 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                     </td>
 
                     <td className="metric-cell">
-                      {vehicle.statistics?.total_odometer ? (
+                      {vehicle.statistics?.total_odometer !== null &&
+                      vehicle.statistics?.total_odometer !== undefined ? (
                         <span>
                           {(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km
                         </span>
