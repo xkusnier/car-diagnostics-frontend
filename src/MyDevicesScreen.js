@@ -9,6 +9,7 @@ import {
   ChartBarIcon,
   TrashIcon,
   InformationCircleIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
@@ -21,6 +22,12 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [feedbackModal, setFeedbackModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    tone: "info",
+  });
 
   useEffect(() => {
     fetchDevices();
@@ -36,12 +43,50 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     setFilteredDevices(devices);
   }, [devices]);
 
+  const openFeedbackModal = (title, message, tone = "info") => {
+    setFeedbackModal({
+      open: true,
+      title,
+      message,
+      tone,
+    });
+  };
+
+  const closeFeedbackModal = () => {
+    setFeedbackModal({
+      open: false,
+      title: "",
+      message: "",
+      tone: "info",
+    });
+  };
+
+  const normalizeApiError = (err, fallbackMessage) => {
+    const raw =
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      err?.message ||
+      "";
+
+    const normalized = String(raw).trim().toLowerCase();
+
+    if (
+      normalized.includes("content-type must be application/json") ||
+      normalized.includes("please set content-type header") ||
+      normalized.includes("application/json")
+    ) {
+      return fallbackMessage;
+    }
+
+    return raw || fallbackMessage;
+  };
+
   const fetchDevices = async () => {
     try {
       const res = await api.get("/api/my-devices");
       setDevices(res.data.devices || []);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load devices");
+      setError(normalizeApiError(err, "Failed to load devices"));
     } finally {
       setLoading(false);
     }
@@ -49,7 +94,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
 
   const handleAddDevice = async () => {
     if (!newDeviceId) {
-      alert("Please enter a Device ID");
+      openFeedbackModal("Missing Device ID", "Please enter a Device ID.", "danger");
       return;
     }
 
@@ -61,16 +106,22 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     try {
       await api.post("/api/add-device", payload);
 
-      alert(
-        "Device added successfully. VIN information will appear automatically after the device is connected to a vehicle."
-      );
       setNewDeviceId("");
       setAssignUserId("");
       setShowAddForm(false);
-
       await fetchDevices();
+
+      openFeedbackModal(
+        "Device Added",
+        "The device was added successfully. VIN information will appear automatically after the device is connected to a vehicle.",
+        "success"
+      );
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to add device");
+      openFeedbackModal(
+        "Add Device Failed",
+        normalizeApiError(err, "Failed to add device."),
+        "danger"
+      );
     }
   };
 
@@ -78,10 +129,20 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     setDeletingId(deviceId);
     try {
       await api.delete(`/api/device/${deviceId}`);
-      alert("Device deleted successfully!");
       await fetchDevices();
+      setShowDeleteConfirm(null);
+
+      openFeedbackModal(
+        "Device Deleted",
+        `Device #${deviceId} was deleted successfully.`,
+        "success"
+      );
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to delete device");
+      openFeedbackModal(
+        "Delete Device Failed",
+        normalizeApiError(err, "Failed to delete device."),
+        "danger"
+      );
     } finally {
       setDeletingId(null);
       setShowDeleteConfirm(null);
@@ -132,6 +193,34 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     </div>
   );
 
+  const FeedbackModal = ({ title, message, tone, onClose }) => (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>{title}</h3>
+        <div
+          className={`status-message ${
+            tone === "success" ? "success" : tone === "danger" ? "warning" : "info"
+          }`}
+          style={{ marginTop: "1rem", marginBottom: "1rem" }}
+        >
+          {tone === "success" ? (
+            <CheckCircleIcon style={{ width: "1.1rem", height: "1.1rem", flexShrink: 0 }} />
+          ) : (
+            <ExclamationTriangleIcon
+              style={{ width: "1.1rem", height: "1.1rem", flexShrink: 0 }}
+            />
+          )}
+          <div>{message}</div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-primary" onClick={onClose}>
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="devices-container">
@@ -148,24 +237,24 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
       <div className="devices-header">
         <div className="header-content">
           <h1>{role === "admin" ? "Device Management" : "My Devices"}</h1>
-            <div
-              className="status-message info"
-              style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
-            >
-              <InformationCircleIcon
-                style={{
-                  width: "1.1rem",
-                  height: "1.1rem",
-                  marginTop: "0.1rem",
-                  flexShrink: 0,
-                }}
-              />
-              <div>
-                  Add and manage your Raspberry Pi diagnostic devices. Vehicle VIN
-                  details are assigned automatically after the device is physically
-                  connected to a car.
-              </div>
+          <div
+            className="status-message info"
+            style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+          >
+            <InformationCircleIcon
+              style={{
+                width: "1.1rem",
+                height: "1.1rem",
+                marginTop: "0.1rem",
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              Add and manage your Raspberry Pi diagnostic devices. Vehicle VIN
+              details are assigned automatically after the device is physically
+              connected to a car.
             </div>
+          </div>
         </div>
       </div>
 
@@ -419,6 +508,15 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
           deviceId={showDeleteConfirm}
           onConfirm={handleDeleteDevice}
           onCancel={() => setShowDeleteConfirm(null)}
+        />
+      )}
+
+      {feedbackModal.open && (
+        <FeedbackModal
+          title={feedbackModal.title}
+          message={feedbackModal.message}
+          tone={feedbackModal.tone}
+          onClose={closeFeedbackModal}
         />
       )}
     </div>
