@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 import {
@@ -31,8 +31,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
   });
   const [deletingVin, setDeletingVin] = useState(null);
   const [openActionMenuVin, setOpenActionMenuVin] = useState(null);
+  const [actionPopupStyle, setActionPopupStyle] = useState({});
 
   const actionMenuRef = useRef(null);
+  const triggerRefs = useRef({});
 
   useEffect(() => {
     fetchTelemetryComparison();
@@ -42,7 +44,15 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+      const popupEl = actionMenuRef.current;
+      const triggerEl = openActionMenuVin
+        ? triggerRefs.current[openActionMenuVin]
+        : null;
+
+      const clickedInsidePopup = popupEl && popupEl.contains(event.target);
+      const clickedTrigger = triggerEl && triggerEl.contains(event.target);
+
+      if (!clickedInsidePopup && !clickedTrigger) {
         setOpenActionMenuVin(null);
       }
     };
@@ -51,7 +61,22 @@ function VehicleTelemetryComparison({ onNavigate }) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [openActionMenuVin]);
+
+  useLayoutEffect(() => {
+    if (!openActionMenuVin) return;
+
+    const handleReposition = () => updatePopupPosition(openActionMenuVin);
+
+    handleReposition();
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+
+    return () => {
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [openActionMenuVin]);
 
   const fetchTelemetryComparison = async () => {
     try {
@@ -76,8 +101,8 @@ function VehicleTelemetryComparison({ onNavigate }) {
       }
 
       setError(null);
-    } catch (error) {
-      console.error("Error fetching telemetry comparison:", error);
+    } catch (fetchError) {
+      console.error("Error fetching telemetry comparison:", fetchError);
       setError("Failed to load vehicle telemetry. Please try again.");
     } finally {
       setLoading(false);
@@ -85,7 +110,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
   };
 
   const handleDeleteVehicle = async (vin) => {
-    if (!window.confirm(`Are you sure you want to delete vehicle ${vin}?`)) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete vehicle ${vin}?`
+    );
+    if (!confirmed) return;
 
     setDeletingVin(vin);
     try {
@@ -94,10 +122,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
       await api.delete(`/api/user-vehicle/${vin}`);
       await fetchTelemetryComparison();
       setOpenActionMenuVin(null);
-      alert("Vehicle deleted successfully");
     } catch (err) {
       console.error("Error deleting vehicle:", err);
-      alert(err.response?.data?.error || "Failed to delete vehicle");
+      setError(err.response?.data?.error || "Failed to delete vehicle");
     } finally {
       setDeletingVin(null);
     }
@@ -177,8 +204,48 @@ function VehicleTelemetryComparison({ onNavigate }) {
     return status ? "success" : "danger";
   };
 
+  const updatePopupPosition = (vin) => {
+    const button = triggerRefs.current[vin];
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const popupWidth = 220;
+    const estimatedPopupHeight = 260;
+    const gap = 8;
+
+    let left = rect.right - popupWidth;
+    let top = rect.bottom + gap;
+
+    if (left < 12) left = 12;
+    if (left + popupWidth > window.innerWidth - 12) {
+      left = window.innerWidth - popupWidth - 12;
+    }
+
+    if (top + estimatedPopupHeight > window.innerHeight - 12) {
+      top = rect.top - estimatedPopupHeight - gap;
+    }
+
+    if (top < 12) {
+      top = 12;
+    }
+
+    setActionPopupStyle({
+      position: "fixed",
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${popupWidth}px`,
+      zIndex: 99999,
+    });
+  };
+
   const toggleActionMenu = (vin) => {
-    setOpenActionMenuVin((prev) => (prev === vin ? null : vin));
+    setOpenActionMenuVin((prev) => {
+      const next = prev === vin ? null : vin;
+      if (next) {
+        requestAnimationFrame(() => updatePopupPosition(vin));
+      }
+      return next;
+    });
   };
 
   if (loading) {
@@ -205,7 +272,11 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
           <div
             className="status-message info"
-            style={{ marginTop: "1rem", marginBottom: "1.5rem", alignItems: "flex-start" }}
+            style={{
+              marginTop: "1rem",
+              marginBottom: "1.5rem",
+              alignItems: "flex-start",
+            }}
           >
             <InformationCircleIcon
               style={{
@@ -216,7 +287,8 @@ function VehicleTelemetryComparison({ onNavigate }) {
               }}
             />
             <div>
-              A vehicle is added automatically after your diagnostic device is physically connected to it.
+              A vehicle is added automatically after your diagnostic device is
+              physically connected to it.
             </div>
           </div>
         </div>
@@ -232,7 +304,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
           <span className="stat-label">Online</span>
         </div>
         <div className="stat-item">
-          <span className="stat-number">{summary.totalSamples.toLocaleString()}</span>
+          <span className="stat-number">
+            {summary.totalSamples.toLocaleString()}
+          </span>
           <span className="stat-label">Total Samples</span>
         </div>
       </div>
@@ -264,7 +338,8 @@ function VehicleTelemetryComparison({ onNavigate }) {
             </div>
             <h3>No Vehicles Found</h3>
             <p>
-              A vehicle appears automatically after your Raspberry Pi diagnostic device is connected to a car.
+              A vehicle appears automatically after your Raspberry Pi diagnostic
+              device is connected to a car.
             </p>
           </div>
         ) : (
@@ -354,7 +429,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
                     <td className="metric-cell">
                       {vehicle.statistics?.avg_consumption ? (
-                        <span>{formatNumber(vehicle.statistics.avg_consumption)} L/100km</span>
+                        <span>
+                          {formatNumber(vehicle.statistics.avg_consumption)} L/100km
+                        </span>
                       ) : (
                         "—"
                       )}
@@ -372,7 +449,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
                     <td className="metric-cell">
                       {vehicle.statistics?.total_odometer ? (
-                        <span>{(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km</span>
+                        <span>
+                          {(vehicle.statistics.total_odometer / 1000).toFixed(1)}k km
+                        </span>
                       ) : (
                         "—"
                       )}
@@ -387,11 +466,11 @@ function VehicleTelemetryComparison({ onNavigate }) {
                     </td>
 
                     <td className="actions-cell">
-                      <div
-                        className="actions-menu-wrapper"
-                        ref={openActionMenuVin === vehicle.vin ? actionMenuRef : null}
-                      >
+                      <div className="actions-menu-wrapper">
                         <button
+                          ref={(el) => {
+                            triggerRefs.current[vehicle.vin] = el;
+                          }}
                           className="btn-action-trigger"
                           type="button"
                           onClick={() => toggleActionMenu(vehicle.vin)}
@@ -402,7 +481,11 @@ function VehicleTelemetryComparison({ onNavigate }) {
                         </button>
 
                         {openActionMenuVin === vehicle.vin && (
-                          <div className="actions-popup">
+                          <div
+                            className="actions-popup actions-popup-floating"
+                            style={actionPopupStyle}
+                            ref={actionMenuRef}
+                          >
                             {vehicle.device_id ? (
                               <>
                                 <button
