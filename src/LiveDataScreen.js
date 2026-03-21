@@ -14,6 +14,7 @@ import {
   FireIcon,
   ArrowTrendingDownIcon,
   BoltIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
@@ -111,8 +112,6 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
     const onTelemetry = (payload) => {
       if (!payload || Number(payload.device_id) !== Number(deviceId)) return;
-
-      console.log("Telemetry payload:", payload);
 
       setLive((prev) => {
         const newData = { ...(prev.data || {}) };
@@ -215,11 +214,28 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
 
         <div className="device-status">
           <span
-            className={`status-indicator ${
-              wsStatus.connected ? "online" : "offline"
-            }`}
+            className={`status-indicator ${wsStatus.connected ? "online" : "offline"}`}
           ></span>
           {wsStatus.connected ? "Live Stream Active" : "Disconnected"}
+        </div>
+      </div>
+
+      <div
+        className="status-message info"
+        style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+      >
+        <InformationCircleIcon
+          style={{
+            width: "1.1rem",
+            height: "1.1rem",
+            marginTop: "0.1rem",
+            flexShrink: 0,
+          }}
+        />
+        <div>
+          Live Data shows the latest telemetry received from the vehicle. If the
+          device is offline, this screen may show the last available values
+          only.
         </div>
       </div>
 
@@ -322,8 +338,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
               <div
                 className="live-data-badge"
                 style={{
-                  background:
-                    data.battery.health === "good" ? "#4caf50" : "#ff9800",
+                  background: data.battery.health === "good" ? "#4caf50" : "#ff9800",
                   color: "white",
                   padding: "0.25rem 0.75rem",
                   borderRadius: "20px",
@@ -377,9 +392,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
             <div className="live-data-value">
               {data.engine?.load != null ? (
                 <>
-                  <span className="value">
-                    {formatNumber(data.engine.load)}
-                  </span>
+                  <span className="value">{formatNumber(data.engine.load)}</span>
                   <span className="unit">%</span>
                 </>
               ) : (
@@ -459,9 +472,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
             <div className="live-data-value">
               {data.fuel?.consumption_lh != null ? (
                 <>
-                  <span className="value">
-                    {formatNumber(data.fuel.consumption_lh)}
-                  </span>
+                  <span className="value">{formatNumber(data.fuel.consumption_lh)}</span>
                   <span className="unit">L/h</span>
                 </>
               ) : (
@@ -534,10 +545,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
       )}
 
       {live.updatedAt && (
-        <div
-          className="last-updated"
-          style={{ textAlign: "center", marginTop: "2rem" }}
-        >
+        <div className="last-updated" style={{ textAlign: "center", marginTop: "2rem" }}>
           <small>Last updated: {new Date(live.updatedAt).toLocaleString()}</small>
         </div>
       )}
