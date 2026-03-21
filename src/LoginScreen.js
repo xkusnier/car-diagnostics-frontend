@@ -5,10 +5,11 @@ import {
   ExclamationTriangleIcon,
   EyeIcon,
   EyeSlashIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function LoginScreen({ onLogin, onNavigateToRegister }) {
-  const [identifier, setIdentifier] = useState(""); // email alebo username
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -66,9 +67,29 @@ function LoginScreen({ onLogin, onNavigateToRegister }) {
           <p className="auth-subtitle">Sign in to your account to continue</p>
         </div>
 
+        <div
+          className="status-message info"
+          style={{ marginBottom: "1rem", alignItems: "flex-start" }}
+        >
+          <InformationCircleIcon
+            style={{
+              width: "1.1rem",
+              height: "1.1rem",
+              marginTop: "0.1rem",
+              flexShrink: 0,
+            }}
+          />
+          <div>
+            Car-Diagnostics works with a Raspberry Pi-based diagnostic device
+            installed in your vehicle.
+          </div>
+        </div>
+
         {error && (
           <div className="auth-error">
-            <ExclamationTriangleIcon style={{ width: "1.25rem", height: "1.25rem" }} />
+            <ExclamationTriangleIcon
+              style={{ width: "1.25rem", height: "1.25rem" }}
+            />
             <span>{error}</span>
           </div>
         )}
