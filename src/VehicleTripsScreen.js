@@ -296,16 +296,6 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           </div>
         )}
       </div>
-
-      <div className="legend" style={{ marginTop: "2rem" }}>
-        <div className="legend-item">
-          <MapIcon
-            className="legend-icon"
-            style={{ width: "1rem", height: "1rem" }}
-          />{" "}
-          Trip statistics are generated automatically from telemetry and engine state changes.
-        </div>
-      </div>
     </div>
   );
 }
