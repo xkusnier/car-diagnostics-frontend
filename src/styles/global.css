@@ -1650,8 +1650,8 @@ code {
 
 .vehicles-telemetry-table {
   width: 100%;
-  min-width: 1400px;
-  table-layout: auto;
+  min-width: 1180px;
+  table-layout: fixed;
 }
 
 .vehicles-telemetry-table th,
@@ -1659,20 +1659,26 @@ code {
   vertical-align: middle;
 }
 
+.vehicles-telemetry-table th,
+.vehicles-telemetry-table td {
+  padding-left: 0.65rem !important;
+  padding-right: 0.65rem !important;
+}
+
 .sortable-header {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.22rem;
   white-space: nowrap;
 }
 
 .vehicle-cell {
-  min-width: 220px;
+  min-width: 180px;
 }
 
 .metric-cell {
   white-space: nowrap;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
 }
 
 .samples-cell {
@@ -1684,25 +1690,29 @@ code {
   width: 1%;
   white-space: nowrap;
   position: relative;
+  overflow: visible !important;
 }
 
 .actions-menu-wrapper {
   position: relative;
   display: inline-block;
+  overflow: visible !important;
 }
 
 .btn-action-trigger {
-  min-height: 38px;
-  padding: 0.55rem 0.5rem;
+  min-height: 32px;
+  padding: 0.38rem 0.42rem;
   border: 1px solid var(--border-medium);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--bg-secondary);
   color: var(--text-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
+  gap: 0.15rem;
   font-weight: 500;
+  font-size: 0.76rem;
+  line-height: 1;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -1720,19 +1730,20 @@ code {
 }
 
 .actions-popup {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
   min-width: 220px;
   background: #1b2230;
   border: 1px solid var(--border-light);
   border-radius: 14px;
   box-shadow: var(--shadow-lg);
   padding: 0.5rem;
-  z-index: 9999;
+  z-index: 99999;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.actions-popup-floating {
+  position: fixed;
 }
 
 .actions-popup-item {
@@ -1775,51 +1786,130 @@ code {
   font-size: 0.88rem;
 }
 
+/* kompaktnejšie šírky stĺpcov */
 .vehicles-telemetry-table th:nth-child(1),
 .vehicles-telemetry-table td:nth-child(1) {
-  min-width: 110px;
+  min-width: 86px;
+  width: 86px;
 }
 
 .vehicles-telemetry-table th:nth-child(2),
 .vehicles-telemetry-table td:nth-child(2) {
-  min-width: 220px;
+  min-width: 54px;
+  width: 54px;
 }
 
 .vehicles-telemetry-table th:nth-child(3),
 .vehicles-telemetry-table td:nth-child(3) {
-  min-width: 110px;
+  min-width: 190px;
+  width: 190px;
 }
 
 .vehicles-telemetry-table th:nth-child(4),
 .vehicles-telemetry-table td:nth-child(4) {
-  min-width: 110px;
+  min-width: 88px;
+  width: 88px;
 }
 
 .vehicles-telemetry-table th:nth-child(5),
 .vehicles-telemetry-table td:nth-child(5) {
-  min-width: 125px;
+  min-width: 88px;
+  width: 88px;
 }
 
 .vehicles-telemetry-table th:nth-child(6),
 .vehicles-telemetry-table td:nth-child(6) {
-  min-width: 125px;
+  min-width: 102px;
+  width: 102px;
 }
 
 .vehicles-telemetry-table th:nth-child(7),
 .vehicles-telemetry-table td:nth-child(7) {
-  min-width: 115px;
+  min-width: 102px;
+  width: 102px;
 }
 
 .vehicles-telemetry-table th:nth-child(8),
 .vehicles-telemetry-table td:nth-child(8) {
-  min-width: 90px;
+  min-width: 92px;
+  width: 92px;
 }
 
 .vehicles-telemetry-table th:nth-child(9),
 .vehicles-telemetry-table td:nth-child(9) {
-  min-width: 150px;
+  min-width: 58px;
+  width: 58px;
 }
 
+.vehicles-telemetry-table th:nth-child(10),
+.vehicles-telemetry-table td:nth-child(10) {
+  min-width: 82px;
+  width: 82px;
+}
+
+/* úzky admin stĺpec User ID */
+.vehicles-telemetry-table .user-id-column,
+.vehicles-telemetry-table .user-id-cell {
+  width: 54px !important;
+  min-width: 54px !important;
+  max-width: 54px !important;
+  white-space: nowrap;
+  text-align: center;
+  padding-left: 0.35rem !important;
+  padding-right: 0.35rem !important;
+}
+
+/* badge nech zaberá minimum */
+.vehicles-telemetry-table .user-id-cell .user-id-badge {
+  padding: 0.16rem 0.34rem;
+  font-size: 0.7rem;
+  min-width: 0;
+  border-radius: 999px;
+}
+
+/* fallback text */
+.vehicles-telemetry-table .user-id-cell .unassigned {
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+/* status stĺpec menší */
+.vehicles-telemetry-table td.status-cell,
+.vehicles-telemetry-table th.status-column {
+  width: 86px !important;
+  min-width: 86px !important;
+  max-width: 86px !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+}
+
+/* status badge kompaktnejší */
+.vehicles-telemetry-table .status-badge {
+  gap: 0.22rem;
+  padding: 0.28rem 0.48rem;
+  font-size: 0.68rem;
+}
+
+/* samples stĺpec menší */
+.vehicles-telemetry-table td.samples-cell,
+.vehicles-telemetry-table th.samples-column {
+  width: 58px !important;
+  min-width: 58px !important;
+  max-width: 58px !important;
+  text-align: center;
+  padding-left: 0.3rem !important;
+  padding-right: 0.3rem !important;
+}
+
+/* actions stĺpec menší */
+.vehicles-telemetry-table td.actions-cell,
+.vehicles-telemetry-table th.actions-column {
+  width: 82px !important;
+  min-width: 82px !important;
+  max-width: 82px !important;
+  padding-left: 0.3rem !important;
+  padding-right: 0.3rem !important;
+}
 
 .vehicles-table-container,
 .devices-table-container,
@@ -1841,59 +1931,6 @@ code {
 .vehicles-table-container .actions-cell,
 .vehicles-table-container .actions-menu-wrapper {
   overflow: visible !important;
-}
-
-.actions-cell {
-  width: 1%;
-  white-space: nowrap;
-  position: relative;
-  overflow: visible !important;
-}
-
-.actions-menu-wrapper {
-  position: relative;
-  display: inline-block;
-  overflow: visible !important;
-}
-
-.actions-popup {
-  min-width: 220px;
-  background: #1b2230;
-  border: 1px solid var(--border-light);
-  border-radius: 14px;
-  box-shadow: var(--shadow-lg);
-  padding: 0.5rem;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.actions-popup-floating {
-  position: fixed;
-}
-
-/* úzky admin stĺpec User ID */
-.vehicles-telemetry-table .user-id-column,
-.vehicles-telemetry-table .user-id-cell {
-  width: 72px;
-  min-width: 58px;
-  max-width: 64px;
-  white-space: nowrap;
-  text-align: center;
-}
-
-/* badge nech nezaberá zbytočne miesto */
-.vehicles-telemetry-table .user-id-cell .user-id-badge {
-  padding: 0.22rem 0.45rem;
-  font-size: 0.75rem;
-  min-width: 0;
-}
-
-/* text Unassigned tiež nech je malý */
-.vehicles-telemetry-table .user-id-cell .unassigned {
-  font-size: 0.75rem;
-  white-space: nowrap;
 }
 
 
