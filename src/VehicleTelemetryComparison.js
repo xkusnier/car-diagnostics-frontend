@@ -194,10 +194,23 @@ function VehicleTelemetryComparison({ onNavigate }) {
       <div className="devices-header">
         <div className="header-content">
           <h1>My Vehicles</h1>
-          <p className="subtitle">Vehicles linked through your diagnostic devices</p>
-          <p className="table-info" style={{ marginTop: "0.5rem" }}>
-            A vehicle is added automatically after your diagnostic device is physically connected to it.
-          </p>
+            <div
+              className="status-message info"
+              style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+            >
+              <InformationCircleIcon
+                style={{
+                  width: "1.1rem",
+                  height: "1.1rem",
+                  marginTop: "0.1rem",
+                  flexShrink: 0,
+                }}
+              />
+              <div>
+      		Vehicles linked through your diagnostic devices <br />
+                  A vehicle is added automatically after your diagnostic device is physically 	connected to it.
+              </div>
+            </div>
         </div>
       </div>
 
