@@ -67,24 +67,24 @@ function MainScreen({ onNavigate, user }) {
 
   const mainSections = [
     {
-      icon: TruckIcon,
-      title: "My Vehicles, Live Data & Status",
+      icon: CpuChipIcon,
+      title: "My Devices, Diagnostics & Live Access",
       description:
-        "View your vehicles, assigned devices, current status, and available vehicle actions.",
-      action: () => onNavigate("telemetry-comparison"),
+        "Manage your diagnostic devices, linked VINs, connection status, diagnostics access, and live vehicle data entry points.",
+      action: () => onNavigate("my-devices"),
     },
     {
-      icon: CpuChipIcon,
-      title: "My Devices, Diagnostics & Fault Codes",
+      icon: TruckIcon,
+      title: "My Vehicles, Statistics, Trips & Events",
       description:
-        "Manage devices and open diagnostics, linked vehicle details, and active fault codes.",
-      action: () => onNavigate("my-devices"),
+        "Browse all linked vehicles, compare telemetry statistics, sort by speed/RPM/consumption, view trips, events, odometer, and open available vehicle actions.",
+      action: () => onNavigate("telemetry-comparison"),
     },
     {
       icon: DocumentTextIcon,
       title: "DTC History & Fault Code Records",
       description:
-        "Browse stored fault code history and previously detected issues by VIN.",
+        "Browse saved DTC history, previously detected fault codes, descriptions, and historical issue records by VIN.",
       action: () => onNavigate("dtc-history"),
     },
   ];
@@ -115,9 +115,10 @@ function MainScreen({ onNavigate, user }) {
             <strong style={{ color: "var(--text-primary)" }}>{displayName}</strong>
           </p>
           <p className="subtitle" style={{ marginTop: "0.5rem" }}>
-            Start by adding your diagnostic device in <strong>My Devices</strong>.
-            Your vehicle will appear automatically in <strong>My Vehicles</strong>{" "}
-            after the device is physically connected to the car.
+            Start in <strong>My Devices</strong> by adding your diagnostic device.
+            After the device is physically connected to a vehicle, it will appear
+            automatically in <strong>My Vehicles</strong>, where you can view
+            telemetry statistics, trips, events, and related vehicle actions.
           </p>
         </div>
       </div>
@@ -151,8 +152,9 @@ function MainScreen({ onNavigate, user }) {
           }}
         />
         <div>
-          Vehicles are created automatically from linked device data. Diagnostics
-          and Live Data require an active device connection.
+          Vehicles are created automatically from linked device data. Diagnostics,
+          live data, trips, events, and telemetry comparison features depend on an
+          active device-to-vehicle relationship.
         </div>
       </div>
 
