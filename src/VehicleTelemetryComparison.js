@@ -14,6 +14,7 @@ import {
   ShieldExclamationIcon,
   EllipsisVerticalIcon,
   InformationCircleIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function VehicleTelemetryComparison({ onNavigate }) {
@@ -31,6 +32,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
   });
   const [deletingVin, setDeletingVin] = useState(null);
   const [openActionMenuVin, setOpenActionMenuVin] = useState(null);
+  const [showDeleteConfirmVin, setShowDeleteConfirmVin] = useState(null);
+  const [statusMessage, setStatusMessage] = useState("");
+
   const [actionPopupStyle, setActionPopupStyle] = useState({});
 
   const actionMenuRef = useRef(null);
@@ -110,21 +114,26 @@ function VehicleTelemetryComparison({ onNavigate }) {
   };
 
   const handleDeleteVehicle = async (vin) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete vehicle ${vin}?`
-    );
-    if (!confirmed) return;
-
     setDeletingVin(vin);
+
     try {
       const token = localStorage.getItem("token");
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
       await api.delete(`/api/user-vehicle/${vin}`);
       await fetchTelemetryComparison();
+
       setOpenActionMenuVin(null);
+      setShowDeleteConfirmVin(null);
+      setStatusMessage("Vehicle deleted successfully.");
+
+      setTimeout(() => {
+        setStatusMessage("");
+      }, 3000);
     } catch (err) {
       console.error("Error deleting vehicle:", err);
       setError(err.response?.data?.error || "Failed to delete vehicle");
+      setShowDeleteConfirmVin(null);
     } finally {
       setDeletingVin(null);
     }
@@ -248,6 +257,39 @@ function VehicleTelemetryComparison({ onNavigate }) {
     });
   };
 
+  const DeleteConfirmDialog = ({ vin, onConfirm, onCancel }) => (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>Delete Vehicle</h3>
+        <p>
+          Are you sure you want to delete vehicle <strong>{vin}</strong>?
+        </p>
+        <p className="warning-text">
+          This will remove the vehicle from your list. Historical data already
+          linked in the system may remain available where applicable.
+        </p>
+        <div className="modal-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={onCancel}
+            disabled={deletingVin === vin}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={() => onConfirm(vin)}
+            disabled={deletingVin === vin}
+            type="button"
+          >
+            {deletingVin === vin ? "Deleting..." : "Delete Vehicle"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="devices-container">
@@ -310,6 +352,13 @@ function VehicleTelemetryComparison({ onNavigate }) {
           <span className="stat-label">Total Samples</span>
         </div>
       </div>
+
+      {statusMessage && (
+        <div className="status-message success">
+          <CheckCircleIcon style={{ width: "1.1rem", height: "1.1rem", flexShrink: 0 }} />
+          <div>{statusMessage}</div>
+        </div>
+      )}
 
       {error && (
         <div className="error-message card">
@@ -575,15 +624,14 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
                             <button
                               className="actions-popup-item danger"
-                              onClick={() => handleDeleteVehicle(vehicle.vin)}
+                              onClick={() => {
+                                setOpenActionMenuVin(null);
+                                setShowDeleteConfirmVin(vehicle.vin);
+                              }}
                               disabled={deletingVin === vehicle.vin}
                               type="button"
                             >
-                              {deletingVin === vehicle.vin ? (
-                                <div className="spinner-small"></div>
-                              ) : (
-                                <TrashIcon style={{ width: "1rem", height: "1rem" }} />
-                              )}
+                              <TrashIcon style={{ width: "1rem", height: "1rem" }} />
                               Delete
                             </button>
                           </div>
@@ -597,6 +645,14 @@ function VehicleTelemetryComparison({ onNavigate }) {
           </div>
         )}
       </div>
+
+      {showDeleteConfirmVin && (
+        <DeleteConfirmDialog
+          vin={showDeleteConfirmVin}
+          onConfirm={handleDeleteVehicle}
+          onCancel={() => setShowDeleteConfirmVin(null)}
+        />
+      )}
     </div>
   );
 }
