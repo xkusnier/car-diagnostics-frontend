@@ -98,10 +98,10 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
       const response = await api.get("/api/vehicles/telemetry-comparison");
 
       if (response.data.status === "success") {
-        setVehicles(response.data.vehicles);
+        setVehicles(response.data.vehicles || []);
         setSummary({
-          totalVehicles: response.data.summary.total_vehicles,
-          onlineVehicles: response.data.summary.online_vehicles,
+          totalVehicles: response.data.summary.total_vehicles || 0,
+          onlineVehicles: response.data.summary.online_vehicles || 0,
           totalSamples: response.data.summary.total_samples || 0,
         });
       }
@@ -168,8 +168,8 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
           bVal = b.brand || "ZZZ";
           break;
         case "user_id":
-          aVal = a.user_id || 0;
-          bVal = b.user_id || 0;
+          aVal = a.user_id ?? Number.MAX_SAFE_INTEGER;
+          bVal = b.user_id ?? Number.MAX_SAFE_INTEGER;
           break;
         case "avg_speed":
           aVal = a.statistics?.avg_speed || -1;
@@ -313,9 +313,11 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     <div className="devices-container">
       <div className="devices-header">
         <div className="header-content">
-          <h1>{isAdmin ? "All Vehicles" : "My Vehicles"}</h1>
+          <h1>{isAdmin ? "Vehicle Management" : "My Vehicles"}</h1>
           <p className="subtitle" style={{ marginTop: "0.5rem" }}>
-            Vehicles linked through diagnostic devices
+            {isAdmin
+              ? "All vehicles linked through diagnostic devices"
+              : "Vehicles linked through your diagnostic devices"}
           </p>
 
           <div
@@ -408,12 +410,6 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                     </span>
                   </th>
 
-                  <th onClick={() => handleSort("vin")}>
-                    <span className="sortable-header">
-                      Vehicle {getSortIcon("vin")}
-                    </span>
-                  </th>
-
                   {isAdmin && (
                     <th onClick={() => handleSort("user_id")}>
                       <span className="sortable-header">
@@ -421,6 +417,12 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                       </span>
                     </th>
                   )}
+
+                  <th onClick={() => handleSort("vin")}>
+                    <span className="sortable-header">
+                      Vehicle {getSortIcon("vin")}
+                    </span>
+                  </th>
 
                   <th onClick={() => handleSort("avg_speed")}>
                     <span className="sortable-header">
@@ -463,6 +465,16 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                       </span>
                     </td>
 
+                    {isAdmin && (
+                      <td>
+                        {vehicle.user_id ? (
+                          <span className="user-id-badge">{vehicle.user_id}</span>
+                        ) : (
+                          <span className="unassigned">Unassigned</span>
+                        )}
+                      </td>
+                    )}
+
                     <td className="vehicle-cell">
                       <div className="vehicle-info">
                         <div className="vehicle-name">
@@ -473,16 +485,6 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                         </div>
                       </div>
                     </td>
-
-                    {isAdmin && (
-                      <td className="metric-cell">
-                        {vehicle.user_id ? (
-                          <span className="user-id-badge">{vehicle.user_id}</span>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                    )}
 
                     <td className="metric-cell">
                       {vehicle.statistics?.avg_speed ? (
