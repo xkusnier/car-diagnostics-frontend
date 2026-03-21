@@ -34,7 +34,6 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   const [openActionMenuVin, setOpenActionMenuVin] = useState(null);
   const [showDeleteConfirmVin, setShowDeleteConfirmVin] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
-
   const [actionPopupStyle, setActionPopupStyle] = useState({});
 
   const actionMenuRef = useRef(null);
@@ -100,9 +99,9 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
       if (response.data.status === "success") {
         setVehicles(response.data.vehicles || []);
         setSummary({
-          totalVehicles: response.data.summary.total_vehicles || 0,
-          onlineVehicles: response.data.summary.online_vehicles || 0,
-          totalSamples: response.data.summary.total_samples || 0,
+          totalVehicles: response.data.summary?.total_vehicles || 0,
+          onlineVehicles: response.data.summary?.online_vehicles || 0,
+          totalSamples: response.data.summary?.total_samples || 0,
         });
       }
 
@@ -168,8 +167,8 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
           bVal = b.brand || "ZZZ";
           break;
         case "user_id":
-          aVal = a.user_id ?? Number.MAX_SAFE_INTEGER;
-          bVal = b.user_id ?? Number.MAX_SAFE_INTEGER;
+          aVal = a.user_id ?? 999999999;
+          bVal = b.user_id ?? 999999999;
           break;
         case "avg_speed":
           aVal = a.statistics?.avg_speed || -1;
@@ -315,9 +314,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
         <div className="header-content">
           <h1>{isAdmin ? "Vehicle Management" : "My Vehicles"}</h1>
           <p className="subtitle" style={{ marginTop: "0.5rem" }}>
-            {isAdmin
-              ? "All vehicles linked through diagnostic devices"
-              : "Vehicles linked through your diagnostic devices"}
+            Vehicles linked through diagnostic devices
           </p>
 
           <div
@@ -363,7 +360,9 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
 
       {statusMessage && (
         <div className="status-message success">
-          <CheckCircleIcon style={{ width: "1.1rem", height: "1.1rem", flexShrink: 0 }} />
+          <CheckCircleIcon
+            style={{ width: "1.1rem", height: "1.1rem", flexShrink: 0 }}
+          />
           <div>{statusMessage}</div>
         </div>
       )}
@@ -411,7 +410,10 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                   </th>
 
                   {isAdmin && (
-                    <th onClick={() => handleSort("user_id")}>
+                    <th
+                      className="user-id-column"
+                      onClick={() => handleSort("user_id")}
+                    >
                       <span className="sortable-header">
                         User ID {getSortIcon("user_id")}
                       </span>
@@ -459,18 +461,20 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                 {sortedVehicles.map((vehicle) => (
                   <tr key={vehicle.vin} className="device-row">
                     <td>
-                      <span className={`status-badge ${getStatusColor(vehicle.online)}`}>
+                      <span
+                        className={`status-badge ${getStatusColor(vehicle.online)}`}
+                      >
                         <span className="status-dot"></span>
                         {vehicle.online ? "Online" : "Offline"}
                       </span>
                     </td>
 
                     {isAdmin && (
-                      <td>
+                      <td className="user-id-cell">
                         {vehicle.user_id ? (
                           <span className="user-id-badge">{vehicle.user_id}</span>
                         ) : (
-                          <span className="unassigned">Unassigned</span>
+                          <span className="unassigned">—</span>
                         )}
                       </td>
                     )}
@@ -513,7 +517,8 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                     </td>
 
                     <td className="metric-cell">
-                      {vehicle.statistics?.min_rpm && vehicle.statistics?.max_rpm ? (
+                      {vehicle.statistics?.min_rpm &&
+                      vehicle.statistics?.max_rpm ? (
                         <span>
                           {vehicle.statistics.min_rpm} - {vehicle.statistics.max_rpm}
                         </span>
@@ -534,7 +539,9 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
 
                     <td className="samples-cell">
                       {vehicle.statistics?.samples ? (
-                        <span className="samples-badge">{vehicle.statistics.samples}</span>
+                        <span className="samples-badge">
+                          {vehicle.statistics.samples}
+                        </span>
                       ) : (
                         "0"
                       )}
@@ -551,7 +558,9 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                           onClick={() => toggleActionMenu(vehicle.vin)}
                           disabled={deletingVin === vehicle.vin}
                         >
-                          <EllipsisVerticalIcon style={{ width: "1rem", height: "1rem" }} />
+                          <EllipsisVerticalIcon
+                            style={{ width: "1rem", height: "1rem" }}
+                          />
                           Click to action
                         </button>
 
@@ -596,13 +605,16 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                                   }}
                                   type="button"
                                 >
-                                  <ChartBarIcon style={{ width: "1rem", height: "1rem" }} />
+                                  <ChartBarIcon
+                                    style={{ width: "1rem", height: "1rem" }}
+                                  />
                                   Live Data
                                 </button>
                               </>
                             ) : (
                               <div className="actions-popup-empty">
-                                Diagnostics and Live Data require a linked diagnostic device.
+                                Diagnostics and Live Data require a linked diagnostic
+                                device.
                               </div>
                             )}
 
