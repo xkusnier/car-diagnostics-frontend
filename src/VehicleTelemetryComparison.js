@@ -194,6 +194,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
       <div className="devices-header">
         <div className="header-content">
           <h1>My Vehicles</h1>
+          <p className="subtitle">Vehicles linked through your diagnostic devices</p>
+          <p className="table-info" style={{ marginTop: "0.5rem" }}>
+            A vehicle is added automatically after your diagnostic device is physically connected to it.
+          </p>
         </div>
       </div>
 
@@ -224,7 +228,12 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
       <div className="devices-table-container card vehicles-table-container">
         <div className="table-header">
-          <h3>Vehicles ({sortedVehicles.length})</h3>
+          <div>
+            <h3>Vehicles ({sortedVehicles.length})</h3>
+            <p className="table-info" style={{ marginTop: "0.35rem" }}>
+              Diagnostics and Live Data require an active linked device.
+            </p>
+          </div>
         </div>
 
         {sortedVehicles.length === 0 ? (
@@ -233,7 +242,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
               <TruckIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
             </div>
             <h3>No Vehicles Found</h3>
-            <p>No vehicles are currently registered to your account</p>
+            <p>A vehicle appears automatically after your Raspberry Pi diagnostic device is connected to a car.</p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -411,7 +420,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
                                 </button>
                               </>
                             ) : (
-                              <div className="actions-popup-empty">No device available</div>
+                              <div className="actions-popup-empty">
+                                Diagnostics and Live Data require a linked diagnostic device.
+                              </div>
                             )}
 
                             <button
