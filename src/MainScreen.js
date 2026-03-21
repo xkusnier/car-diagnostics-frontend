@@ -25,6 +25,8 @@ function MainScreen({ onNavigate, user }) {
   const displayName =
     user?.name || user?.nickname || user?.email?.split("@")[0] || "User";
 
+  const isAdmin = user?.role === "admin";
+
   useEffect(() => {
     fetchHomeData();
   }, []);
@@ -157,11 +159,11 @@ function MainScreen({ onNavigate, user }) {
       <div className="stats-bar">
         <div className="stat-item">
           <span className="stat-number">{stats.totalVehicles}</span>
-          <span className="stat-label">My Vehicles</span>
+          <span className="stat-label">{isAdmin ? "Total Vehicles" : "My Vehicles"}</span>
         </div>
         <div className="stat-item">
           <span className="stat-number">{stats.totalDevices}</span>
-          <span className="stat-label">My Devices</span>
+          <span className="stat-label">{isAdmin ? "Total Devices" : "My Devices"}</span>
         </div>
         <div className="stat-item">
           <span className="stat-number">{stats.activeDTCs}</span>
@@ -246,6 +248,7 @@ function MainScreen({ onNavigate, user }) {
                   <th>Status</th>
                   <th>Vehicle</th>
                   <th>VIN</th>
+                  {isAdmin && <th>User ID</th>}
                   <th>Active DTCs</th>
                   <th>Linked Device</th>
                   <th>Actions</th>
@@ -277,6 +280,16 @@ function MainScreen({ onNavigate, user }) {
                     <td>
                       <code className="vin-code">{vehicle.vin}</code>
                     </td>
+
+                    {isAdmin && (
+                      <td>
+                        {vehicle.user_id ? (
+                          <span className="user-id-badge">{vehicle.user_id}</span>
+                        ) : (
+                          <span className="unassigned">—</span>
+                        )}
+                      </td>
+                    )}
 
                     <td>
                       <span className="badge badge-danger">
