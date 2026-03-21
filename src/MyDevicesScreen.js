@@ -148,11 +148,24 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
       <div className="devices-header">
         <div className="header-content">
           <h1>{role === "admin" ? "Device Management" : "My Devices"}</h1>
-          <p className="subtitle">
-            Add and manage your Raspberry Pi diagnostic devices. Vehicle VIN
-            details are assigned automatically after the device is physically
-            connected to a car.
-          </p>
+            <div
+              className="status-message info"
+              style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+            >
+              <InformationCircleIcon
+                style={{
+                  width: "1.1rem",
+                  height: "1.1rem",
+                  marginTop: "0.1rem",
+                  flexShrink: 0,
+                }}
+              />
+              <div>
+                  Add and manage your Raspberry Pi diagnostic devices. Vehicle VIN
+                  details are assigned automatically after the device is physically
+                  connected to a car.
+              </div>
+            </div>
         </div>
       </div>
 
