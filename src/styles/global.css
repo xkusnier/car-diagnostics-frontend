@@ -1693,7 +1693,7 @@ code {
 
 .btn-action-trigger {
   min-height: 38px;
-  padding: 0.55rem 0.9rem;
+  padding: 0.55rem 0.5rem;
   border: 1px solid var(--border-medium);
   border-radius: 12px;
   background: var(--bg-secondary);
@@ -1701,8 +1701,8 @@ code {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  font-weight: 700;
+  gap: 0.2rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
