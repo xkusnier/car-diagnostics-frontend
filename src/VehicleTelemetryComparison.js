@@ -194,6 +194,7 @@ function VehicleTelemetryComparison({ onNavigate }) {
       <div className="devices-header">
         <div className="header-content">
           <h1>My Vehicles</h1>
+            <p className="subtitle" style={{ marginTop: "0.5rem" }}>Vehicles linked through your diagnostic devices</p>
             <div
               className="status-message info"
               style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
@@ -207,7 +208,6 @@ function VehicleTelemetryComparison({ onNavigate }) {
                 }}
               />
               <div>
-      		Vehicles linked through your diagnostic devices <br />
                   A vehicle is added automatically after your diagnostic device is physically 	connected to it.
               </div>
             </div>
