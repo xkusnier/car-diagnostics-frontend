@@ -9,6 +9,7 @@ import {
   FireIcon,
   ExclamationTriangleIcon,
   BeakerIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
@@ -133,22 +134,23 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           <p className="table-info" style={{ marginTop: "0.5rem" }}>
             Trips are detected automatically from telemetry data.
           </p>
+
           <div
-          className="status-message info"
-          style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+            className="status-message info"
+            style={{ marginTop: "1rem", marginBottom: "1.5rem", alignItems: "flex-start" }}
           >
-          <InformationCircleIcon
-            style={{
-              width: "1.1rem",
-              height: "1.1rem",
-              marginTop: "0.1rem",
-              flexShrink: 0,
-            }}
-          />
-          <div>
-            A trip starts when the engine turns on and ends when the engine turns off.
+            <InformationCircleIcon
+              style={{
+                width: "1.1rem",
+                height: "1.1rem",
+                marginTop: "0.1rem",
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              A trip starts when the engine turns on and ends when the engine turns off.
+            </div>
           </div>
-        </div>
         </div>
       </div>
 
