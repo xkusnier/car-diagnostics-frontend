@@ -23,9 +23,54 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [polling, setPolling] = useState(false);
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [feedbackModal, setFeedbackModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    tone: "info",
+  });
 
   const socketRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+
+  const openFeedbackModal = (title, message, tone = "info") => {
+    setFeedbackModal({
+      open: true,
+      title,
+      message,
+      tone,
+    });
+  };
+
+  const closeFeedbackModal = () => {
+    setFeedbackModal({
+      open: false,
+      title: "",
+      message: "",
+      tone: "info",
+    });
+  };
+
+  const normalizeApiError = (err, fallbackMessage) => {
+    const raw =
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      err?.message ||
+      "";
+
+    const normalized = String(raw).trim().toLowerCase();
+
+    if (
+      normalized.includes("content-type must be application/json") ||
+      normalized.includes("please set content-type header") ||
+      normalized.includes("application/json")
+    ) {
+      return fallbackMessage;
+    }
+
+    return raw || fallbackMessage;
+  };
 
   useEffect(() => {
     fetchDiagnostics();
@@ -84,7 +129,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       setData(res.data);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.error || "Error fetching diagnostics");
+      setError(normalizeApiError(err, "Error fetching diagnostics"));
     } finally {
       setLoading(false);
     }
@@ -113,15 +158,18 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       await api.post(`/api/device/${deviceId}/read-dtcs`);
       setReadStatus("Command sent. Waiting for DTCs...");
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to send read DTC command.");
       setReading(false);
       setReadStatus("");
+      openFeedbackModal(
+        "Read DTC Failed",
+        normalizeApiError(err, "Failed to send the read DTC command."),
+        "danger"
+      );
     }
   };
 
   const handleClearDTCs = async () => {
-    if (!window.confirm("Are you sure you want to clear all active DTCs?")) return;
-
+    setShowClearConfirm(false);
     setClearing(true);
     setClearStatus("Sending clear command...");
 
@@ -129,9 +177,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       await api.post(`/api/device/${deviceId}/clear-dtcs`);
       setClearStatus("Command sent. Waiting for device confirmation...");
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to send clear command.");
       setClearing(false);
       setClearStatus("");
+      openFeedbackModal(
+        "Clear DTC Failed",
+        normalizeApiError(err, "Failed to send the clear DTC command."),
+        "danger"
+      );
     }
   };
 
@@ -189,6 +241,55 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     if (confidence >= 80) return "#ffb300";
     return "#f57c00";
   };
+
+  const ConfirmClearDialog = ({ onConfirm, onCancel }) => (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>Clear Active DTC Codes</h3>
+        <p>Are you sure you want to clear all active DTC codes for this device?</p>
+        <p className="warning-text">
+          This will send a clear command to the diagnostic device and wait for
+          confirmation from the vehicle.
+        </p>
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onCancel} disabled={clearing}>
+            Cancel
+          </button>
+          <button className="btn btn-danger" onClick={onConfirm} disabled={clearing}>
+            Confirm Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const FeedbackModal = ({ title, message, tone, onClose }) => (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>{title}</h3>
+        <div
+          className={`status-message ${
+            tone === "success" ? "success" : tone === "danger" ? "warning" : "info"
+          }`}
+          style={{ marginTop: "1rem", marginBottom: "1rem" }}
+        >
+          {tone === "success" ? (
+            <CheckCircleIcon style={{ width: "1.1rem", height: "1.1rem", flexShrink: 0 }} />
+          ) : (
+            <ExclamationTriangleIcon
+              style={{ width: "1.1rem", height: "1.1rem", flexShrink: 0 }}
+            />
+          )}
+          <div>{message}</div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-primary" onClick={onClose}>
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -328,7 +429,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
           <button
             className={`btn btn-danger ${clearing ? "loading" : ""}`}
-            onClick={handleClearDTCs}
+            onClick={() => setShowClearConfirm(true)}
             disabled={clearing || !data.online}
             style={{ minWidth: "150px" }}
           >
@@ -599,6 +700,22 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
             </div>
           )}
         </div>
+      )}
+
+      {showClearConfirm && (
+        <ConfirmClearDialog
+          onConfirm={handleClearDTCs}
+          onCancel={() => setShowClearConfirm(false)}
+        />
+      )}
+
+      {feedbackModal.open && (
+        <FeedbackModal
+          title={feedbackModal.title}
+          message={feedbackModal.message}
+          tone={feedbackModal.tone}
+          onClose={closeFeedbackModal}
+        />
       )}
     </div>
   );
