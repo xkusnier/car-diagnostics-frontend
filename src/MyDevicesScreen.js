@@ -8,6 +8,7 @@ import {
   WrenchScrewdriverIcon,
   ChartBarIcon,
   TrashIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
@@ -24,7 +25,6 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   useEffect(() => {
     fetchDevices();
 
-    // Kontrola každých 5 sekúnd či pribudlo VIN
     const interval = setInterval(() => {
       fetchDevices();
     }, 5000);
@@ -33,7 +33,6 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   }, []);
 
   useEffect(() => {
-    // Jednoduché filtrovanie - zobrazujeme všetky zariadenia
     setFilteredDevices(devices);
   }, [devices]);
 
@@ -54,14 +53,17 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
       return;
     }
 
-    const payload = role === "admin"
-      ? { device_id: newDeviceId, user_id: assignUserId || null }
-      : { device_id: newDeviceId };
+    const payload =
+      role === "admin"
+        ? { device_id: newDeviceId, user_id: assignUserId || null }
+        : { device_id: newDeviceId };
 
     try {
-      const res = await api.post("/api/add-device", payload);
+      await api.post("/api/add-device", payload);
 
-      alert("Device added successfully!");
+      alert(
+        "Device added successfully. VIN information will appear automatically after the device is connected to a vehicle."
+      );
       setNewDeviceId("");
       setAssignUserId("");
       setShowAddForm(false);
@@ -88,20 +90,28 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case "online": return "success";
-      case "offline": return "danger";
-      case "error": return "warning";
-      default: return "secondary";
+      case "online":
+        return "success";
+      case "offline":
+        return "danger";
+      case "error":
+        return "warning";
+      default:
+        return "secondary";
     }
   };
 
-  // Potvrdzovací dialóg
   const DeleteConfirmDialog = ({ deviceId, onConfirm, onCancel }) => (
     <div className="modal-overlay">
       <div className="modal-content">
         <h3>Delete Device</h3>
-        <p>Are you sure you want to delete device <strong>#{deviceId}</strong>?</p>
-        <p className="warning-text">This action cannot be undone. All device data including telemetry and DTC history will be permanently removed.</p>
+        <p>
+          Are you sure you want to delete device <strong>#{deviceId}</strong>?
+        </p>
+        <p className="warning-text">
+          This action cannot be undone. All device data including telemetry and
+          DTC history will be permanently removed.
+        </p>
         <div className="modal-actions">
           <button
             className="btn btn-secondary"
@@ -135,15 +145,17 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
 
   return (
     <div className="devices-container">
-      {/* Header - bez refresh buttonu */}
       <div className="devices-header">
         <div className="header-content">
           <h1>{role === "admin" ? "Device Management" : "My Devices"}</h1>
+          <p className="subtitle">
+            Add and manage your Raspberry Pi diagnostic devices. Vehicle VIN
+            details are assigned automatically after the device is physically
+            connected to a car.
+          </p>
         </div>
-        {/* Refresh button removed */}
       </div>
 
-      {/* Stats Bar */}
       <div className="stats-bar">
         <div className="stat-item">
           <span className="stat-number">{devices.length}</span>
@@ -163,7 +175,6 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
         </div>
       </div>
 
-      {/* Control Bar - bez search a filtra, len Add Device button */}
       <div className="control-bar" style={{ justifyContent: "flex-end" }}>
         <div className="filters">
           <button
@@ -182,10 +193,15 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
         </div>
       </div>
 
-      {/* Add Device Form */}
       {showAddForm && (
         <div className="add-device-form card">
           <h3>Add New Device</h3>
+          <p className="input-hint" style={{ marginBottom: "1rem" }}>
+            The Device ID is printed on the physical Raspberry Pi diagnostic
+            unit. After the device is connected to a vehicle, the VIN will
+            appear automatically.
+          </p>
+
           <div className="form-grid">
             <div className="form-group">
               <label>Device ID *</label>
@@ -196,6 +212,9 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
                 onChange={(e) => setNewDeviceId(e.target.value)}
                 className="input"
               />
+              <small className="input-hint">
+                Use the Device ID printed on the physical device.
+              </small>
             </div>
 
             {role === "admin" && (
@@ -208,6 +227,9 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
                   onChange={(e) => setAssignUserId(e.target.value)}
                   className="input"
                 />
+                <small className="input-hint">
+                  Leave empty to add the device without assigning it to a user.
+                </small>
               </div>
             )}
 
@@ -224,27 +246,38 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="error-message card">
-          <ExclamationTriangleIcon className="error-icon" style={{ width: "1.5rem", height: "1.5rem" }} />
+          <ExclamationTriangleIcon
+            className="error-icon"
+            style={{ width: "1.5rem", height: "1.5rem" }}
+          />
           <p>{error}</p>
         </div>
       )}
 
-      {/* Devices Table */}
       <div className="devices-table-container card">
         <div className="table-header">
           <h3>Devices ({filteredDevices.length})</h3>
+          <span className="table-info">
+            Diagnostics and live telemetry are available when the device is
+            linked to a vehicle.
+          </span>
         </div>
 
         {filteredDevices.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
-              <DevicePhoneMobileIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
+              <DevicePhoneMobileIcon
+                style={{ width: "3rem", height: "3rem", margin: "0 auto" }}
+              />
             </div>
             <h3>No Devices Found</h3>
-            <p>No devices are currently registered to your account</p>
+            <p>
+              No devices are currently registered to your account. Add your
+              Raspberry Pi diagnostic device using the Device ID printed on the
+              physical unit.
+            </p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -264,7 +297,10 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
                   <tr key={index} className="device-row">
                     <td>
                       <div className="device-id-cell">
-                        <DevicePhoneMobileIcon className="device-icon" style={{ width: "1.25rem", height: "1.25rem" }} />
+                        <DevicePhoneMobileIcon
+                          className="device-icon"
+                          style={{ width: "1.25rem", height: "1.25rem" }}
+                        />
                         <span className="device-id">#{device.device_id}</span>
                       </div>
                     </td>
@@ -283,12 +319,20 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
                       {device.vin ? (
                         <code className="vin-code">{device.vin}</code>
                       ) : (
-                        <span className="no-vin">Not linked</span>
+                        <div className="last-seen">
+                          <span className="no-vin">Not linked yet</span>
+                          <small className="additional-info">
+                            VIN will appear after the device is connected to a
+                            vehicle.
+                          </small>
+                        </div>
                       )}
                     </td>
 
                     <td>
-                      <span className={`status-badge ${getStatusColor(device.status)}`}>
+                      <span
+                        className={`status-badge ${getStatusColor(device.status)}`}
+                      >
                         <span className="status-dot"></span>
                         {device.status}
                       </span>
@@ -310,7 +354,9 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
                           title="View Diagnostics"
                           disabled={deletingId === device.device_id}
                         >
-                          <WrenchScrewdriverIcon style={{ width: "1rem", height: "1rem" }} />
+                          <WrenchScrewdriverIcon
+                            style={{ width: "1rem", height: "1rem" }}
+                          />
                           Diagnostics
                         </button>
 
@@ -320,7 +366,9 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
                           title="View Live Data"
                           disabled={deletingId === device.device_id}
                         >
-                          <ChartBarIcon style={{ width: "1rem", height: "1rem" }} />
+                          <ChartBarIcon
+                            style={{ width: "1rem", height: "1rem" }}
+                          />
                           Live Data
                         </button>
 
@@ -334,6 +382,16 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
                           Delete
                         </button>
                       </div>
+
+                      {!device.vin && (
+                        <div
+                          className="input-hint"
+                          style={{ marginTop: "0.5rem", maxWidth: "260px" }}
+                        >
+                          Connect this device to a vehicle to assign VIN details
+                          automatically.
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -343,7 +401,6 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <DeleteConfirmDialog
           deviceId={showDeleteConfirm}
