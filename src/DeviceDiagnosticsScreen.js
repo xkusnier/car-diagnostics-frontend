@@ -39,7 +39,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     });
 
     socketRef.current.on("clear_confirmation", (socketData) => {
-      console.log("Clear confirmation received:", socketData);
       if (socketData.device_id === deviceId && socketData.status === "success") {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
@@ -58,7 +57,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     });
 
     socketRef.current.on("dtc_update", (socketData) => {
-      console.log("DTC update received:", socketData);
       if (socketData.device_id === deviceId) {
         setReading(false);
         setReadStatus("DTC read completed");
@@ -129,7 +127,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
     try {
       await api.post(`/api/device/${deviceId}/clear-dtcs`);
-      setClearStatus("Command sent. Waiting for RPi...");
+      setClearStatus("Command sent. Waiting for device confirmation...");
     } catch (err) {
       alert(err.response?.data?.error || "Failed to send clear command.");
       setClearing(false);
@@ -177,13 +175,10 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
     switch (severity?.toLowerCase()) {
       case "critical":
-        return <ExclamationTriangleIcon style={iconStyle} />;
       case "high":
-        return <ExclamationTriangleIcon style={iconStyle} />;
       case "medium":
         return <ExclamationTriangleIcon style={iconStyle} />;
       case "low":
-        return <InformationCircleIcon style={iconStyle} />;
       default:
         return <InformationCircleIcon style={iconStyle} />;
     }
@@ -242,6 +237,25 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         </div>
       </div>
 
+      <div
+        className="status-message info"
+        style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+      >
+        <InformationCircleIcon
+          style={{
+            width: "1.1rem",
+            height: "1.1rem",
+            marginTop: "0.1rem",
+            flexShrink: 0,
+          }}
+        />
+        <div>
+          Read DTC requests active fault codes directly from the vehicle. Clear
+          DTC sends a clear command and waits for confirmation from the
+          diagnostic device.
+        </div>
+      </div>
+
       <div className="stats-bar">
         <div className="stat-item">
           <span className="stat-number">#{data.device_id}</span>
@@ -249,7 +263,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         </div>
 
         <div className="stat-item stat-item-vin">
-          <span className="stat-number stat-number-vin">{data.vin ? data.vin : "N/A"}</span>
+          <span className="stat-number stat-number-vin">
+            {data.vin ? data.vin : "N/A"}
+          </span>
           <span className="stat-label">VIN</span>
         </div>
 
@@ -261,10 +277,25 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         </div>
 
         <div className="stat-item">
-          <span className="stat-number">{data.dtc_codes ? data.dtc_codes.length : 0}</span>
+          <span className="stat-number">
+            {data.dtc_codes ? data.dtc_codes.length : 0}
+          </span>
           <span className="stat-label">Active DTCs</span>
         </div>
       </div>
+
+      {!data.vin && (
+        <div className="status-message warning" style={{ marginBottom: "1.5rem" }}>
+          <InformationCircleIcon
+            style={{ width: "1rem", height: "1rem", flexShrink: 0 }}
+          />
+          <div>
+            No vehicle is currently linked to this device. Connect the
+            diagnostic device to a vehicle to read live diagnostic trouble
+            codes.
+          </div>
+        </div>
+      )}
 
       <div className="control-panel" style={{ marginBottom: "2rem" }}>
         <div className="button-group">
@@ -323,6 +354,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           </button>
         </div>
 
+        {!data.online && (
+          <div className="input-hint">
+            The device must be online and connected to a vehicle to read or
+            clear current DTC data.
+          </div>
+        )}
+
         {readStatus && (
           <div
             className={`status-message ${
@@ -374,7 +412,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           <div className="dtc-count">
             {data.dtc_codes ? data.dtc_codes.length : 0} active codes
             {data.dtc_codes && data.dtc_codes.length > 0 && (
-              <span style={{ marginLeft: "1rem", fontSize: "0.875rem", color: "#5f6368" }}>
+              <span
+                style={{
+                  marginLeft: "1rem",
+                  fontSize: "0.875rem",
+                  color: "#5f6368",
+                }}
+              >
                 {data.dtc_codes.filter((d) => d.severity === "critical").length} critical
               </span>
             )}
@@ -384,10 +428,12 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
         {!data.dtc_codes || data.dtc_codes.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
-              <CheckCircleIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
+              <CheckCircleIcon
+                style={{ width: "3rem", height: "3rem", margin: "0 auto" }}
+              />
             </div>
             <h3>No Active DTC Codes</h3>
-            <p>No diagnostic trouble codes found for this device.</p>
+            <p>No diagnostic trouble codes are currently reported for this device.</p>
           </div>
         ) : (
           <div className="dtc-table-card">
@@ -434,7 +480,8 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                             </span>
                             <div className="severity-info">
                               <small>
-                                {item.severity === "critical" && "Requires immediate attention"}
+                                {item.severity === "critical" &&
+                                  "Requires immediate attention"}
                                 {item.severity === "high" && "Needs attention soon"}
                                 {item.severity === "medium" && "Monitor condition"}
                                 {item.severity === "low" && "Informational only"}
@@ -491,7 +538,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
           ) : patterns.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">
-                <MagnifyingGlassIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
+                <MagnifyingGlassIcon
+                  style={{ width: "3rem", height: "3rem", margin: "0 auto" }}
+                />
               </div>
               <h3>No Patterns Detected</h3>
               <p>No known diagnostic patterns match the current DTC combination.</p>
