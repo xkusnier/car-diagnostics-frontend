@@ -1873,6 +1873,27 @@ code {
   position: fixed;
 }
 
+/* úzky admin stĺpec User ID */
+.vehicles-telemetry-table .user-id-column,
+.vehicles-telemetry-table .user-id-cell {
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+  white-space: nowrap;
+  text-align: center;
+}
 
+/* badge nech nezaberá zbytočne miesto */
+.vehicles-telemetry-table .user-id-cell .user-id-badge {
+  padding: 0.22rem 0.45rem;
+  font-size: 0.75rem;
+  min-width: 0;
+}
+
+/* text Unassigned tiež nech je malý */
+.vehicles-telemetry-table .user-id-cell .unassigned {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
 
 
