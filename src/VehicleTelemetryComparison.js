@@ -400,7 +400,11 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
           </div>
         ) : (
           <div className="table-responsive">
-            <table className="devices-table vehicles-telemetry-table">
+            <table
+              className={`devices-table vehicles-telemetry-table ${
+                isAdmin ? "vehicles-telemetry-table-admin" : "vehicles-telemetry-table-user"
+              }`}
+            >
               <thead>
                 <tr>
                   <th onClick={() => handleSort("online")}>
