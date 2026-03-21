@@ -1844,6 +1844,8 @@ code {
 }
 
 .actions-cell {
+  width: 1%;
+  white-space: nowrap;
   position: relative;
   overflow: visible !important;
 }
@@ -1855,9 +1857,6 @@ code {
 }
 
 .actions-popup {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.5rem);
   min-width: 220px;
   background: #1b2230;
   border: 1px solid var(--border-light);
@@ -1865,14 +1864,15 @@ code {
   box-shadow: var(--shadow-lg);
   padding: 0.5rem;
   z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.device-row:last-child .actions-popup,
-.device-row:nth-last-child(2) .actions-popup,
-.device-row:nth-last-child(3) .actions-popup {
-  top: auto;
-  bottom: calc(100% + 0.5rem);
+.actions-popup-floating {
+  position: fixed;
 }
+
 
 
 
