@@ -13,6 +13,7 @@ import {
   TrashIcon,
   ShieldExclamationIcon,
   EllipsisVerticalIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function VehicleTelemetryComparison({ onNavigate }) {
@@ -24,7 +25,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: "online", direction: "desc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "online",
+    direction: "desc",
+  });
   const [deletingVin, setDeletingVin] = useState(null);
   const [openActionMenuVin, setOpenActionMenuVin] = useState(null);
 
@@ -154,13 +158,14 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   const formatNumber = (num, decimals = 1) => {
     if (num === null || num === undefined) return "—";
-    return num.toFixed(decimals);
+    return Number(num).toFixed(decimals);
   };
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) {
       return <ArrowsUpDownIcon style={{ width: "1rem", height: "1rem" }} />;
     }
+
     return sortConfig.direction === "asc" ? (
       <ArrowUpIcon style={{ width: "1rem", height: "1rem" }} />
     ) : (
@@ -194,23 +199,26 @@ function VehicleTelemetryComparison({ onNavigate }) {
       <div className="devices-header">
         <div className="header-content">
           <h1>My Vehicles</h1>
-            <p className="subtitle" style={{ marginTop: "0.5rem" }}>Vehicles linked through your diagnostic devices</p>
-            <div
-              className="status-message info"
-              style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
-            >
-              <InformationCircleIcon
-                style={{
-                  width: "1.1rem",
-                  height: "1.1rem",
-                  marginTop: "0.1rem",
-                  flexShrink: 0,
-                }}
-              />
-              <div>
-                  A vehicle is added automatically after your diagnostic device is physically 	connected to it.
-              </div>
+          <p className="subtitle" style={{ marginTop: "0.5rem" }}>
+            Vehicles linked through your diagnostic devices
+          </p>
+
+          <div
+            className="status-message info"
+            style={{ marginTop: "1rem", marginBottom: "1.5rem", alignItems: "flex-start" }}
+          >
+            <InformationCircleIcon
+              style={{
+                width: "1.1rem",
+                height: "1.1rem",
+                marginTop: "0.1rem",
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              A vehicle is added automatically after your diagnostic device is physically connected to it.
             </div>
+          </div>
         </div>
       </div>
 
@@ -255,7 +263,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
               <TruckIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
             </div>
             <h3>No Vehicles Found</h3>
-            <p>A vehicle appears automatically after your Raspberry Pi diagnostic device is connected to a car.</p>
+            <p>
+              A vehicle appears automatically after your Raspberry Pi diagnostic device is connected to a car.
+            </p>
           </div>
         ) : (
           <div className="table-responsive">
