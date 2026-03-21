@@ -130,6 +130,9 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           <p className="subtitle">
             {vehicle.brand} {vehicle.model} {vehicle.year} • {vin}
           </p>
+          <p className="table-info" style={{ marginTop: "0.5rem" }}>
+            Trips are detected automatically from telemetry data. A trip starts when the engine turns on and ends when the engine turns off.
+          </p>
         </div>
       </div>
 
@@ -222,7 +225,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
               <MapIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
             </div>
             <h3>No Trips Found</h3>
-            <p>No trip history available for this vehicle.</p>
+            <p>No trip history is available for this vehicle yet.</p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -300,7 +303,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
             className="legend-icon"
             style={{ width: "1rem", height: "1rem" }}
           />{" "}
-          Trip statistics based on engine on/off cycles
+          Trip statistics are generated automatically from telemetry and engine state changes.
         </div>
       </div>
     </div>
