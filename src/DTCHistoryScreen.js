@@ -67,7 +67,7 @@ function DTCHistoryScreen({ onBack }) {
       const normalizedVin = vin.trim().toUpperCase();
 
       if (!isValidVinFormat(normalizedVin)) {
-        setError("Nesprávny formát VIN.");
+        setError("Invalid VIN format.");
         return;
       }
 
@@ -96,7 +96,7 @@ function DTCHistoryScreen({ onBack }) {
         backendErrorLower.includes("vehicle not found") ||
         backendErrorLower.includes("vin not found")
       ) {
-        setError("Vozidlo nie je v databáze.");
+        setError("Vehicle was not found in the database.");
       } else {
         setError(err.response?.data?.error || "Error fetching DTC history");
       }
@@ -173,7 +173,12 @@ function DTCHistoryScreen({ onBack }) {
 
       <div className="search-card card">
         <div className="search-header">
-          <h2>Search Parameters</h2>
+          <div>
+            <h2>Search Parameters</h2>
+            <p className="table-info" style={{ marginTop: "0.35rem" }}>
+              Enter a 17-character VIN to search stored active and historical fault codes.
+            </p>
+          </div>
           <MagnifyingGlassIcon className="search-icon" style={{ width: "2rem", height: "2rem" }} />
         </div>
 
@@ -193,7 +198,7 @@ function DTCHistoryScreen({ onBack }) {
               required
             />
             <small className="input-hint">
-              Enter the complete 17-character VIN. Only VIN format is checked.
+              VIN is the vehicle identification number stamped on the vehicle body or identification plate.
             </small>
           </div>
 
@@ -242,7 +247,7 @@ function DTCHistoryScreen({ onBack }) {
                 <InboxIcon style={{ width: "4rem", height: "4rem", margin: "0 auto" }} />
               </div>
               <h3>No DTC Records Found</h3>
-              <p>No diagnostic trouble codes found for the specified VIN and filters.</p>
+              <p>No diagnostic trouble codes were found for the specified VIN.</p>
             </div>
           ) : (
             <>
