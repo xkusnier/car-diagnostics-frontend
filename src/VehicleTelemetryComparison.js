@@ -559,9 +559,9 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                           disabled={deletingVin === vehicle.vin}
                         >
                           <EllipsisVerticalIcon
-                            style={{ width: "1rem", height: "1rem" }}
+                            style={{ width: "0.95rem", height: "0.95rem" }}
                           />
-                          Click to action
+                          Open
                         </button>
 
                         {openActionMenuVin === vehicle.vin && (
