@@ -660,7 +660,7 @@ code {
 .table-responsive {
   width: 100%;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: visible !important;
   border-radius: var(--radius-md);
 }
 
@@ -721,7 +721,7 @@ code {
 .vehicles-table-container .table-responsive,
 .vehicles-table-container .table-container {
   padding: 1rem 1.25rem 1.25rem;
-  overflow-y: visible;
+  overflow-y: visible !important;;
 }
 
 .dtc-table-card {
@@ -1819,14 +1819,52 @@ code {
 .vehicles-telemetry-table td:nth-child(9) {
   min-width: 150px;
 }
+
+
+.vehicles-table-container,
+.devices-table-container,
+.devices-table-container.card,
+.vehicles-table-container.card {
+  overflow: visible !important;
+}
+
+.vehicles-table-container .table-responsive,
+.vehicles-table-container .table-container,
+.devices-table-container .table-responsive,
+.devices-table-container .table-container {
+  overflow-x: auto;
+  overflow-y: visible !important;
+}
+
+.vehicles-table-container .devices-table,
+.vehicles-table-container .device-row,
+.vehicles-table-container .actions-cell,
+.vehicles-table-container .actions-menu-wrapper {
+  overflow: visible !important;
+}
+
 .actions-cell {
-  overflow: visible;
+  position: relative;
+  overflow: visible !important;
 }
 
 .actions-menu-wrapper {
   position: relative;
   display: inline-block;
-  overflow: visible;
+  overflow: visible !important;
+}
+
+.actions-popup {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 220px;
+  background: #1b2230;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  z-index: 99999;
 }
 
 .device-row:last-child .actions-popup,
@@ -1835,4 +1873,6 @@ code {
   top: auto;
   bottom: calc(100% + 0.5rem);
 }
+
+
 
