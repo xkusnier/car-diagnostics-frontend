@@ -17,7 +17,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
-function VehicleTelemetryComparison({ onNavigate }) {
+function VehicleTelemetryComparison({ onNavigate, user }) {
   const [vehicles, setVehicles] = useState([]);
   const [summary, setSummary] = useState({
     totalVehicles: 0,
@@ -39,6 +39,8 @@ function VehicleTelemetryComparison({ onNavigate }) {
 
   const actionMenuRef = useRef(null);
   const triggerRefs = useRef({});
+
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
     fetchTelemetryComparison();
@@ -164,6 +166,10 @@ function VehicleTelemetryComparison({ onNavigate }) {
         case "brand":
           aVal = a.brand || "ZZZ";
           bVal = b.brand || "ZZZ";
+          break;
+        case "user_id":
+          aVal = a.user_id || 0;
+          bVal = b.user_id || 0;
           break;
         case "avg_speed":
           aVal = a.statistics?.avg_speed || -1;
@@ -307,9 +313,9 @@ function VehicleTelemetryComparison({ onNavigate }) {
     <div className="devices-container">
       <div className="devices-header">
         <div className="header-content">
-          <h1>My Vehicles</h1>
+          <h1>{isAdmin ? "All Vehicles" : "My Vehicles"}</h1>
           <p className="subtitle" style={{ marginTop: "0.5rem" }}>
-            Vehicles linked through your diagnostic devices
+            Vehicles linked through diagnostic devices
           </p>
 
           <div
@@ -408,6 +414,14 @@ function VehicleTelemetryComparison({ onNavigate }) {
                     </span>
                   </th>
 
+                  {isAdmin && (
+                    <th onClick={() => handleSort("user_id")}>
+                      <span className="sortable-header">
+                        User ID {getSortIcon("user_id")}
+                      </span>
+                    </th>
+                  )}
+
                   <th onClick={() => handleSort("avg_speed")}>
                     <span className="sortable-header">
                       Avg Speed {getSortIcon("avg_speed")}
@@ -459,6 +473,16 @@ function VehicleTelemetryComparison({ onNavigate }) {
                         </div>
                       </div>
                     </td>
+
+                    {isAdmin && (
+                      <td className="metric-cell">
+                        {vehicle.user_id ? (
+                          <span className="user-id-badge">{vehicle.user_id}</span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    )}
 
                     <td className="metric-cell">
                       {vehicle.statistics?.avg_speed ? (
