@@ -7,6 +7,7 @@ import {
   DocumentTextIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/solid";
 
 function MainScreen({ onNavigate, user }) {
@@ -22,10 +23,7 @@ function MainScreen({ onNavigate, user }) {
   const [error, setError] = useState(null);
 
   const displayName =
-    user?.name ||
-    user?.nickname ||
-    user?.email?.split("@")[0] ||
-    "User";
+    user?.name || user?.nickname || user?.email?.split("@")[0] || "User";
 
   useEffect(() => {
     fetchHomeData();
@@ -114,6 +112,11 @@ function MainScreen({ onNavigate, user }) {
             Welcome back,{" "}
             <strong style={{ color: "var(--text-primary)" }}>{displayName}</strong>
           </p>
+          <p className="subtitle" style={{ marginTop: "0.5rem" }}>
+            Start by adding your diagnostic device in <strong>My Devices</strong>.
+            Your vehicle will appear automatically in <strong>My Vehicles</strong>{" "}
+            after the device is physically connected to the car.
+          </p>
         </div>
       </div>
 
@@ -121,13 +124,35 @@ function MainScreen({ onNavigate, user }) {
         <div className="error-message card">
           <span
             className="error-icon"
-            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             <ExclamationTriangleIcon style={{ width: "1.5rem", height: "1.5rem" }} />
           </span>
           <p>{error}</p>
         </div>
       )}
+
+      <div
+        className="status-message info"
+        style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+      >
+        <InformationCircleIcon
+          style={{
+            width: "1.1rem",
+            height: "1.1rem",
+            marginTop: "0.1rem",
+            flexShrink: 0,
+          }}
+        />
+        <div>
+          Vehicles are created automatically from linked device data. Diagnostics
+          and Live Data require an active device connection.
+        </div>
+      </div>
 
       <div className="stats-bar">
         <div className="stat-item">
@@ -171,7 +196,13 @@ function MainScreen({ onNavigate, user }) {
                   transition: "0.2s ease",
                 }}
               >
-                <div style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center" }}>
+                <div
+                  style={{
+                    marginBottom: "0.75rem",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
                   <Icon style={{ width: "1.8rem", height: "1.8rem" }} />
                 </div>
                 <h3 style={{ marginBottom: "0.5rem" }}>{section.title}</h3>
@@ -196,7 +227,11 @@ function MainScreen({ onNavigate, user }) {
           <div className="empty-state">
             <div
               className="empty-icon"
-              style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
             >
               <CheckCircleIcon style={{ width: "3rem", height: "3rem" }} />
             </div>
@@ -220,7 +255,11 @@ function MainScreen({ onNavigate, user }) {
                 {vehiclesWithIssuesList.map((vehicle) => (
                   <tr key={vehicle.vin} className="device-row">
                     <td>
-                      <span className={`status-badge ${vehicle.online ? "success" : "danger"}`}>
+                      <span
+                        className={`status-badge ${
+                          vehicle.online ? "success" : "danger"
+                        }`}
+                      >
                         <span className="status-dot"></span>
                         {vehicle.online ? "Online" : "Offline"}
                       </span>
@@ -259,7 +298,11 @@ function MainScreen({ onNavigate, user }) {
                           >
                             Open Diagnostics
                           </button>
-                        ) : null}
+                        ) : (
+                          <span className="input-hint">
+                            Link a device to open diagnostics.
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -278,8 +321,12 @@ function MainScreen({ onNavigate, user }) {
           }}
         >
           <h2 style={{ marginBottom: "0.75rem" }}>Getting started</h2>
-          <p style={{ marginBottom: "1rem", opacity: 0.9 }}>
-            You do not have any registered devices or vehicles yet. Start by adding a device.
+          <p style={{ marginBottom: "0.75rem", opacity: 0.9 }}>
+            You do not have any registered devices or vehicles yet.
+          </p>
+          <p style={{ marginBottom: "1rem", opacity: 0.85 }}>
+            Add your diagnostic device first. Once it is physically connected to
+            a vehicle, that vehicle will be added automatically to your account.
           </p>
           <button
             onClick={() => onNavigate("my-devices")}
