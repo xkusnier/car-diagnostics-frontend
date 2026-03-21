@@ -131,8 +131,24 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
             {vehicle.brand} {vehicle.model} {vehicle.year} • {vin}
           </p>
           <p className="table-info" style={{ marginTop: "0.5rem" }}>
-            Trips are detected automatically from telemetry data. A trip starts when the engine turns on and ends when the engine turns off.
+            Trips are detected automatically from telemetry data.
           </p>
+          <div
+          className="status-message info"
+          style={{ marginBottom: "1.5rem", alignItems: "flex-start" }}
+          >
+          <InformationCircleIcon
+            style={{
+              width: "1.1rem",
+              height: "1.1rem",
+              marginTop: "0.1rem",
+              flexShrink: 0,
+            }}
+          />
+          <div>
+            A trip starts when the engine turns on and ends when the engine turns off.
+          </div>
+        </div>
         </div>
       </div>
 
