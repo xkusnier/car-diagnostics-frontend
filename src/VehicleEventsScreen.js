@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { api } from "./api";
 import "./styles/global.css";
 import {
@@ -149,6 +149,9 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
           <p className="subtitle">
             {vehicle.brand || "Unknown"} {vehicle.model || ""} {vehicle.year || ""} • {vin}
           </p>
+          <p className="table-info" style={{ marginTop: "0.5rem" }}>
+            Driving events are generated automatically from motion and telemetry data reported by the diagnostic device.
+          </p>
         </div>
       </div>
 
@@ -184,7 +187,12 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
 
       <div className="devices-table-container card">
         <div className="table-header">
-          <h3>Events ({events.length})</h3>
+          <div>
+            <h3>Events ({events.length})</h3>
+            <p className="table-info" style={{ marginTop: "0.35rem" }}>
+              Events such as hard braking, sharp acceleration, hard turns, and crash detection are stored for this vehicle.
+            </p>
+          </div>
         </div>
 
         {events.length === 0 ? (
@@ -193,7 +201,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
               <ShieldExclamationIcon style={{ width: "3rem", height: "3rem", margin: "0 auto" }} />
             </div>
             <h3>No Events Found</h3>
-            <p>No driving events are available for this vehicle.</p>
+            <p>No driving events are available for this vehicle yet.</p>
           </div>
         ) : (
           <div className="table-responsive">
