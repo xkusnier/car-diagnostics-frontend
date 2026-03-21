@@ -1877,8 +1877,8 @@ code {
 .vehicles-telemetry-table .user-id-column,
 .vehicles-telemetry-table .user-id-cell {
   width: 72px;
-  min-width: 72px;
-  max-width: 72px;
+  min-width: 58px;
+  max-width: 64px;
   white-space: nowrap;
   text-align: center;
 }
