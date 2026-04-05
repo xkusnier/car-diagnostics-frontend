@@ -10,7 +10,18 @@ import {
   ExclamationTriangleIcon,
   BeakerIcon,
   InformationCircleIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
   const [trips, setTrips] = useState([]);
@@ -43,29 +54,30 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
       const response = await api.get(`/api/vehicle/${vin}/trips`);
 
       if (response.data.status === "success") {
-        setTrips(response.data.trips);
-        setVehicle({
-          ...vehicle,
+        const loadedTrips = response.data.trips || [];
+        setTrips(loadedTrips);
+        setVehicle((prev) => ({
+          ...prev,
           ...response.data.vehicle,
-        });
+        }));
 
-        const totalDistance = response.data.trips.reduce(
+        const totalDistance = loadedTrips.reduce(
           (sum, t) => sum + (t.distance_km || 0),
           0
         );
-        const totalDuration = response.data.trips.reduce(
+        const totalDuration = loadedTrips.reduce(
           (sum, t) => sum + (t.duration_seconds || 0),
           0
         );
-        const speeds = response.data.trips
+        const speeds = loadedTrips
           .filter((t) => t.avg_speed)
           .map((t) => t.avg_speed);
-        const consumptions = response.data.trips
+        const consumptions = loadedTrips
           .filter((t) => t.avg_consumption_l100km)
           .map((t) => t.avg_consumption_l100km);
 
         setSummary({
-          totalTrips: response.data.total_trips,
+          totalTrips: response.data.total_trips || loadedTrips.length,
           totalDistance,
           totalDuration,
           avgSpeed: speeds.length
@@ -75,12 +87,14 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
             ? consumptions.reduce((a, b) => a + b, 0) / consumptions.length
             : 0,
         });
-      }
 
-      setError(null);
+        setError(null);
+      } else {
+        setError("Failed to load trip history.");
+      }
     } catch (error) {
       console.error("Error fetching trips:", error);
-      setError("Failed to load trip history. Please try again.");
+      setError(error.response?.data?.error || "Failed to load trip history. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -106,6 +120,23 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
     });
   };
 
+  const formatCoordinate = (num) => {
+    if (num === null || num === undefined) return "—";
+    return Number(num).toFixed(6);
+  };
+
+  const getOpenStreetMapTripLink = (points) => {
+    if (!points || points.length === 0) return "#";
+    const first = points[0];
+    return `https://www.openstreetmap.org/?mlat=${first.latitude}&mlon=${first.longitude}#map=14/${first.latitude}/${first.longitude}`;
+  };
+
+  const getGoogleMapsTripLink = (points) => {
+    if (!points || points.length === 0) return "#";
+    const first = points[0];
+    return `https://www.google.com/maps?q=${first.latitude},${first.longitude}`;
+  };
+
   if (loading) {
     return (
       <div className="devices-container">
@@ -129,7 +160,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
         <div className="header-content">
           <h1>Trip History</h1>
           <p className="subtitle">
-            {vehicle.brand} {vehicle.model} {vehicle.year} • {vin}
+            {vehicle.brand || "Unknown"} {vehicle.model || ""} {vehicle.year || ""} • {vin}
           </p>
           <p className="table-info" style={{ marginTop: "0.5rem" }}>
             Trips are detected automatically from telemetry data.
@@ -175,9 +206,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           <div className="summary-content">
             <span className="summary-label">Total Distance</span>
             <span className="summary-value">
-              {summary.totalDistance
-                ? `${summary.totalDistance.toFixed(1)} km`
-                : "—"}
+              {summary.totalDistance ? `${summary.totalDistance.toFixed(1)} km` : "—"}
             </span>
           </div>
         </div>
@@ -213,9 +242,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           <div className="summary-content">
             <span className="summary-label">Avg Consumption</span>
             <span className="summary-value">
-              {summary.avgConsumption
-                ? `${summary.avgConsumption.toFixed(1)} L/100km`
-                : "—"}
+              {summary.avgConsumption ? `${summary.avgConsumption.toFixed(1)} L/100km` : "—"}
             </span>
           </div>
         </div>
@@ -246,47 +273,114 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
             <p>No trip history is available for this vehicle yet.</p>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="devices-table">
-              <thead>
-                <tr>
-                  <th>Start Time</th>
-                  <th>Duration</th>
-                  <th>Distance</th>
-                  <th>Avg Speed</th>
-                  <th>Max Speed</th>
-                  <th>Avg RPM</th>
-                  <th>Max RPM</th>
-                  <th>Avg Consumption</th>
-                  <th>Fuel Used</th>
-                  <th>Avg Coolant</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trips.map((trip) => (
-                  <tr key={trip.id} className="device-row">
-                    <td>
-                      <div className="date-cell">{formatDate(trip.start_time)}</div>
-                    </td>
-                    <td>{formatDuration(trip.duration_seconds)}</td>
-                    <td>{trip.distance_km ? `${trip.distance_km.toFixed(1)} km` : "—"}</td>
-                    <td>{trip.avg_speed ? `${trip.avg_speed} km/h` : "—"}</td>
-                    <td>{trip.max_speed ? `${trip.max_speed} km/h` : "—"}</td>
-                    <td>{trip.avg_rpm ? `${trip.avg_rpm} rpm` : "—"}</td>
-                    <td>{trip.max_rpm ? `${trip.max_rpm} rpm` : "—"}</td>
-                    <td>
-                      {trip.avg_consumption_l100km
-                        ? `${trip.avg_consumption_l100km} L/100km`
-                        : "—"}
-                    </td>
-                    <td>
-                      {trip.total_fuel_used_l
-                        ? `${trip.total_fuel_used_l.toFixed(2)} L`
-                        : "—"}
-                    </td>
-                    <td>
-                      {trip.avg_coolant_temp ? (
-                        <div>
+          <div style={{ display: "grid", gap: "1rem" }}>
+            {trips.map((trip) => {
+              const points = trip.location_points || [];
+              const hasRoute = points.length > 0;
+              const polylinePositions = points.map((p) => [p.latitude, p.longitude]);
+              const firstPoint = hasRoute ? points[0] : null;
+              const lastPoint = hasRoute ? points[points.length - 1] : null;
+              const mapCenter = hasRoute
+                ? [points[Math.floor(points.length / 2)].latitude, points[Math.floor(points.length / 2)].longitude]
+                : [48.1486, 17.1077];
+
+              return (
+                <div
+                  key={trip.id}
+                  className="card"
+                  style={{
+                    padding: "1rem",
+                    background: "var(--card-bg, #111827)",
+                    border: "1px solid var(--border-color, rgba(255,255,255,0.08))",
+                    borderRadius: "16px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: "1rem",
+                      flexWrap: "wrap",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <div>
+                      <span
+                        className="status-badge info"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+                      >
+                        <MapIcon style={{ width: "1rem", height: "1rem" }} />
+                        Trip #{trip.id}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                      <ClockIcon style={{ width: "1rem", height: "1rem" }} />
+                      {formatDate(trip.start_time)}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                      gap: "0.9rem",
+                      marginBottom: hasRoute ? "1rem" : 0,
+                    }}
+                  >
+                    <div>
+                      <div className="table-info">Duration</div>
+                      <div>{formatDuration(trip.duration_seconds)}</div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Distance</div>
+                      <div>{trip.distance_km ? `${trip.distance_km.toFixed(1)} km` : "—"}</div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Avg Speed</div>
+                      <div>{trip.avg_speed ? `${trip.avg_speed} km/h` : "—"}</div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Max Speed</div>
+                      <div>{trip.max_speed ? `${trip.max_speed} km/h` : "—"}</div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Avg RPM</div>
+                      <div>{trip.avg_rpm ? `${trip.avg_rpm} rpm` : "—"}</div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Max RPM</div>
+                      <div>{trip.max_rpm ? `${trip.max_rpm} rpm` : "—"}</div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Avg Consumption</div>
+                      <div>
+                        {trip.avg_consumption_l100km
+                          ? `${trip.avg_consumption_l100km} L/100km`
+                          : "—"}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Fuel Used</div>
+                      <div>
+                        {trip.total_fuel_used_l
+                          ? `${trip.total_fuel_used_l.toFixed(2)} L`
+                          : "—"}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Avg Coolant</div>
+                      <div>
+                        {trip.avg_coolant_temp ? (
                           <span
                             style={{
                               display: "inline-flex",
@@ -297,20 +391,138 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
                             <BeakerIcon style={{ width: "1rem", height: "1rem" }} />
                             {trip.avg_coolant_temp}°C
                           </span>
-                          {trip.max_coolant_temp && (
-                            <div>
-                              <small>max: {trip.max_coolant_temp}°C</small>
-                            </div>
+                        ) : (
+                          "—"
+                        )}
+                        {trip.max_coolant_temp && (
+                          <div>
+                            <small>max: {trip.max_coolant_temp}°C</small>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="table-info">Route Points</div>
+                      <div>{points.length || "—"}</div>
+                    </div>
+                  </div>
+
+                  {hasRoute && (
+                    <div
+                      style={{
+                        borderRadius: "14px",
+                        overflow: "hidden",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <MapContainer
+                        center={mapCenter}
+                        zoom={13}
+                        scrollWheelZoom={true}
+                        dragging={true}
+                        doubleClickZoom={true}
+                        touchZoom={true}
+                        zoomControl={true}
+                        style={{ height: "260px", width: "100%" }}
+                      >
+                        <TileLayer
+                          attribution='&copy; OpenStreetMap contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+
+                        {polylinePositions.length > 1 && (
+                          <Polyline positions={polylinePositions} />
+                        )}
+
+                        {firstPoint && (
+                          <Marker position={[firstPoint.latitude, firstPoint.longitude]} />
+                        )}
+
+                        {lastPoint &&
+                          (lastPoint.latitude !== firstPoint.latitude ||
+                            lastPoint.longitude !== firstPoint.longitude) && (
+                            <Marker position={[lastPoint.latitude, lastPoint.longitude]} />
                           )}
+                      </MapContainer>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.75rem",
+                          flexWrap: "wrap",
+                          padding: "0.9rem 1rem",
+                          background:
+                            "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)",
+                          borderTop: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.4rem",
+                            padding: "0.7rem 1rem",
+                            borderRadius: "12px",
+                            color: "#cbd5e1",
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          <MapPinIcon style={{ width: "1rem", height: "1rem" }} />
+                          Start: {formatCoordinate(firstPoint.latitude)}, {formatCoordinate(firstPoint.longitude)}
                         </div>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+                        <a
+                          href={getOpenStreetMapTripLink(points)}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0.7rem 1rem",
+                            borderRadius: "12px",
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            fontSize: "0.92rem",
+                            color: "#e5eefc",
+                            background: "rgba(37, 99, 235, 0.14)",
+                            border: "1px solid rgba(59, 130, 246, 0.28)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+                          }}
+                        >
+                          Open in OpenStreetMap
+                        </a>
+
+                        <a
+                          href={getGoogleMapsTripLink(points)}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0.7rem 1rem",
+                            borderRadius: "12px",
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            fontSize: "0.92rem",
+                            color: "#f3f4f6",
+                            background: "rgba(255,255,255,0.06)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                          }}
+                        >
+                          Open in Google Maps
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
