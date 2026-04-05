@@ -140,6 +140,12 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  const getOpenStreetMapLink = (lat, lng) =>
+    `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
+
+  const getGoogleMapsLink = (lat, lng) =>
+    `https://www.google.com/maps?q=${lat},${lng}`;
+
   if (loading) {
     return (
       <div className="devices-container">
@@ -342,11 +348,11 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
                       <MapContainer
                         center={[event.latitude, event.longitude]}
                         zoom={15}
-                        scrollWheelZoom={false}
-                        dragging={false}
-                        doubleClickZoom={false}
-                        touchZoom={false}
-                        zoomControl={false}
+                        scrollWheelZoom={true}
+                        dragging={true}
+                        doubleClickZoom={true}
+                        touchZoom={true}
+                        zoomControl={true}
                         style={{ height: "220px", width: "100%" }}
                       >
                         <TileLayer
@@ -355,6 +361,37 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
                         />
                         <Marker position={[event.latitude, event.longitude]} />
                       </MapContainer>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.75rem",
+                          flexWrap: "wrap",
+                          padding: "0.85rem 1rem",
+                          background: "rgba(255,255,255,0.02)",
+                          borderTop: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <a
+                          href={getOpenStreetMapLink(event.latitude, event.longitude)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-secondary"
+                          style={{ textDecoration: "none" }}
+                        >
+                          Open in OpenStreetMap
+                        </a>
+
+                        <a
+                          href={getGoogleMapsLink(event.latitude, event.longitude)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-secondary"
+                          style={{ textDecoration: "none" }}
+                        >
+                          Open in Google Maps
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>
