@@ -367,8 +367,8 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
                           display: "flex",
                           gap: "0.75rem",
                           flexWrap: "wrap",
-                          padding: "0.85rem 1rem",
-                          background: "rgba(255,255,255,0.02)",
+                          padding: "0.9rem 1rem",
+                          background: "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)",
                           borderTop: "1px solid rgba(255,255,255,0.08)",
                         }}
                       >
@@ -376,18 +376,64 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
                           href={getOpenStreetMapLink(event.latitude, event.longitude)}
                           target="_blank"
                           rel="noreferrer"
-                          className="btn-secondary"
-                          style={{ textDecoration: "none" }}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0.7rem 1rem",
+                            borderRadius: "12px",
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            fontSize: "0.92rem",
+                            color: "#e5eefc",
+                            background: "rgba(37, 99, 235, 0.14)",
+                            border: "1px solid rgba(59, 130, 246, 0.28)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+                            transition: "all 0.2s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "rgba(37, 99, 235, 0.22)";
+                            e.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.45)";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "rgba(37, 99, 235, 0.14)";
+                            e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.28)";
+                            e.currentTarget.style.transform = "translateY(0)";
+                          }}
                         >
                           Open in OpenStreetMap
                         </a>
-
+                      
                         <a
                           href={getGoogleMapsLink(event.latitude, event.longitude)}
                           target="_blank"
                           rel="noreferrer"
-                          className="btn-secondary"
-                          style={{ textDecoration: "none" }}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0.7rem 1rem",
+                            borderRadius: "12px",
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            fontSize: "0.92rem",
+                            color: "#f3f4f6",
+                            background: "rgba(255,255,255,0.06)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                            transition: "all 0.2s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                            e.currentTarget.style.transform = "translateY(0)";
+                          }}
                         >
                           Open in Google Maps
                         </a>
