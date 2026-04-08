@@ -17,6 +17,7 @@ import VehicleTelemetryComparison from "./VehicleTelemetryComparison";
 import LiveDataScreen from "./LiveDataScreen";
 import VehicleTripsScreen from "./VehicleTripsScreen";
 import VehicleEventsScreen from "./VehicleEventsScreen";
+import VehicleOdometerScreen from "./VehicleOdometerScreen";
 
 import LoadingScreen from "./LoadingScreen";
 
@@ -76,6 +77,14 @@ function App() {
             vehicleInfo: selectedEventsVehicleInfo,
           },
         };
+      case "vehicle-odometer":
+        return {
+          screen: currentScreen,
+          params: {
+            vin: selectedVin,
+            vehicleInfo: selectedVehicleInfo,
+          },
+        };
       default:
         return {
           screen: currentScreen,
@@ -112,6 +121,11 @@ function App() {
     if (screen === "vehicle-events") {
       if (params.vin) setSelectedEventsVin(params.vin);
       if (params.vehicleInfo) setSelectedEventsVehicleInfo(params.vehicleInfo);
+    }
+
+    if (screen === "vehicle-odometer") {
+      if (params.vin) setSelectedVin(params.vin);
+      if (params.vehicleInfo) setSelectedVehicleInfo(params.vehicleInfo);
     }
 
     setCurrentScreen(screen);
@@ -395,7 +409,8 @@ function App() {
               className={`nav-link ${
                 currentScreen === "telemetry-comparison" ||
                 currentScreen === "vehicle-trips" ||
-                currentScreen === "vehicle-events"
+                currentScreen === "vehicle-events" ||
+                currentScreen === "vehicle-odometer"
                   ? "active"
                   : ""
               }`}
@@ -543,6 +558,15 @@ function App() {
             key={`vehicle-events-${refreshKey}`}
             vin={selectedEventsVin}
             vehicleInfo={selectedEventsVehicleInfo}
+            onBack={goBack}
+          />
+        )}
+
+        {currentScreen === "vehicle-odometer" && user && (
+          <VehicleOdometerScreen
+            key={`vehicle-odometer-${refreshKey}`}
+            vin={selectedVin}
+            vehicleInfo={selectedVehicleInfo}
             onBack={goBack}
           />
         )}
