@@ -15,6 +15,7 @@ import {
   EllipsisVerticalIcon,
   InformationCircleIcon,
   CheckCircleIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 
 function VehicleTelemetryComparison({ onNavigate, user }) {
@@ -224,7 +225,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
 
     const rect = button.getBoundingClientRect();
     const popupWidth = 220;
-    const estimatedPopupHeight = 260;
+    const estimatedPopupHeight = 300;
     const gap = 8;
 
     let left = rect.right - popupWidth;
@@ -629,6 +630,30 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
                                 device.
                               </div>
                             )}
+
+                            <button
+                              className="actions-popup-item"
+                              onClick={() => {
+                                setOpenActionMenuVin(null);
+                                onNavigate("vehicle-odometer", {
+                                  vin: vehicle.vin,
+                                  vehicleInfo: {
+                                    vin: vehicle.vin,
+                                    brand: vehicle.brand,
+                                    model: vehicle.model,
+                                    year: vehicle.year,
+                                    engine: vehicle.engine,
+                                    device_id: vehicle.device_id,
+                                  },
+                                });
+                              }}
+                              type="button"
+                            >
+                              <PencilSquareIcon
+                                style={{ width: "1rem", height: "1rem" }}
+                              />
+                              Odometer
+                            </button>
 
                             <button
                               className="actions-popup-item"
