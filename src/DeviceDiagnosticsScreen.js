@@ -155,7 +155,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     setReadStatus("Sending read DTC command...");
 
     try {
-      await api.post(`/api/device/${deviceId}/read-dtcs`);
+      await api.post(`/api/device/${deviceId}/read-dtcs`, {});
       setReadStatus("Command sent. Waiting for DTCs...");
     } catch (err) {
       setReading(false);
@@ -174,7 +174,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     setClearStatus("Sending clear command...");
 
     try {
-      await api.post(`/api/device/${deviceId}/clear-dtcs`);
+      await api.post(`/api/device/${deviceId}/clear-dtcs`, {});
       setClearStatus("Command sent. Waiting for device confirmation...");
     } catch (err) {
       setClearing(false);
