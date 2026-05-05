@@ -236,6 +236,21 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  const getRecommendedAction = (item) => {
+    if (item?.recommended_action) return item.recommended_action;
+
+    switch (item?.severity?.toLowerCase()) {
+      case "critical":
+        return "Stop immediately and do not continue driving";
+      case "medium":
+        return "Visit a service center soon";
+      case "low":
+        return "Continue driving and monitor the vehicle";
+      default:
+        return "Visit a service center soon";
+    }
+  };
+
   const getConfidenceColor = (confidence) => {
     if (confidence >= 90) return "#388e3c";
     if (confidence >= 80) return "#ffb300";
@@ -545,6 +560,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                     <th>DTC Code</th>
                     <th>Description</th>
                     <th>Severity</th>
+                    <th>Recommended Action</th>
                     <th>Date Detected</th>
                   </tr>
                 </thead>
@@ -588,6 +604,18 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
                                 {item.severity === "low" && "Informational only"}
                               </small>
                             </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            className="recommended-action-cell"
+                            style={{
+                              fontSize: "0.9rem",
+                              lineHeight: "1.35",
+                              maxWidth: "220px",
+                            }}
+                          >
+                            <strong>{getRecommendedAction(item)}</strong>
                           </div>
                         </td>
                         <td>
