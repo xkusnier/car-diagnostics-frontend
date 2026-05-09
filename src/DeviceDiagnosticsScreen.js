@@ -251,11 +251,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
-  const getConfidenceColor = (confidence) => {
-    if (confidence >= 90) return "#388e3c";
-    if (confidence >= 80) return "#ffb300";
-    return "#f57c00";
-  };
 
   const ConfirmClearDialog = ({ onConfirm, onCancel }) => (
     <div className="modal-overlay">
@@ -678,23 +673,6 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
             <div className="pattern-cards">
               {patterns.map((pattern, index) => (
                 <div key={index} className="pattern-card">
-                  <div className="pattern-header">
-                    <div
-                      className="pattern-title"
-                      style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
-                    >
-                      <h3>{pattern.pattern_name}</h3>
-                    </div>
-                    <div
-                      className="confidence-badge"
-                      style={{
-                        backgroundColor: getConfidenceColor(pattern.confidence),
-                        color: "white",
-                      }}
-                    >
-                      {pattern.confidence}% confidence
-                    </div>
-                  </div>
 
                   <div className="pattern-body">
                     <div className="pattern-cause">
