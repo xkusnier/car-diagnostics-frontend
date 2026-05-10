@@ -12,6 +12,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
+// AI: Komponent MyDevicesScreen bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
 // Obrazovka spravuje zariadenia pouzivatela a akcie nad nimi.
 function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   // Zoznam zariadeni je hlavny zdroj pre tabulku.
@@ -49,6 +50,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   }, [devices]);
 
   // Jeden modal sa pouziva pre viac druhov stavovych hlasok.
+  // AI: Funkcia openFeedbackModal bola ciastocne generovana cez ChatGPT na jednotne zobrazovanie vysledku akcii a nasledne upravena autorom.
   const openFeedbackModal = (title, message, tone = "info") => {
     setFeedbackModal({
       open: true,
@@ -69,6 +71,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   };
 
   // Rozne formaty backend chyb sa prevadzaju na jeden text.
+  // AI: Funkcia normalizeApiError bola ciastocne generovana cez ChatGPT na spracovanie API chyb a nasledne upravena autorom.
   const normalizeApiError = (err, fallbackMessage) => {
     const raw =
       err?.response?.data?.error ||
@@ -90,6 +93,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   };
 
   // Nacitanie zariadeni sa pouziva pri prvom vstupe aj po zmene zoznamu.
+  // AI: Funkcia fetchDevices a volanie endpointu /api/my-devices boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const fetchDevices = async () => {
     try {
       // Backend vracia zariadenia patriace aktualnemu pouzivatelovi.
@@ -103,6 +107,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   };
 
   // Pridanie zariadenia validuje vstup a potom vola backend.
+  // AI: Funkcia handleAddDevice a volanie endpointu /api/add-device boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const handleAddDevice = async () => {
     if (!newDeviceId) {
       openFeedbackModal("Missing Device ID", "Please enter a Device ID.", "danger");
@@ -137,6 +142,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   };
 
   // Mazanie zariadenia sa vykona podla ID z riadku tabulky.
+  // AI: Funkcia handleDeleteDevice a volanie endpointu /api/device/{deviceId} boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const handleDeleteDevice = async (deviceId) => {
     setDeletingId(deviceId);
     try {
@@ -163,6 +169,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   };
 
   // Status zariadenia sa prevadza na CSS stav.
+  // AI: Funkcia getStatusColor bola ciastocne generovana cez ChatGPT na zobrazenie stavu zariadenia a nasledne upravena autorom.
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "online":
@@ -177,6 +184,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   };
 
   // Potvrdenie chrani pred nahodnym zmazanim zariadenia.
+  // AI: Komponent DeleteConfirmDialog bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
   const DeleteConfirmDialog = ({ deviceId, onConfirm, onCancel }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -209,6 +217,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
   );
 
   // Modal je samostatny, aby hlavny render ostal prehladnejsi.
+  // AI: Komponent FeedbackModal bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
   const FeedbackModal = ({ title, message, tone, onClose }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -541,3 +550,4 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
 }
 
 export default MyDevicesScreen;
+// Suhrn vyuzitia AI: V tomto subore bol ChatGPT pouzity pri navrhu obrazovky zariadeni, volaniach endpointov pre nacitanie, pridanie a vymazanie zariadenia, spracovani API chyb a pri potvrdzovacich/modalnych prvkoch. Vysledny kod bol skontrolovany a upraveny autorom.

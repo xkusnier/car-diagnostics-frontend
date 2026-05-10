@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Registracny formular vytvara novy ucet a po uspechu vie pouzivatela prihlasit.
+// AI: Registracna obrazovka RegisterScreen bola ciastocne generovana cez ChatGPT a nasledne upravena autorom.
 function RegisterScreen({ onRegister, onNavigateToLogin }) {
   // Udaje formulara su ulozene samostatne, lebo kazdy input sa meni nezavisle.
   const [username, setUsername] = useState("");
@@ -21,6 +22,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
   const [loading, setLoading] = useState(false);
 
   // Handler robi zakladnu validaciu este pred volanim backendu.
+  // AI: Funkcia handleSubmit pre validaciu registracie a odoslanie formulara bola ciastocne generovana cez ChatGPT a nasledne upravena autorom.
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -75,6 +77,7 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
     }
   };
 
+  // AI: JSX struktura registracneho formulara bola ciastocne generovana cez ChatGPT a nasledne upravena autorom.
   return (
     <div className="auth-container">
       <div className="auth-background">
@@ -251,3 +254,4 @@ function RegisterScreen({ onRegister, onNavigateToLogin }) {
 }
 
 export default RegisterScreen;
+// Suhrn vyuzitia AI: V tomto subore bol ChatGPT pouzity pri navrhu registracnej obrazovky, validacii vstupov, spracovani odoslania formulara a pri textoch/rozlozeni UI. Vysledny kod bol skontrolovany a upraveny autorom.

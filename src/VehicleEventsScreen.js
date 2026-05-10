@@ -21,6 +21,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// AI: Komponent VehicleEventsScreen bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
 // Obrazovka zobrazuje udalosti vozidla pre konkretne VIN.
 function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   // Udalosti su hlavny zoznam pre suhrn aj detailne karty.
@@ -35,6 +36,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   }, [vin]);
 
   // Request nacita eventy a zakladne informacie o vozidle.
+  // AI: Funkcia fetchVehicleEvents a volanie endpointu /api/vehicle/{vin}/events boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const fetchVehicleEvents = async () => {
     try {
       // Token sa nastavi pred volanim chraneneho endpointu.
@@ -81,6 +83,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   }, [events]);
 
   // Datum udalosti sa zobrazuje v citatelnejsom tvare.
+  // AI: Funkcia formatDate bola ciastocne generovana cez ChatGPT na formatovanie casu udalosti a nasledne upravena autorom.
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     const date = new Date(dateStr);
@@ -94,6 +97,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // Chybajuce cisla sa nahradia pomlckou.
+  // AI: Funkcia formatNumber bola ciastocne generovana cez ChatGPT na zobrazenie ciselnych hodnot a nasledne upravena autorom.
   const formatNumber = (num, decimals = 2) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(decimals);
@@ -106,6 +110,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // Interny typ eventu sa prevadza na text pre pouzivatela.
+  // AI: Funkcia getEventLabel bola ciastocne generovana cez ChatGPT na preklad typov udalosti do textu UI a nasledne upravena autorom.
   const getEventLabel = (eventType) => {
     switch (eventType) {
       case "HARD_BRAKE":
@@ -122,6 +127,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // Ikony ulahcuju rychle rozlisenie typov udalosti.
+  // AI: Funkcia getEventIcon bola ciastocne generovana cez ChatGPT na priradenie ikon udalostiam a nasledne upravena autorom.
   const getEventIcon = (eventType) => {
     switch (eventType) {
       case "HARD_BRAKE":
@@ -138,6 +144,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // CSS trieda urcuje vizualne zvyraznenie eventu.
+  // AI: Funkcia getEventClass bola ciastocne generovana cez ChatGPT na priradenie CSS tried udalostiam a nasledne upravena autorom.
   const getEventClass = (eventType) => {
     switch (eventType) {
       case "HARD_BRAKE":
@@ -154,9 +161,11 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // Link na mapu sa sklada z GPS suradnic eventu.
+  // AI: Funkcia getOpenStreetMapLink bola ciastocne generovana cez ChatGPT na vytvorenie odkazu na mapu a nasledne upravena autorom.
   const getOpenStreetMapLink = (lat, lng) =>
     `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
 
+  // AI: Funkcia getGoogleMapsLink bola ciastocne generovana cez ChatGPT na vytvorenie odkazu na mapu a nasledne upravena autorom.
   const getGoogleMapsLink = (lat, lng) =>
     `https://www.google.com/maps?q=${lat},${lng}`;
 
@@ -466,3 +475,4 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
 }
 
 export default VehicleEventsScreen;
+// Suhrn vyuzitia AI: V tomto subore bol ChatGPT pouzity pri navrhu obrazovky udalosti vozidla, volani endpointu pre udalosti, formatovani telemetrickych hodnot, mapovani typov udalosti a tvorbe mapovych odkazov. Vysledny kod bol skontrolovany a upraveny autorom.

@@ -21,6 +21,7 @@ import VehicleOdometerScreen from "./VehicleOdometerScreen";
 
 import LoadingScreen from "./LoadingScreen";
 
+// AI: Komponent App a jeho hlavna navigacna logika boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
 // Hlavny komponent drzi prihlasenie, navigaciu a spolocny stav aplikacie.
 function App() {
   // Obrazovky sa prepinaju rucne cez nazov, bez samostatneho routera.
@@ -50,6 +51,7 @@ function App() {
   // Vlastny stack robi jednoduche tlacidlo spat medzi obrazovkami.
   const [historyStack, setHistoryStack] = useState([]);
 
+  // AI: Funkcia getCurrentRoute bola navrhnuta cez ChatGPT na ulozenie aktualnej trasy a nasledne upravena autorom.
   // Aktualna trasa sa uklada ako screen + parametre, aby sa k nej dalo vratit.
   const getCurrentRoute = () => {
     // Podla obrazovky sa ukladaju iba parametre, ktore dana obrazovka realne potrebuje.
@@ -102,6 +104,7 @@ function App() {
     }
   };
 
+  // AI: Funkcia applyRoute bola ciastocne generovana cez ChatGPT na centralne nastavenie navigacnych parametrov a nasledne upravena autorom.
   // Tu sa centralne nastavia parametre a az potom sa prepne currentScreen.
   const applyRoute = (screen, params = {}) => {
     // Podpora starsieho volania, kde sa do navigacie posielalo iba cislo zariadenia.
@@ -149,6 +152,7 @@ function App() {
   // Hlavne sekcie resetuju historiu, lebo sa beru ako novy start navigacie.
   const topLevelScreens = ["main", "my-devices", "telemetry-comparison", "dtc-history"];
 
+  // AI: Funkcia navigateTo bola ciastocne generovana cez ChatGPT na pracu s historiou obrazoviek a nasledne upravena autorom.
   // Navigacia rozhoduje, ci sa aktualna obrazovka ulozi do historie.
   const navigateTo = (screen, params = {}, options = {}) => {
     const { resetHistory = false } = options;
@@ -166,6 +170,7 @@ function App() {
     applyRoute(screen, params);
   };
 
+  // AI: Funkcia goBack bola ciastocne generovana cez ChatGPT na navrat medzi obrazovkami a nasledne upravena autorom.
   // Navrat vyberie poslednu ulozenu trasu alebo pouzivatela vrati na dashboard.
   const goBack = () => {
     setHistoryStack((prev) => {
@@ -187,6 +192,7 @@ function App() {
     });
   };
 
+  // AI: Funkcia wakeUpBackend s opakovanym healthcheckom backendu bola ciastocne generovana cez ChatGPT a nasledne upravena autorom.
   // Backend sa pred prihlasenim skusi prebudit, kedze hosting moze byt uspany.
   const wakeUpBackend = async () => {
     setLoadingStage("backend");
@@ -248,6 +254,7 @@ function App() {
     console.log(`Screen ${currentScreen} refreshed`);
   };
 
+  // AI: Funkcia checkAuthStatus bola ciastocne generovana cez ChatGPT na overenie tokenu a nasledne upravena autorom.
   // Kontrola tokenu rozhodne, ci sa pouzivatel vrati do aplikacie alebo na login.
   const checkAuthStatus = async () => {
     try {
@@ -303,6 +310,7 @@ function App() {
     }
   };
 
+  // AI: Funkcia handleLogin a volanie endpointu /api/login boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   // Login posiela prihlasovacie udaje na backend a po uspechu uklada token.
   const handleLogin = async (identifier, password) => {
     try {
@@ -348,6 +356,7 @@ function App() {
     }
   };
 
+  // AI: Funkcia handleRegister a volanie endpointu /api/register boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   // Registracia po uspechu rovno nastavi prihlaseneho pouzivatela.
   const handleRegister = async (username, email, password) => {
     try {
@@ -609,3 +618,4 @@ function App() {
 }
 
 export default App;
+// Suhrn vyuzitia AI: V tomto subore bol ChatGPT pouzity pri navrhu hlavnej navigacie aplikacie, overovani prihlasenia, volaniach prihlasovacieho a registracneho endpointu a pri logike prebudenia backendu. Vysledny kod bol skontrolovany a upraveny autorom.

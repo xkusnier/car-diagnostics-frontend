@@ -12,8 +12,10 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
+// AI: Komponent DeviceDiagnosticsScreen bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
 // Diagnosticka obrazovka zobrazuje aktualne DTC a dovoluje ich citat alebo mazat.
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
+  // AI: Stavova struktura pre diagnosticke data a modalne hlasky bola ciastocne generovana cez ChatGPT a nasledne upravena autorom.
   // Data obsahuju odpoved diagnostickeho endpointu pre konkretne zariadenie.
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -41,6 +43,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const pollingIntervalRef = useRef(null);
 
   // Jeden modal sa pouziva pre uspech, chybu aj informacne spravy.
+  // AI: Funkcia openFeedbackModal bola ciastocne generovana cez ChatGPT na jednotne zobrazovanie stavovych hlasok a nasledne upravena autorom.
   const openFeedbackModal = (title, message, tone = "info") => {
     setFeedbackModal({
       open: true,
@@ -61,6 +64,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   // Chyby z backendu sa prevadzaju na jeden citatelny text.
+  // AI: Funkcia normalizeApiError bola ciastocne generovana cez ChatGPT na spracovanie API chyb a nasledne upravena autorom.
   const normalizeApiError = (err, fallbackMessage) => {
     const raw =
       err?.response?.data?.error ||
@@ -141,6 +145,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   }, [data?.vin]);
 
   // Zakladny request nacita stav zariadenia a zoznam DTC kodov.
+  // AI: Funkcia fetchDiagnostics a volanie endpointu /api/device/{deviceId}/diagnostics boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const fetchDiagnostics = async () => {
     try {
       // Endpoint vracia diagnostiku pre jedno konkretne zariadenie.
@@ -155,6 +160,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   // Pattern kontrola hlada zaujimave kombinacie alebo opakovane chyby pre VIN.
+  // AI: Funkcia checkDtcPatterns a volanie endpointu /api/dtc/pattern-check/{vin} boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const checkDtcPatterns = async (vin) => {
     if (!vin) return;
 
@@ -172,6 +178,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   // Manualne citanie poziada backend o nove nacitanie DTC zo zariadenia.
+  // AI: Funkcia handleReadDTCs a volanie endpointu /api/device/{deviceId}/read-dtcs boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const handleReadDTCs = async () => {
     setReading(true);
     setReadStatus("Sending read DTC command...");
@@ -192,6 +199,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   // Vymazanie DTC je samostatna akcia a spusta sa az po potvrdeni.
+  // AI: Funkcia handleClearDTCs a volanie endpointu /api/device/{deviceId}/clear-dtcs boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const handleClearDTCs = async () => {
     setShowClearConfirm(false);
     setClearing(true);
@@ -213,6 +221,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   // Vaznost sa meni na jednoduchy nazov farby pre UI.
+  // AI: Funkcia getSeverityColor bola ciastocne generovana cez ChatGPT na mapovanie zavaznosti DTC kodov a nasledne upravena autorom.
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
       case "critical":
@@ -265,6 +274,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
   // Odporucanie sa berie z backendu alebo zo zalozneho pravidla.
+  // AI: Funkcia getRecommendedAction bola ciastocne generovana cez ChatGPT na zobrazovanie odporucaneho postupu pri DTC kode a nasledne upravena autorom.
   const getRecommendedAction = (item) => {
     if (item?.recommended_action) return item.recommended_action;
 
@@ -282,6 +292,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 
 
   // Dialog brani nahodnemu vymazaniu chybovych kodov.
+  // AI: Komponent ConfirmClearDialog bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
   const ConfirmClearDialog = ({ onConfirm, onCancel }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -304,6 +315,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   );
 
   // Modal je oddeleny komponent, aby sa neopakoval markup hlasok.
+  // AI: Komponent FeedbackModal bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
   const FeedbackModal = ({ title, message, tone, onClose }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -761,3 +773,4 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
 }
 
 export default DeviceDiagnosticsScreen;
+// Suhrn vyuzitia AI: V tomto subore bol ChatGPT pouzity pri navrhu diagnostickej obrazovky, volaniach endpointov pre citanie a mazanie DTC kodov, spracovani DTC patternov, mapovani zavaznosti a pri modalnych potvrdeniach. Vysledny kod bol skontrolovany a upraveny autorom.

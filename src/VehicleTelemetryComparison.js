@@ -18,6 +18,7 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 
+// AI: Komponent VehicleTelemetryComparison bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
 // Obrazovka porovnava vozidla podla poslednych telemetry hodnot.
 function VehicleTelemetryComparison({ onNavigate, user }) {
   // Zoznam vozidiel je zdroj pre tabulku aj prazdny stav.
@@ -92,6 +93,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   }, [openActionMenuVin]);
 
   // Backend vracia posledne telemetry hodnoty pre vsetky vozidla pouzivatela.
+  // AI: Funkcia fetchTelemetryComparison a volanie endpointu /api/vehicles/telemetry-comparison boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const fetchTelemetryComparison = async () => {
     try {
       // Token sa nastavi pred requestom, aby presla autorizacia.
@@ -126,6 +128,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   };
 
   // Mazanie vozidla sa robi podla VIN vybraneho riadku.
+  // AI: Funkcia handleDeleteVehicle a volanie endpointu /api/user-vehicle/{vin} boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const handleDeleteVehicle = async (vin) => {
     setDeletingVin(vin);
 
@@ -154,6 +157,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   };
 
   // Klik na hlavicku tabulky prepina stlpec a smer triedenia.
+  // AI: Funkcia handleSort bola ciastocne generovana cez ChatGPT na ovladanie triedenia tabulky a nasledne upravena autorom.
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -163,6 +167,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   };
 
   // Triedenie pracuje s kopiou pola, nie priamo so stavom.
+  // AI: Funkcia getSortedVehicles bola ciastocne generovana cez ChatGPT na triedenie vozidiel podla telemetrickych statistik a nasledne upravena autorom.
   const getSortedVehicles = () => {
     return [...vehicles].sort((a, b) => {
       let aVal;
@@ -214,12 +219,14 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   };
 
   // Chybajuce cisla sa v tabulke zobrazia ako pomlcka.
+  // AI: Funkcia formatNumber bola ciastocne generovana cez ChatGPT na zobrazenie telemetrickych cisel a nasledne upravena autorom.
   const formatNumber = (num, decimals = 1) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(decimals);
   };
 
   // Ikona ukazuje aktualny smer triedenia stlpca.
+  // AI: Funkcia getSortIcon bola ciastocne generovana cez ChatGPT na zobrazenie smeru triedenia a nasledne upravena autorom.
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) {
       return <ArrowsUpDownIcon style={{ width: "1rem", height: "1rem" }} />;
@@ -238,6 +245,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   };
 
   // Pozicia popupu sa pocita z tlacidla v konkretnom riadku.
+  // AI: Funkcia updatePopupPosition bola ciastocne generovana cez ChatGPT na umiestnenie akcioveho popupu a nasledne upravena autorom.
   const updatePopupPosition = (vin) => {
     const button = triggerRefs.current[vin];
     if (!button) return;
@@ -273,6 +281,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   };
 
   // Klik bud otvori menu pre VIN, alebo zatvori uz otvorene menu.
+  // AI: Funkcia toggleActionMenu bola ciastocne generovana cez ChatGPT na ovladanie akcioveho menu vozidla a nasledne upravena autorom.
   const toggleActionMenu = (vin) => {
     setOpenActionMenuVin((prev) => {
       const next = prev === vin ? null : vin;
@@ -284,6 +293,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   };
 
   // Potvrdzovaci dialog brani nechcenemu zmazaniu vozidla.
+  // AI: Komponent DeleteConfirmDialog bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
   const DeleteConfirmDialog = ({ vin, onConfirm, onCancel }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -756,3 +766,4 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
 }
 
 export default VehicleTelemetryComparison;
+// Suhrn vyuzitia AI: V tomto subore bol ChatGPT pouzity pri navrhu porovnania telemetrie vozidiel, volani endpointov pre nacitanie a vymazanie vozidla, triedeni tabulky, formatovani hodnot a pri akciovom menu. Vysledny kod bol skontrolovany a upraveny autorom.

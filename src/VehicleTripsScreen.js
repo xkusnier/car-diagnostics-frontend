@@ -24,6 +24,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// AI: Komponent VehicleTripsScreen bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
 // Obrazovka zobrazuje historiu jazd vozidla vratane mapy.
 function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
   // Jazdy sa pouzivaju pre zoznam, mapu aj prepocet suhrnu.
@@ -46,6 +47,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
   }, [vin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Request nacita jazdy a pripadne doplni informacie o vozidle.
+  // AI: Funkcia fetchTrips a volanie endpointu /api/vehicle/{vin}/trips boli ciastocne generovane cez ChatGPT a nasledne upravene autorom.
   const fetchTrips = async () => {
     try {
       // Endpoint je chraneny, preto sa najprv kontroluje token.
@@ -71,6 +73,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
           ...response.data.vehicle,
         }));
 
+        // AI: Vypocet suhrnnych statistik jazd bol ciastocne generovany cez ChatGPT a nasledne upraveny autorom.
         // Vzdialenost sa rata suctom jednotlivych jazd.
         const totalDistance = loadedTrips.reduce(
           (sum, t) => sum + (t.distance_km || 0),
@@ -116,6 +119,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // Sekundy sa pre UI prevadzaju na hodiny, minuty a sekundy.
+  // AI: Funkcia formatDuration bola ciastocne generovana cez ChatGPT na zobrazenie trvania jazdy a nasledne upravena autorom.
   const formatDuration = (seconds) => {
     if (!seconds) return "—";
     const hours = Math.floor(seconds / 3600);
@@ -125,6 +129,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // Datum jazdy sa prevadza do citatelneho formatu.
+  // AI: Funkcia formatDate bola ciastocne generovana cez ChatGPT na formatovanie datumu jazdy a nasledne upravena autorom.
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     const date = new Date(dateStr);
@@ -138,12 +143,14 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // GPS suradnice sa zobrazia na sest desatinnych miest.
+  // AI: Funkcia formatCoordinate bola ciastocne generovana cez ChatGPT na zobrazenie GPS suradnic a nasledne upravena autorom.
   const formatCoordinate = (num) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(6);
   };
 
   // Mapovy link zacina na prvom bode trasy.
+  // AI: Funkcia getOpenStreetMapTripLink bola ciastocne generovana cez ChatGPT na vytvorenie odkazu na trasu a nasledne upravena autorom.
   const getOpenStreetMapTripLink = (points) => {
     if (!points || points.length === 0) return "#";
     const first = points[0];
@@ -151,6 +158,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
   };
 
   // Google Maps link sa sklada z prvej dostupnej suradnice.
+  // AI: Funkcia getGoogleMapsTripLink bola ciastocne generovana cez ChatGPT na vytvorenie odkazu na trasu a nasledne upravena autorom.
   const getGoogleMapsTripLink = (points) => {
     if (!points || points.length === 0) return "#";
     const first = points[0];
@@ -552,3 +560,4 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
 }
 
 export default VehicleTripsScreen;
+// Suhrn vyuzitia AI: V tomto subore bol ChatGPT pouzity pri navrhu obrazovky historie jazd, volani endpointu pre jazdy, vypocte suhrnnych statistik, formatovani hodnot a tvorbe mapovych odkazov. Vysledny kod bol skontrolovany a upraveny autorom.
