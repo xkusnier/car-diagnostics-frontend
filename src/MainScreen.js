@@ -10,7 +10,9 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/solid";
 
+// Dashboard po prihlaseni zobrazuje rychly prehlad a navigacne karty.
 function MainScreen({ onNavigate, user }) {
+  // Statistiky su pokope, lebo sa vykresluju v spolocnych kartach.
   const [stats, setStats] = useState({
     totalDevices: 0,
     totalVehicles: 0,
@@ -18,21 +20,27 @@ function MainScreen({ onNavigate, user }) {
     vehiclesWithIssues: 0,
   });
 
+  // Vozidla s problemami sa drzia oddelene pre spodny prehlad.
   const [vehiclesWithIssuesList, setVehiclesWithIssuesList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Meno v hlavicke sa sklada z najdostupnejsieho udaja o pouzivatelovi.
   const displayName =
     user?.name || user?.nickname || user?.email?.split("@")[0] || "User";
 
+  // Rola urcuje, ci sa maju zobrazit aj admin casti.
   const isAdmin = user?.role === "admin";
 
+  // Po otvoreni dashboardu sa nacita suhrn zo servera.
   useEffect(() => {
     fetchHomeData();
   }, []);
 
+  // Dashboard summary endpoint vracia cisla pre hlavne karty.
   const fetchHomeData = async () => {
     try {
+      // Bez tokenu nema zmysel volat chraneny dashboard endpoint.
       const token = localStorage.getItem("token");
       if (!token) {
         setError("Please login first");
@@ -42,9 +50,11 @@ function MainScreen({ onNavigate, user }) {
 
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+      // Backend vracia pocet zariadeni, vozidiel a problemov.
       const response = await api.get("/api/dashboard-summary");
       const data = response.data;
 
+      // Stav sa nastavuje iba pri uspesnej odpovedi backendu.
       if (data.status === "success") {
         setStats({
           totalDevices: data.summary.total_devices || 0,
@@ -65,6 +75,7 @@ function MainScreen({ onNavigate, user }) {
     }
   };
 
+  // Definicia navigacnych sekcii je v poli, aby sa karty dali renderovat mapom.
   const mainSections = [
     {
       icon: CpuChipIcon,
@@ -89,11 +100,13 @@ function MainScreen({ onNavigate, user }) {
     },
   ];
 
+  // Diagnostika potrebuje deviceId z konkretneho problemoveho vozidla.
   const handleOpenDiagnostics = (deviceId) => {
     if (!deviceId) return;
     onNavigate("device-diagnostics", { deviceId });
   };
 
+  // Pri nacitani dashboardu sa neukazuje prazdny obsah.
   if (loading) {
     return (
       <div className="devices-container">

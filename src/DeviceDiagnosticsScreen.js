@@ -12,7 +12,9 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
+// Diagnosticka obrazovka zobrazuje aktualne DTC a dovoluje ich citat alebo mazat.
 function DeviceDiagnosticsScreen({ deviceId, onBack }) {
+  // Data obsahuju odpoved diagnostickeho endpointu pre konkretne zariadenie.
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +22,9 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   const [reading, setReading] = useState(false);
   const [clearStatus, setClearStatus] = useState("");
   const [readStatus, setReadStatus] = useState("");
+  // Polling sluzi ako poistka, ked realtime udalost nepride hned.
   const [polling, setPolling] = useState(false);
+  // Patterny su oddelene od DTC kodov, lebo ide o dodatocnu analyzu historie.
   const [patterns, setPatterns] = useState([]);
   const [loadingPatterns, setLoadingPatterns] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -31,9 +35,12 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     tone: "info",
   });
 
+  // Socket ref uchovava aktivne spojenie medzi renderovaniami.
   const socketRef = useRef(null);
+  // Interval ref umozni zrusit polling pri odchode z obrazovky.
   const pollingIntervalRef = useRef(null);
 
+  // Jeden modal sa pouziva pre uspech, chybu aj informacne spravy.
   const openFeedbackModal = (title, message, tone = "info") => {
     setFeedbackModal({
       open: true,
@@ -43,6 +50,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     });
   };
 
+  // Zatvorenie modalu vycisti aj jeho texty.
   const closeFeedbackModal = () => {
     setFeedbackModal({
       open: false,
@@ -52,6 +60,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     });
   };
 
+  // Chyby z backendu sa prevadzaju na jeden citatelny text.
   const normalizeApiError = (err, fallbackMessage) => {
     const raw =
       err?.response?.data?.error ||
@@ -72,18 +81,23 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     return raw || fallbackMessage;
   };
 
+  // Pri zmene zariadenia sa vytvori websocket a pripravi realtime diagnostika.
   useEffect(() => {
     fetchDiagnostics();
 
+    // Socket adresa sa sklada podobne ako API URL.
     const socketUrl =
       process.env.REACT_APP_API_URL || "https://car-diagnostics.onrender.com";
 
+    // Websocket sa pripaja cez transport websocket, aby sa obisli problemy s pollingom.
     socketRef.current = io(socketUrl, {
       transports: ["websocket"],
       reconnection: true,
     });
 
+    // Potvrdenie vymazania pride asynchronne zo servera.
     socketRef.current.on("clear_confirmation", (socketData) => {
+      // Event sa spracuje iba pre prave otvorene zariadenie.
       if (socketData.device_id === deviceId && socketData.status === "success") {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
@@ -101,6 +115,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       }
     });
 
+    // DTC update obnovi data bez manualneho refreshu obrazovky.
     socketRef.current.on("dtc_update", (socketData) => {
       if (socketData.device_id === deviceId) {
         setReading(false);
@@ -113,18 +128,22 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
       }
     });
 
+    // Cleanup zrusi interval aj socket, aby po odchode nebezali duplicitne odbery.
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
       if (socketRef.current) socketRef.current.disconnect();
     };
   }, [deviceId]);
 
+  // Ked sa zmeni VIN v diagnostike, nacitaju sa aj pattern vysledky.
   useEffect(() => {
     if (data?.vin) checkDtcPatterns(data.vin);
   }, [data?.vin]);
 
+  // Zakladny request nacita stav zariadenia a zoznam DTC kodov.
   const fetchDiagnostics = async () => {
     try {
+      // Endpoint vracia diagnostiku pre jedno konkretne zariadenie.
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
       setData(res.data);
       setError(null);
@@ -135,11 +154,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // Pattern kontrola hlada zaujimave kombinacie alebo opakovane chyby pre VIN.
   const checkDtcPatterns = async (vin) => {
     if (!vin) return;
 
     setLoadingPatterns(true);
     try {
+      // Backend vyhodnoti patterny na zaklade historie DTC.
       const res = await api.get(`/api/dtc/pattern-check/${vin}`);
       setPatterns(res.data.matched_patterns || []);
     } catch (err) {
@@ -150,11 +171,13 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // Manualne citanie poziada backend o nove nacitanie DTC zo zariadenia.
   const handleReadDTCs = async () => {
     setReading(true);
     setReadStatus("Sending read DTC command...");
 
     try {
+      // Poziadavka sa odosiela bez tela, dolezite je deviceId v URL.
       await api.post(`/api/device/${deviceId}/read-dtcs`, {});
       setReadStatus("Command sent. Waiting for DTCs...");
     } catch (err) {
@@ -168,12 +191,14 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // Vymazanie DTC je samostatna akcia a spusta sa az po potvrdeni.
   const handleClearDTCs = async () => {
     setShowClearConfirm(false);
     setClearing(true);
     setClearStatus("Sending clear command...");
 
     try {
+      // Backend vykona clear akciu na konkretnom zariadeni.
       await api.post(`/api/device/${deviceId}/clear-dtcs`, {});
       setClearStatus("Command sent. Waiting for device confirmation...");
     } catch (err) {
@@ -187,6 +212,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // Vaznost sa meni na jednoduchy nazov farby pre UI.
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
       case "critical":
@@ -202,6 +228,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // Badge trieda oddeluje CSS od dat z backendu.
   const getSeverityBadgeClass = (severity) => {
     switch (severity?.toLowerCase()) {
       case "critical":
@@ -217,6 +244,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // Ikony pomahaju rychlo odlisit kriticke chyby.
   const getSeverityIcon = (severity) => {
     const iconStyle = {
       width: "0.95rem",
@@ -236,6 +264,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     }
   };
 
+  // Odporucanie sa berie z backendu alebo zo zalozneho pravidla.
   const getRecommendedAction = (item) => {
     if (item?.recommended_action) return item.recommended_action;
 
@@ -252,6 +281,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
   };
 
 
+  // Dialog brani nahodnemu vymazaniu chybovych kodov.
   const ConfirmClearDialog = ({ onConfirm, onCancel }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -273,6 +303,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     </div>
   );
 
+  // Modal je oddeleny komponent, aby sa neopakoval markup hlasok.
   const FeedbackModal = ({ title, message, tone, onClose }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -301,6 +332,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     </div>
   );
 
+  // Pri prvom nacitani sa zobrazi loading namiesto prazdnej diagnostiky.
   if (loading) {
     return (
       <div className="devices-container">
@@ -312,6 +344,7 @@ function DeviceDiagnosticsScreen({ deviceId, onBack }) {
     );
   }
 
+  // Pri chybe sa zobrazi samostatny stav s moznostou navratu.
   if (error) {
     return (
       <div className="devices-container">

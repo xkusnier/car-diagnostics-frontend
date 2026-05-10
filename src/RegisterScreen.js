@@ -7,29 +7,36 @@ import {
   EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 
+// Registracny formular vytvara novy ucet a po uspechu vie pouzivatela prihlasit.
 function RegisterScreen({ onRegister, onNavigateToLogin }) {
+  // Udaje formulara su ulozene samostatne, lebo kazdy input sa meni nezavisle.
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  // Prepnutie viditelnosti hesla je iba lokalna UI pomocka.
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Handler robi zakladnu validaciu este pred volanim backendu.
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prazdne povinne polia sa vratia ako chyba vo formulari.
     if (!username || !email || !password || !confirmPassword) {
       setError("Please fill in all fields");
       return;
     }
 
+    // Kratke meno sa odmietne hned, aby pouzivatel nemusel cakat na backend.
     if (username.trim().length < 3) {
       setError("Username must be at least 3 characters long");
       return;
     }
 
+    // Zhodu hesiel vie frontend overit spolahlivo sam.
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       setConfirmPassword("");

@@ -8,27 +8,33 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 
+// Obrazovka zobrazuje a upravuje stav kilometrov pre vozidlo.
 function VehicleOdometerScreen({ vin, vehicleInfo, onBack }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
 
+  // Formular drzi editovatelne hodnoty oddelene od odpovede backendu.
   const [form, setForm] = useState({
     odometer: "",
     odometer_source: "rpi",
   });
 
+  // Nacitanie doplni aktualny stav kilometrov a metadata vozidla.
   const fetchOdometer = async () => {
     try {
       setLoading(true);
+      // Token sa nastavi pred volanim chraneneho endpointu.
       const token = localStorage.getItem("token");
       if (token) {
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
 
+      // Backend vracia posledny znamy odometer pre dane VIN.
       const res = await api.get(`/api/vehicle/${vin}/odometer`);
 
+      // Formular sa predvyplni hodnotami zo servera.
       setForm({
         odometer:
           res.data?.odometer !== null && res.data?.odometer !== undefined
@@ -46,12 +52,14 @@ function VehicleOdometerScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  // Pri zmene VIN sa nacita iny odometer.
   useEffect(() => {
     if (vin) {
       fetchOdometer();
     }
   }, [vin]);
 
+  // Helper meni jedno pole formulara bez prepisania ostatnych.
   const handleChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
@@ -59,6 +67,7 @@ function VehicleOdometerScreen({ vin, vehicleInfo, onBack }) {
     }));
   };
 
+  // Ulozenie validuje vstup a posiela novu hodnotu na backend.
   const handleSave = async () => {
     setSaving(true);
     setStatusMessage("");
@@ -70,10 +79,12 @@ function VehicleOdometerScreen({ vin, vehicleInfo, onBack }) {
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
 
+      // Payload sa sklada z aktualnych hodnot formulara.
       const payload = {
         odometer_source: form.odometer_source,
       };
 
+      // Pri manualnom zdroji musi byt vyplnena aj konkretna hodnota kilometrov.
       if (form.odometer_source === "manual") {
         if (form.odometer === "" || form.odometer === null) {
           setError("Please enter the odometer value.");
@@ -92,6 +103,7 @@ function VehicleOdometerScreen({ vin, vehicleInfo, onBack }) {
         payload.odometer = parsed;
       }
 
+      // PUT poziadavka prepise aktualny odometer vozidla.
       await api.put(`/api/vehicle/${vin}/odometer`, payload);
 
       setStatusMessage("Odometer settings saved successfully.");
@@ -108,6 +120,7 @@ function VehicleOdometerScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  // Pri prvom nacitani sa ukaze loading stav.
   if (loading) {
     return (
       <div className="devices-container">

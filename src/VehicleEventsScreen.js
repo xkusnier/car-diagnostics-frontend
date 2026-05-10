@@ -21,18 +21,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// Obrazovka zobrazuje udalosti vozidla pre konkretne VIN.
 function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
+  // Udalosti su hlavny zoznam pre suhrn aj detailne karty.
   const [events, setEvents] = useState([]);
   const [vehicle, setVehicle] = useState(vehicleInfo || { vin });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pri zmene VIN sa nacitaju udalosti pre ine vozidlo.
   useEffect(() => {
     fetchVehicleEvents();
   }, [vin]);
 
+  // Request nacita eventy a zakladne informacie o vozidle.
   const fetchVehicleEvents = async () => {
     try {
+      // Token sa nastavi pred volanim chraneneho endpointu.
       const token = localStorage.getItem("token");
       if (!token) {
         setError("Please login first");
@@ -42,6 +47,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
 
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+      // Endpoint vracia udalosti ulozene pre dane vozidlo.
       const response = await api.get(`/api/vehicle/${vin}/events`);
 
       if (response.data.status === "success") {
@@ -63,6 +69,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  // Suhrn sa prepocita iba ked sa zmeni zoznam udalosti.
   const summary = useMemo(() => {
     return {
       total: events.length,
@@ -73,6 +80,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
     };
   }, [events]);
 
+  // Datum udalosti sa zobrazuje v citatelnejsom tvare.
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     const date = new Date(dateStr);
@@ -85,16 +93,19 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
     });
   };
 
+  // Chybajuce cisla sa nahradia pomlckou.
   const formatNumber = (num, decimals = 2) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(decimals);
   };
 
+  // GPS suradnice potrebuju viac desatinnych miest.
   const formatCoordinate = (num) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(6);
   };
 
+  // Interny typ eventu sa prevadza na text pre pouzivatela.
   const getEventLabel = (eventType) => {
     switch (eventType) {
       case "HARD_BRAKE":
@@ -110,6 +121,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  // Ikony ulahcuju rychle rozlisenie typov udalosti.
   const getEventIcon = (eventType) => {
     switch (eventType) {
       case "HARD_BRAKE":
@@ -125,6 +137,7 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  // CSS trieda urcuje vizualne zvyraznenie eventu.
   const getEventClass = (eventType) => {
     switch (eventType) {
       case "HARD_BRAKE":
@@ -140,12 +153,14 @@ function VehicleEventsScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  // Link na mapu sa sklada z GPS suradnic eventu.
   const getOpenStreetMapLink = (lat, lng) =>
     `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
 
   const getGoogleMapsLink = (lat, lng) =>
     `https://www.google.com/maps?q=${lat},${lng}`;
 
+  // Loading stav sa zobrazi pred prichodom eventov.
   if (loading) {
     return (
       <div className="devices-container">

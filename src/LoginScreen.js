@@ -8,25 +8,32 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
+// Prihlasovaci formular posiela udaje do handlera v App.js.
 function LoginScreen({ onLogin, onNavigateToRegister }) {
+  // Identifier moze byt email alebo pouzivatelske meno.
   const [identifier, setIdentifier] = useState("");
+  // Heslo sa drzi len v lokalnom stave formulara.
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Submit zastavi klasicke odoslanie a pouzije React handler.
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prazdny formular sa zachyti este pred requestom na backend.
     if (!identifier || !password) {
       setError("Please enter your email/username and password");
       return;
     }
 
+    // Stara chyba sa maze pred novym pokusom o prihlasenie.
     setError("");
     setLoading(true);
 
     try {
+      // App.js riesi samotny API request a vrati vysledok prihlasenia.
       const result = await onLogin(identifier, password);
 
       if (!result.success) {

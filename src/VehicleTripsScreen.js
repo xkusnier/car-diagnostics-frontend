@@ -16,6 +16,7 @@ import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+// Leaflet v React builde potrebuje rucne nastavene cesty k ikonam markerov.
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -23,11 +24,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// Obrazovka zobrazuje historiu jazd vozidla vratane mapy.
 function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
+  // Jazdy sa pouzivaju pre zoznam, mapu aj prepocet suhrnu.
   const [trips, setTrips] = useState([]);
   const [vehicle, setVehicle] = useState(vehicleInfo || { vin });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Suhrn drzi prepocitane hodnoty nad nacitanymi jazdami.
   const [summary, setSummary] = useState({
     totalTrips: 0,
     totalDistance: 0,
@@ -36,12 +40,15 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
     avgConsumption: 0,
   });
 
+  // Pri zmene VIN sa musi nacitat ina historia jazd.
   useEffect(() => {
     fetchTrips();
   }, [vin]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Request nacita jazdy a pripadne doplni informacie o vozidle.
   const fetchTrips = async () => {
     try {
+      // Endpoint je chraneny, preto sa najprv kontroluje token.
       const token = localStorage.getItem("token");
       if (!token) {
         setError("Please login first");
@@ -51,31 +58,39 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
 
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+      // Backend vracia zoznam jazd pre dane VIN.
       const response = await api.get(`/api/vehicle/${vin}/trips`);
 
       if (response.data.status === "success") {
+        // Prazdna odpoved sa berie ako prazdny zoznam jazd.
         const loadedTrips = response.data.trips || [];
         setTrips(loadedTrips);
+        // Info o vozidle sa doplni k tomu, co prislo z navigacie.
         setVehicle((prev) => ({
           ...prev,
           ...response.data.vehicle,
         }));
 
+        // Vzdialenost sa rata suctom jednotlivych jazd.
         const totalDistance = loadedTrips.reduce(
           (sum, t) => sum + (t.distance_km || 0),
           0
         );
+        // Celkovy cas sa rata zo sekund ulozenych pri jazdach.
         const totalDuration = loadedTrips.reduce(
           (sum, t) => sum + (t.duration_seconds || 0),
           0
         );
+        // Priemer rychlosti sa rata iba z jazd, ktore hodnotu maju.
         const speeds = loadedTrips
           .filter((t) => t.avg_speed)
           .map((t) => t.avg_speed);
+        // Spotreba sa priemeruje len z dostupnych hodnot.
         const consumptions = loadedTrips
           .filter((t) => t.avg_consumption_l100km)
           .map((t) => t.avg_consumption_l100km);
 
+        // Suhrnne karty dostanu prepocitane hodnoty naraz.
         setSummary({
           totalTrips: response.data.total_trips || loadedTrips.length,
           totalDistance,
@@ -100,6 +115,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
     }
   };
 
+  // Sekundy sa pre UI prevadzaju na hodiny, minuty a sekundy.
   const formatDuration = (seconds) => {
     if (!seconds) return "—";
     const hours = Math.floor(seconds / 3600);
@@ -108,6 +124,7 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
     return `${hours}h ${minutes}m ${secs}s`;
   };
 
+  // Datum jazdy sa prevadza do citatelneho formatu.
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     const date = new Date(dateStr);
@@ -120,23 +137,27 @@ function VehicleTripsScreen({ vin, vehicleInfo, onBack }) {
     });
   };
 
+  // GPS suradnice sa zobrazia na sest desatinnych miest.
   const formatCoordinate = (num) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(6);
   };
 
+  // Mapovy link zacina na prvom bode trasy.
   const getOpenStreetMapTripLink = (points) => {
     if (!points || points.length === 0) return "#";
     const first = points[0];
     return `https://www.openstreetmap.org/?mlat=${first.latitude}&mlon=${first.longitude}#map=14/${first.latitude}/${first.longitude}`;
   };
 
+  // Google Maps link sa sklada z prvej dostupnej suradnice.
   const getGoogleMapsTripLink = (points) => {
     if (!points || points.length === 0) return "#";
     const first = points[0];
     return `https://www.google.com/maps?q=${first.latitude},${first.longitude}`;
   };
 
+  // Pri nacitani sa nezobrazuje prazdny zoznam jazd.
   if (loading) {
     return (
       <div className="devices-container">

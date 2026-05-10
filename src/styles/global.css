@@ -1,5 +1,6 @@
 /* src/styles/global.css */
 
+/* Spolocne CSS premenne pre farby, tiene, radiusy a prechody. */
 :root {
   --primary-blue: #2563eb;
   --primary-blue-dark: #1d4ed8;
@@ -67,6 +68,7 @@
 }
 
 html,
+/* Zaklad stranky nastavuje rozmery aplikacie na celu vysku okna. */
 body,
 #root {
   min-height: 100%;
@@ -88,6 +90,7 @@ svg {
   display: block;
 }
 
+/* Formularove prvky dedia font, aby cele UI posobilo jednotne. */
 button,
 input,
 textarea,
@@ -136,6 +139,7 @@ code {
   }
 }
 
+/* Hlavne kontajnery zjednocuju sirku a odsadenie obrazoviek. */
 .container,
 .devices-container,
 .dtc-history-container {
@@ -144,6 +148,7 @@ code {
   padding: 2rem 0.9rem 3rem;
 }
 
+/* Karty a panely maju rovnaky tmavy vizualny zaklad. */
 .card,
 .search-card,
 .results-section,
@@ -175,6 +180,7 @@ code {
   padding: 1.5rem;
 }
 
+/* Horny pas obrazovky drzi hlavne navigacne akcie. */
 .screen-topbar {
   display: flex;
   align-items: center;
@@ -182,6 +188,7 @@ code {
   margin-bottom: 1rem;
 }
 
+/* Jednotne spatne tlacidlo sa pouziva na viacerych detailoch. */
 .back-button-unified {
   border: 1px solid var(--border-medium);
   background: var(--bg-secondary);
@@ -202,6 +209,7 @@ code {
   transform: translateY(-1px);
 }
 
+/* Hlavicka oddeluje nazov sekcie od obsahu pod nou. */
 .devices-header {
   display: flex;
   align-items: flex-start;
@@ -221,6 +229,7 @@ code {
   font-size: 0.98rem;
 }
 
+/* Male status prvky ukazuju rychle informacie pri nadpisoch. */
 .device-status,
 .dtc-count,
 .pattern-count {
@@ -261,6 +270,7 @@ code {
   box-shadow: 0 0 10px rgba(220, 38, 38, 0.45);
 }
 
+/* Suhrnne bloky su v gride, aby sa pekne prisposobili sirke. */
 .stats-bar,
 .summary-cards {
   display: grid;
@@ -330,6 +340,7 @@ code {
   gap: 0.3rem;
 }
 
+/* Loading a prazdne stavy su centrovane namiesto prazdneho obsahu. */
 .loading-center,
 .empty-state {
   min-height: 240px;
@@ -367,6 +378,7 @@ code {
   color: var(--text-secondary);
 }
 
+/* Chybove a stavove spravy zdielaju zaklad a lisia sa farbou. */
 .error-card,
 .error-message,
 .auth-error,
@@ -428,6 +440,7 @@ code {
   color: #fde68a;
 }
 
+/* Formularove skupiny drzia label, input a pomocny text pokope. */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -448,6 +461,7 @@ code {
   font-size: 0.95rem;
 }
 
+/* Vstupy maju jednotny tmavy styl a focus spravanie. */
 .input,
 .form-input {
   width: 100%;
@@ -517,6 +531,7 @@ code {
   color: var(--text-primary);
 }
 
+/* Hlavicky sekcii drzia nadpisy a doplnkove akcie v jednom riadku. */
 .search-header,
 .results-header,
 .section-header,
@@ -563,6 +578,7 @@ code {
   margin-bottom: 1.5rem;
 }
 
+/* Tlacidla zdielaju zakladne rozmery, varianty menia hlavne farbu. */
 .btn,
 .auth-button,
 .auth-link,
@@ -839,6 +855,7 @@ code {
   font-size: 0.84rem;
 }
 
+/* Badge prvky zobrazaju kratke stavy ako vaznost alebo aktivitu. */
 .badge,
 .severity-badge,
 .status-badge,
@@ -1188,6 +1205,7 @@ code {
   color: var(--text-secondary);
 }
 
+/* Modal overlay stmavi pozadie pri potvrdeniach a hlaseniach. */
 .modal-overlay {
   position: fixed;
   inset: 0;

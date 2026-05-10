@@ -7,6 +7,7 @@ import {
   InboxIcon,
 } from "@heroicons/react/24/outline";
 
+// Obrazovka zobrazuje historiu DTC kodov pre zadane VIN.
 function DTCHistoryScreen({ onBack }) {
   const [vin, setVin] = useState("");
   const [data, setData] = useState(null);
@@ -14,30 +15,37 @@ function DTCHistoryScreen({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [activeDtcs, setActiveDtcs] = useState([]);
   const [loadingActive, setLoadingActive] = useState(false);
+  // Filtre su pokope, lebo sa posielaju v jednom payloade na backend.
   const [filters, setFilters] = useState({
     dateFrom: "",
     dateTo: "",
     severity: "all",
   });
 
+  // VIN ma presnu dlzku a nepovoluje znaky, ktore sa lahko zamienaju.
   const isValidVinFormat = (value) => {
     return /^[A-HJ-NPR-Z0-9]{17}$/.test(value);
   };
 
+  // Aktivne DTC sa dotahuju zvlast, aby sa historia dala oznacit ako active/resolved.
   const fetchActiveDtcs = async (vinCode) => {
     setLoadingActive(true);
     try {
+      // Najprv sa skusia zariadenia pouzivatela, kde je mozne ziskat aktualnu diagnostiku.
       const devicesRes = await api.get("/api/my-devices");
       const devices = devicesRes.data.devices || [];
 
+      // Hlada sa zariadenie priradene k rovnakemu VIN.
       const deviceWithVin = devices.find((d) => d.vin === vinCode);
 
+      // Ak existuje zariadenie, aktualne DTC sa citaju cez jeho device_id.
       if (deviceWithVin) {
         const diagRes = await api.get(`/api/device/${deviceWithVin.device_id}/diagnostics`);
         const activeCodes = diagRes.data.dtc_codes || [];
         setActiveDtcs(activeCodes.map((d) => d.dtc_code));
       } else {
         try {
+          // Fallback endpoint sa pouzije, ked VIN nie je medzi zariadeniami.
           const activeRes = await api.get(`/api/vehicle/${vinCode}/active-dtcs`);
           setActiveDtcs(activeRes.data.active_dtcs || []);
         } catch {
@@ -52,10 +60,12 @@ function DTCHistoryScreen({ onBack }) {
     }
   };
 
+  // Pomocna funkcia zisti, ci sa kod nachadza medzi aktivnymi DTC.
   const isDtcActive = (dtcCode) => {
     return activeDtcs.includes(dtcCode);
   };
 
+  // Formular vycisti stare data, zvaliduje VIN a nacita historiu.
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -64,6 +74,7 @@ function DTCHistoryScreen({ onBack }) {
     setActiveDtcs([]);
 
     try {
+      // VIN sa normalizuje, aby nezalezalo na medzerach a velkosti pismen.
       const normalizedVin = vin.trim().toUpperCase();
 
       if (!isValidVinFormat(normalizedVin)) {
@@ -71,17 +82,20 @@ function DTCHistoryScreen({ onBack }) {
         return;
       }
 
+      // Payload sa sklada postupne, aby sa neposielali prazdne filtre.
       const payload = { vin: normalizedVin };
       if (filters.dateFrom) payload.date_from = filters.dateFrom;
       if (filters.dateTo) payload.date_to = filters.dateTo;
       if (filters.severity !== "all") payload.severity = filters.severity;
 
+      // Backend vracia kompletnu historiu DTC pre dane vozidlo.
       const res = await api.post("/api/dtc-history-full", payload);
       const history = res.data.history || [];
 
       setData(history);
       await fetchActiveDtcs(normalizedVin);
     } catch (err) {
+      // Chyba z backendu moze byt v error alebo message poli.
       const backendError =
         err.response?.data?.error ||
         err.response?.data?.message ||
@@ -105,6 +119,7 @@ function DTCHistoryScreen({ onBack }) {
     }
   };
 
+  // Zalozny odhad vaznosti vychadza z prefixu DTC kodu.
   const getSeverityColor = (dtcCode) => {
     if (dtcCode?.startsWith("P0") || dtcCode?.startsWith("P1")) return "medium";
     if (dtcCode?.startsWith("P2")) return "high";
@@ -112,6 +127,7 @@ function DTCHistoryScreen({ onBack }) {
     return "low";
   };
 
+  // Vaznost sa mapuje na CSS triedu pre badge.
   const getSeverityBadgeClass = (severity) => {
     switch (severity?.toLowerCase()) {
       case "critical":
@@ -127,6 +143,7 @@ function DTCHistoryScreen({ onBack }) {
     }
   };
 
+  // Ikona sluzi ako rychla vizualna pomocka pri citani tabulky.
   const getSeverityIcon = (severity) => {
     switch (severity?.toLowerCase()) {
       case "critical":
@@ -142,6 +159,7 @@ function DTCHistoryScreen({ onBack }) {
     }
   };
 
+  // Status badge porovnava historicky kod s aktualne aktivnymi kodmi.
   const getStatusBadge = (dtcCode) => {
     const active = isDtcActive(dtcCode);
     return {
@@ -150,6 +168,7 @@ function DTCHistoryScreen({ onBack }) {
     };
   };
 
+  // Datumy z backendu sa prevadzaju do citatelneho formatu pre UI.
   const formatDate = (dateString) => {
     if (!dateString) return "—";
     const date = new Date(dateString);

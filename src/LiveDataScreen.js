@@ -17,29 +17,36 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
+// Obrazovka ukazuje zive telemetry data z konkretneho zariadenia.
 function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
+  // Live stav drzi posledny znamy balik hodnot z backendu alebo websocketu.
   const [live, setLive] = useState({
     data: null,
     updatedAt: null,
     error: null,
   });
 
+  // Websocket stav sa zobrazuje v UI, aby bolo vidiet pripojenie.
   const [wsStatus, setWsStatus] = useState({
     connected: false,
     error: null,
   });
 
   const [deviceDetails, setDeviceDetails] = useState(deviceInfo || null);
+  // Ref drzi aktivny socket bez toho, aby spustal rerender.
   const socketRef = useRef(null);
 
+  // Ak chyba detail zariadenia, dotiahne sa po otvoreni obrazovky.
   useEffect(() => {
     if (!deviceDetails && deviceId) {
       fetchDeviceInfo();
     }
   }, [deviceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Info o zariadeni sa berie z diagnostickeho endpointu ako fallback.
   const fetchDeviceInfo = async () => {
     try {
+      // Diagnosticky endpoint obsahuje aj zakladne informacie o zariadeni.
       const res = await api.get(`/api/device/${deviceId}/diagnostics`);
       setDeviceDetails(res.data);
     } catch (err) {
@@ -47,8 +54,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     }
   };
 
+  // Prve nacitanie dat vyplni obrazovku este pred websocket updatom.
   const fetchLiveData = async () => {
     try {
+      // Live endpoint vracia posledne ulozene hodnoty pre zariadenie.
       const response = await api.get(`/api/device/${deviceId}/live`);
 
       if (response.data.status === "success") {
@@ -66,9 +75,11 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     }
   };
 
+  // Pri zmene deviceId sa restartuje websocket pripojenie.
   useEffect(() => {
     fetchLiveData();
 
+    // Stary socket sa musi odpojit, aby nechodili duplicity eventov.
     if (socketRef.current) {
       socketRef.current.removeAllListeners();
       socketRef.current.disconnect();
@@ -83,6 +94,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     const token =
       localStorage.getItem("token") || localStorage.getItem("access_token");
 
+    // Socket pouziva rovnaku backend adresu ako API, len bez /api casti.
     const socket = io(wsUrl, {
       transports: ["websocket"],
       auth: token ? { token } : undefined,
@@ -91,8 +103,10 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
       reconnectionDelay: 500,
     });
 
+    // Ulozenie socketu do refu umozni cleanup pri dalsom rendri.
     socketRef.current = socket;
 
+    // Po pripojeni sa klient prihlasi na konkretne zariadenie.
     const onConnect = () => {
       setWsStatus({ connected: true, error: null });
       socket.emit("subscribe_device", { device_id: deviceId });
@@ -110,6 +124,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
       });
     };
 
+    // Telemetry event sa filtruje podla deviceId, aby sa nepomiesali vozidla.
     const onTelemetry = (payload) => {
       if (!payload || Number(payload.device_id) !== Number(deviceId)) return;
 
@@ -119,6 +134,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
         if (payload.odometer !== undefined) newData.odometer = payload.odometer;
         if (payload.speed !== undefined) newData.speed = payload.speed;
 
+        // Bateria je vnoreny objekt, preto sa rozbaluje opatrne po castiach.
         if (payload.battery) {
           newData.battery = {
             voltage: payload.battery.battery_voltage,
@@ -141,6 +157,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("connect_error", onConnectError);
+    // Hlavny realtime event nesie aktualne hodnoty z vozidla.
     socket.on("telemetry_update", onTelemetry);
     socket.on("server_ready", () => {});
     socket.on("subscribed", () => {});
@@ -151,6 +168,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
       });
     });
 
+    // Cleanup zrusi listenery aj socket spojenie pri odchode z obrazovky.
     return () => {
       socket.removeAllListeners();
       socket.disconnect();
@@ -158,11 +176,13 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     };
   }, [deviceId]);
 
+  // Formatter vracia pomlcku pre chybajuce hodnoty namiesto NaN.
   const formatNumber = (num, decimals = 1) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(decimals);
   };
 
+  // Napatie sa prevadza na farbu/stav pre rychle vizualne citanie.
   const getBatteryColor = (voltage) => {
     if (!voltage) return "#999";
     if (voltage < 11.8) return "#f44336";
@@ -170,11 +190,13 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     return "#4caf50";
   };
 
+  // Stav motora sa ukazuje ikonou, aby bol zretelny uz na prvy pohlad.
   const getEngineStatusIcon = (running) => {
     if (running === null || running === undefined) return "⚫";
     return running ? "🟢" : "🔴";
   };
 
+  // Bez ID zariadenia nema obrazovka zdroj dat.
   if (!deviceId) {
     return (
       <div className="devices-container">
@@ -192,6 +214,7 @@ function LiveDataScreen({ deviceId, onBack, deviceInfo }) {
     );
   }
 
+  // Skratka data zjednodusuje JSX s mnozstvom telemetry hodnot.
   const data = live.data;
 
   return (

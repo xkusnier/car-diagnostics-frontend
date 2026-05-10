@@ -5,7 +5,9 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import "leaflet/dist/leaflet.css";
 
+// Root element je miesto, kam React vlozi celu aplikaciu.
 const root = ReactDOM.createRoot(document.getElementById('root'));
+// StrictMode pomaha odhalit niektore problemy pocas vyvoja.
 root.render(
   <React.StrictMode>
     <App />
@@ -15,4 +17,5 @@ root.render(
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// Web vitals hook je pripraveny, ale bez callbacku nikam neposiela vysledky.
 reportWebVitals();

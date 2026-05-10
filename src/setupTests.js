@@ -2,4 +2,5 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
+// Jest-dom pridava pohodlne matchery pre testovanie DOM prvkov.
 import '@testing-library/jest-dom';

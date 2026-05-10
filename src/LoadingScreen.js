@@ -5,12 +5,16 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
+// Jednoducha obrazovka pre dlhsie cakanie, hlavne pri prebudzani backendu.
 function LoadingScreen({ message, attempt }) {
+  // Bodky sa menia v case, aby loading neposobil zamrznuto.
   const [dots, setDots] = useState('');
 
   // Animácia bodiek pre "Waking up..."
+  // Animacia bodiek bezi iba pri sprave o prebudzani servera.
   useEffect(() => {
     if (message.includes("Waking up")) {
+      // Interval pravidelne pridava alebo resetuje bodky v texte.
       const interval = setInterval(() => {
         setDots(prev => prev.length >= 3 ? '' : prev + '.');
       }, 500);
@@ -18,6 +22,7 @@ function LoadingScreen({ message, attempt }) {
     }
   }, [message]);
 
+  // Text sa upravi len pre wake-up stav, ostatne spravy ostavaju povodne.
   const displayMessage = message.includes("Waking up") 
     ? `Waking up the server${dots}` 
     : message;

@@ -12,11 +12,14 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
+// Obrazovka spravuje zariadenia pouzivatela a akcie nad nimi.
 function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
+  // Zoznam zariadeni je hlavny zdroj pre tabulku.
   const [devices, setDevices] = useState([]);
   const [filteredDevices, setFilteredDevices] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Vstup pre pridanie noveho zariadenia sa drzi lokalne.
   const [newDeviceId, setNewDeviceId] = useState("");
   const [assignUserId, setAssignUserId] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -29,6 +32,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     tone: "info",
   });
 
+  // Po otvoreni obrazovky sa nacita aktualny zoznam zariadeni.
   useEffect(() => {
     fetchDevices();
 
@@ -39,10 +43,12 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Druhy efekt zatvara menu pri kliknuti mimo neho.
   useEffect(() => {
     setFilteredDevices(devices);
   }, [devices]);
 
+  // Jeden modal sa pouziva pre viac druhov stavovych hlasok.
   const openFeedbackModal = (title, message, tone = "info") => {
     setFeedbackModal({
       open: true,
@@ -52,6 +58,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     });
   };
 
+  // Pri zatvoreni modalu sa vymaze aj jeho obsah.
   const closeFeedbackModal = () => {
     setFeedbackModal({
       open: false,
@@ -61,6 +68,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     });
   };
 
+  // Rozne formaty backend chyb sa prevadzaju na jeden text.
   const normalizeApiError = (err, fallbackMessage) => {
     const raw =
       err?.response?.data?.error ||
@@ -81,8 +89,10 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     return raw || fallbackMessage;
   };
 
+  // Nacitanie zariadeni sa pouziva pri prvom vstupe aj po zmene zoznamu.
   const fetchDevices = async () => {
     try {
+      // Backend vracia zariadenia patriace aktualnemu pouzivatelovi.
       const res = await api.get("/api/my-devices");
       setDevices(res.data.devices || []);
     } catch (err) {
@@ -92,6 +102,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     }
   };
 
+  // Pridanie zariadenia validuje vstup a potom vola backend.
   const handleAddDevice = async () => {
     if (!newDeviceId) {
       openFeedbackModal("Missing Device ID", "Please enter a Device ID.", "danger");
@@ -125,9 +136,11 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     }
   };
 
+  // Mazanie zariadenia sa vykona podla ID z riadku tabulky.
   const handleDeleteDevice = async (deviceId) => {
     setDeletingId(deviceId);
     try {
+      // Po zmazani sa zoznam obnovi cez fetchDevices.
       await api.delete(`/api/device/${deviceId}`);
       await fetchDevices();
       setShowDeleteConfirm(null);
@@ -149,6 +162,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     }
   };
 
+  // Status zariadenia sa prevadza na CSS stav.
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "online":
@@ -162,6 +176,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     }
   };
 
+  // Potvrdenie chrani pred nahodnym zmazanim zariadenia.
   const DeleteConfirmDialog = ({ deviceId, onConfirm, onCancel }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -193,6 +208,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     </div>
   );
 
+  // Modal je samostatny, aby hlavny render ostal prehladnejsi.
   const FeedbackModal = ({ title, message, tone, onClose }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -221,6 +237,7 @@ function MyDevicesScreen({ onBack, onDiagnostics, onLiveData, role }) {
     </div>
   );
 
+  // Pri nacitani sa zobrazi loading namiesto prazdnej tabulky.
   if (loading) {
     return (
       <div className="devices-container">

@@ -21,12 +21,17 @@ import VehicleOdometerScreen from "./VehicleOdometerScreen";
 
 import LoadingScreen from "./LoadingScreen";
 
+// Hlavny komponent drzi prihlasenie, navigaciu a spolocny stav aplikacie.
 function App() {
+  // Obrazovky sa prepinaju rucne cez nazov, bez samostatneho routera.
   const [currentScreen, setCurrentScreen] = useState("login");
   const [user, setUser] = useState(null);
+  // ID zariadenia sa posuva do diagnostiky a dalsich detailnych obrazoviek.
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  // Live data maju vlastny vyber zariadenia, aby sa nemiesali s diagnostikou.
   const [selectedDeviceForLive, setSelectedDeviceForLive] = useState(null);
   const [selectedDeviceInfo, setSelectedDeviceInfo] = useState(null);
+  // VIN sa uklada globalne v App, lebo ho pouziva viac vozidlovych obrazoviek.
   const [selectedVin, setSelectedVin] = useState(null);
   const [selectedVehicleInfo, setSelectedVehicleInfo] = useState(null);
   const [selectedEventsVin, setSelectedEventsVin] = useState(null);
@@ -34,6 +39,7 @@ function App() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Loading je rozdeleny na fazy, najma kvoli prebudzaniu backendu na hostingu.
   const [loadingStage, setLoadingStage] = useState("auth");
   const [loadingMessage, setLoadingMessage] = useState("Checking authentication...");
   const [loadingAttempt, setLoadingAttempt] = useState(0);
@@ -41,9 +47,12 @@ function App() {
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const profileRef = useRef(null);
 
+  // Vlastny stack robi jednoduche tlacidlo spat medzi obrazovkami.
   const [historyStack, setHistoryStack] = useState([]);
 
+  // Aktualna trasa sa uklada ako screen + parametre, aby sa k nej dalo vratit.
   const getCurrentRoute = () => {
+    // Podla obrazovky sa ukladaju iba parametre, ktore dana obrazovka realne potrebuje.
     switch (currentScreen) {
       case "device-diagnostics":
         return {
@@ -93,7 +102,9 @@ function App() {
     }
   };
 
+  // Tu sa centralne nastavia parametre a az potom sa prepne currentScreen.
   const applyRoute = (screen, params = {}) => {
+    // Podpora starsieho volania, kde sa do navigacie posielalo iba cislo zariadenia.
     if (typeof params === "number") {
       setSelectedDeviceId(params);
       setCurrentScreen(screen);
@@ -104,6 +115,7 @@ function App() {
       setSelectedDeviceId(params.deviceId);
     }
 
+    // Live data potrebuju okrem ID aj info o zariadeni do hlavicky.
     if (screen === "live-data") {
       if (params.deviceId) {
         setSelectedDeviceForLive(params.deviceId);
@@ -113,11 +125,13 @@ function App() {
       }
     }
 
+    // Jazdy pracuju s VIN a zakladnym popisom vozidla.
     if (screen === "vehicle-trips") {
       if (params.vin) setSelectedVin(params.vin);
       if (params.vehicleInfo) setSelectedVehicleInfo(params.vehicleInfo);
     }
 
+    // Eventy maju vlastne VIN stavy, aby sa neprepisovali s inymi vozidlovymi obrazovkami.
     if (screen === "vehicle-events") {
       if (params.vin) setSelectedEventsVin(params.vin);
       if (params.vehicleInfo) setSelectedEventsVehicleInfo(params.vehicleInfo);
@@ -132,13 +146,16 @@ function App() {
     setIsProfilePopupOpen(false);
   };
 
+  // Hlavne sekcie resetuju historiu, lebo sa beru ako novy start navigacie.
   const topLevelScreens = ["main", "my-devices", "telemetry-comparison", "dtc-history"];
 
+  // Navigacia rozhoduje, ci sa aktualna obrazovka ulozi do historie.
   const navigateTo = (screen, params = {}, options = {}) => {
     const { resetHistory = false } = options;
 
     const isTopLevelTarget = topLevelScreens.includes(screen);
 
+    // Pri hlavnej sekcii sa historia maze, aby tlacidlo spat neskakalo nelogicky.
     if (resetHistory || isTopLevelTarget) {
       setHistoryStack([]);
     } else if (currentScreen && currentScreen !== "login" && currentScreen !== "register") {
@@ -149,6 +166,7 @@ function App() {
     applyRoute(screen, params);
   };
 
+  // Navrat vyberie poslednu ulozenu trasu alebo pouzivatela vrati na dashboard.
   const goBack = () => {
     setHistoryStack((prev) => {
       if (prev.length === 0) {
@@ -169,13 +187,16 @@ function App() {
     });
   };
 
+  // Backend sa pred prihlasenim skusi prebudit, kedze hosting moze byt uspany.
   const wakeUpBackend = async () => {
     setLoadingStage("backend");
     setLoadingMessage("Waking up the server...");
 
+    // Pocet pokusov je vyssi, aby mal pomaly backend cas odpovedat.
     const maxAttempts = 30;
     const delay = 2000;
 
+    // Healthcheck sa opakuje s kratkou pauzou medzi pokusmi.
     for (let i = 0; i < maxAttempts; i++) {
       setLoadingAttempt(i + 1);
       try {
@@ -184,6 +205,7 @@ function App() {
           mode: "cors",
         });
 
+        // Ked backend odpovie, pokracuje sa kontrolou prihlasenia.
         if (response.ok) {
           console.log("Backend is awake!");
           setLoadingStage("auth");
@@ -200,10 +222,12 @@ function App() {
     setLoadingMessage("Server is taking too long to respond. Please refresh the page.");
   };
 
+  // Po prvom nacitani aplikacie sa spusti prebudenie backendu.
   useEffect(() => {
     wakeUpBackend();
   }, []);
 
+  // Tento efekt zatvara profilovy popup klikom mimo neho.
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -211,19 +235,23 @@ function App() {
       }
     };
 
+    // Listener je na dokumente, aby zachytil aj klik mimo React komponentu.
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
+  // Refresh iba zmeni kluc a prinuti aktualnu obrazovku nacitat data znova.
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
     console.log(`Screen ${currentScreen} refreshed`);
   };
 
+  // Kontrola tokenu rozhodne, ci sa pouzivatel vrati do aplikacie alebo na login.
   const checkAuthStatus = async () => {
     try {
+      // Token sa cita z localStorage, lebo aplikacia nema serverovu session.
       const token = localStorage.getItem("token");
       const savedEmail = localStorage.getItem("email");
       const savedRole = localStorage.getItem("role");
@@ -275,8 +303,10 @@ function App() {
     }
   };
 
+  // Login posiela prihlasovacie udaje na backend a po uspechu uklada token.
   const handleLogin = async (identifier, password) => {
     try {
+      // Backend akceptuje identifier, cize email alebo pouzivatelske meno.
       const response = await api.post("/api/login", { identifier, password });
       const { access_token, role, username, email } = response.data;
 
@@ -318,6 +348,7 @@ function App() {
     }
   };
 
+  // Registracia po uspechu rovno nastavi prihlaseneho pouzivatela.
   const handleRegister = async (username, email, password) => {
     try {
       await api.post("/api/register", {
@@ -353,6 +384,7 @@ function App() {
     }
   };
 
+  // Odhlasenie vymaze token, user data aj vybrane navigacne parametre.
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("email");
@@ -374,6 +406,7 @@ function App() {
     setHistoryStack([]);
   };
 
+  // Kym sa kontroluje backend alebo token, zobrazi sa samostatny loading screen.
   if (isCheckingAuth || loadingStage === "backend") {
     return <LoadingScreen message={loadingMessage} attempt={loadingAttempt} />;
   }

@@ -18,7 +18,9 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 
+// Obrazovka porovnava vozidla podla poslednych telemetry hodnot.
 function VehicleTelemetryComparison({ onNavigate, user }) {
+  // Zoznam vozidiel je zdroj pre tabulku aj prazdny stav.
   const [vehicles, setVehicles] = useState([]);
   const [summary, setSummary] = useState({
     totalVehicles: 0,
@@ -37,17 +39,22 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
   const [statusMessage, setStatusMessage] = useState("");
   const [actionPopupStyle, setActionPopupStyle] = useState({});
 
+  // Ref pomaha zistit klik mimo akcioveho menu.
   const actionMenuRef = useRef(null);
+  // Pre kazde VIN sa uklada tlacidlo, podla ktoreho sa poziciuje popup.
   const triggerRefs = useRef({});
 
+  // Admin rola ovplyvnuje dostupne akcie nad vozidlami.
   const isAdmin = user?.role === "admin";
 
+  // Po otvoreni obrazovky sa nacita porovnanie vozidiel.
   useEffect(() => {
     fetchTelemetryComparison();
     const interval = setInterval(fetchTelemetryComparison, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  // Druhy efekt zatvara akciove menu klikom mimo neho.
   useEffect(() => {
     const handleClickOutside = (event) => {
       const popupEl = actionMenuRef.current;
@@ -84,8 +91,10 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     };
   }, [openActionMenuVin]);
 
+  // Backend vracia posledne telemetry hodnoty pre vsetky vozidla pouzivatela.
   const fetchTelemetryComparison = async () => {
     try {
+      // Token sa nastavi pred requestom, aby presla autorizacia.
       const token = localStorage.getItem("token");
       if (!token) {
         setError("Please login first");
@@ -95,6 +104,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
 
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+      // Endpoint dodava data pre porovnavaciu tabulku.
       const response = await api.get("/api/vehicles/telemetry-comparison");
 
       if (response.data.status === "success") {
@@ -115,6 +125,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     }
   };
 
+  // Mazanie vozidla sa robi podla VIN vybraneho riadku.
   const handleDeleteVehicle = async (vin) => {
     setDeletingVin(vin);
 
@@ -122,6 +133,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
       const token = localStorage.getItem("token");
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+      // Po zmazani sa tabulka nacita znova zo servera.
       await api.delete(`/api/user-vehicle/${vin}`);
       await fetchTelemetryComparison();
 
@@ -141,6 +153,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     }
   };
 
+  // Klik na hlavicku tabulky prepina stlpec a smer triedenia.
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -149,11 +162,13 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     setSortConfig({ key, direction });
   };
 
+  // Triedenie pracuje s kopiou pola, nie priamo so stavom.
   const getSortedVehicles = () => {
     return [...vehicles].sort((a, b) => {
       let aVal;
       let bVal;
 
+      // Podla aktivneho kluca sa vyberie hodnota na porovnanie.
       switch (sortConfig.key) {
         case "online":
           aVal = a.online ? 1 : 0;
@@ -198,11 +213,13 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     });
   };
 
+  // Chybajuce cisla sa v tabulke zobrazia ako pomlcka.
   const formatNumber = (num, decimals = 1) => {
     if (num === null || num === undefined) return "—";
     return Number(num).toFixed(decimals);
   };
 
+  // Ikona ukazuje aktualny smer triedenia stlpca.
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) {
       return <ArrowsUpDownIcon style={{ width: "1rem", height: "1rem" }} />;
@@ -215,10 +232,12 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     );
   };
 
+  // Online/offline stav sa mapuje na CSS triedu.
   const getStatusColor = (status) => {
     return status ? "success" : "danger";
   };
 
+  // Pozicia popupu sa pocita z tlacidla v konkretnom riadku.
   const updatePopupPosition = (vin) => {
     const button = triggerRefs.current[vin];
     if (!button) return;
@@ -253,6 +272,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     });
   };
 
+  // Klik bud otvori menu pre VIN, alebo zatvori uz otvorene menu.
   const toggleActionMenu = (vin) => {
     setOpenActionMenuVin((prev) => {
       const next = prev === vin ? null : vin;
@@ -263,6 +283,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     });
   };
 
+  // Potvrdzovaci dialog brani nechcenemu zmazaniu vozidla.
   const DeleteConfirmDialog = ({ vin, onConfirm, onCancel }) => (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -296,6 +317,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     </div>
   );
 
+  // Pri nacitani sa zobrazi loading namiesto prazdnej tabulky.
   if (loading) {
     return (
       <div className="devices-container">
@@ -307,6 +329,7 @@ function VehicleTelemetryComparison({ onNavigate, user }) {
     );
   }
 
+  // Zoradeny zoznam sa pocita tesne pred renderom.
   const sortedVehicles = getSortedVehicles();
 
   return (
